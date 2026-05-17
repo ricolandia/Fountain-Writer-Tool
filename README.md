@@ -45,7 +45,7 @@ Primeira versão pública do Fountain Writer, um editor de roteiros leve e compl
 
 **Nota:** Esse projeto é espelhado no meu servidor pessoal **Forgejo server**. Você pode acessar esse repositório pelo link abaixo:
 
-[![Espelho Forgejo]](https://img.shields.io/badge/Mirror-Forgejo-orange?logo=gitea)](https://repo.rizomatico.org/ricograca/Fountain-Writer-Tool)
+[![Espelho Forgejo](https://img.shields.io/badge/Mirror-Forgejo-orange?logo=gitea)](https://repo.rizomatico.org/ricograca/Fountain-Writer-Tool)
 
 ## 🆕 O que está incluído
 
