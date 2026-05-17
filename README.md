@@ -2,6 +2,10 @@
 
 First public version of Fountain Writer, a lightweight and complete screenplay editor.
 
+**Note:** This project is mirrored on my personal **Forgejo server**. You can also access the repository by clicking below:
+
+[![Forgejo MIRROR](https://img.shields.io/badge/Mirror-Forgejo-orange?logo=gitea)](https://repo.rizomatico.org/ricograca/Fountain-Writer-Tool)
+
 ## 🆕 What’s included
 
 - Editor with Fountain syntax highlighting
@@ -38,6 +42,10 @@ To save space and ensure fast downloads, the executable files (Windows, Mac, and
 
 ## ( Em Português do Brasil )
 Primeira versão pública do Fountain Writer, um editor de roteiros leve e completo.
+
+**Nota:** Esse projeto é espelhado no meu servidor pessoal **Forgejo server**. Você pode acessar esse repositório pelo link abaixo:
+
+[![Espelho Forgejo]](https://img.shields.io/badge/Mirror-Forgejo-orange?logo=gitea)](https://repo.rizomatico.org/ricograca/Fountain-Writer-Tool)
 
 ## 🆕 O que está incluído
 
