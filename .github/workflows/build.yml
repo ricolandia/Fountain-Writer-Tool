@@ -1,0 +1,31 @@
+name: Build executables
+
+on: [push, pull_request] # Aciona a build em cada push ou PR
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest] # Define os 3 SOs
+    runs-on: ${{ matrix.os }} # Executa o job em cada SO
+
+    steps:
+      - uses: actions/checkout@v4 # Baixa o código do seu repositório
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10' # A versão que seu projeto usa
+
+      - name: Install dependencies
+        run: pip install pyinstaller reportlab
+        # Adicione aqui outras bibliotecas que seu app precise
+
+      - name: Build with PyInstaller
+        run: pyinstaller --onefile --windowed --name "Fountain-Writer" fountain_writer.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Fountain-Writer-${{ matrix.os }} # O artefato terá o nome do SO
+          path: dist/* # Caminho onde o PyInstaller salva o executável
