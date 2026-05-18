@@ -80,3 +80,8 @@ Para economizar espaço e garantir downloads rápidos, os arquivos executáveis 
 *(Basta acessar o link acima, rolar até a seção "Assets" e baixar o arquivo correspondente ao seu sistema operacional).*
 
 ---
+
+### Images  
+
+![screen capture](imagens/fountain-writer-1.webp)
+![screen capture](imagens/fountain-writer-2.webp)
