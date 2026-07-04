@@ -11,3 +11,13 @@ imagens/*
 !/imagens/2-0/
 *.bak.*
 
+# Desktop app (PySide6 - abandoned)
+desktop/
+resources/
+fountain_writer.py
+fountain_writer_BR.py
+
+# Session / local
+SESSION.md
+*.session.*
+
