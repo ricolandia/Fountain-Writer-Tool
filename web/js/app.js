@@ -189,7 +189,11 @@ const app = {
 
   _findBeatForScene(label, line) {
     const ref = label + '|L' + line;
-    return this.beats.find(b => b.scene_ref === ref || b.title === label || b.scene_ref === label);
+    // Exact scene_ref first — unambiguous even with duplicate headings.
+    // Only fall back to title/legacy scene_ref when no beat is precisely
+    // linked to this scene's line.
+    return this.beats.find(b => b.scene_ref === ref) ||
+      this.beats.find(b => b.title === label || b.scene_ref === label);
   },
 
   _sortActs(actNames) {
@@ -593,17 +597,13 @@ const app = {
     if (!title) return;
     const idx = this._editingBeatIdx;
     if (idx >= 0 && idx < this.beats.length) {
+      // Preserve scene_ref — don't re-derive by scanning text.
+      // Recalculating scene_ref from the heading text breaks when
+      // multiple scenes share the same heading: it always finds the
+      // FIRST occurrence, relinking this beat to the wrong scene.
       this.beats[idx].title = title;
       this.beats[idx].act = act;
       this.beats[idx].plotline = plot;
-      // Find matching scene line for this beat's title
-      const scenes = this.parseScenes(this.editor.value);
-      for (const s of scenes) {
-        if (s.label === title || s.label.startsWith(title) || title.startsWith(s.label)) {
-          this.beats[idx].scene_ref = title + '|L' + s.line;
-          break;
-        }
-      }
     } else {
       this.beats.push({ title, act, plotline: plot, order: this.beats.length });
     }
