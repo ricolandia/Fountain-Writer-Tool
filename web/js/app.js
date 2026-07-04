@@ -94,6 +94,14 @@ const app = {
       const beat = this._findBeatForScene(s.label, s.line);
       this._sceneActMap[s.line] = beat ? (beat.act || 'Ato 1') : null;
     });
+    // Debug: show matching result in status bar
+    let dbg = '';
+    scenes.forEach(s => {
+      const b = this._findBeatForScene(s.label, s.line);
+      dbg += s.label.slice(0, 16) + ':' + (b ? b.act : '?') + ' ';
+    });
+    const el = document.getElementById('dbg');
+    if (el) el.textContent = dbg;
     this.renderSceneList(scenes);
   },
 
@@ -590,6 +598,14 @@ const app = {
     } else {
       this.beats.push({ title, act, plotline: plot, order: this.beats.length });
     }
+    // Debug: show matching result in status bar
+    let dbg = '';
+    this.parseScenes(this.editor.value).forEach(s => {
+      const b = this._findBeatForScene(s.label, s.line);
+      dbg += s.label.slice(0, 16) + ':' + (b ? b.act : '?') + ' ';
+    });
+    const el = document.getElementById('dbg');
+    if (el) el.textContent = dbg;
     // Ensure act exists in fw_acts
     const fwActs = this.getActs();
     if (!fwActs[act]) { fwActs[act] = []; this.saveActs(fwActs); }
