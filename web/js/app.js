@@ -12,7 +12,6 @@ const app = {
   fontSize: parseInt(localStorage.getItem('fw_font_size') || '12'),
   soundOn: localStorage.getItem('fw_sound') === 'true',
   _audioContext: null,
-  _syncTimer: null,
   _sceneActMap: {},
 
   init() {
@@ -1392,7 +1391,6 @@ const app = {
     if (e.ctrlKey && e.key === '0') { e.preventDefault(); this.zoomReset(); }
     // Enter → sync beats immediately (scene heading complete)
     if (e.key === 'Enter') {
-      clearTimeout(this._syncTimer);
       this.syncBeatsFromScenes(this.editor.value);
     }
   },
