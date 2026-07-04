@@ -55,6 +55,9 @@ const app = {
     this.renderProductivity();
     this.initAutoSave();
     this.initBackup();
+    window.addEventListener('beforeunload', e => {
+      if (this.isModified) { e.preventDefault(); e.returnValue = ''; }
+    });
     this.update();
     this.syncBeatsFromScenes(this.editor.value);
     this.renderBeats();
@@ -91,10 +94,12 @@ const app = {
       const beat = this._findBeatForScene(s.label, s.line);
       this._sceneActMap[s.line] = beat ? (beat.act || 'Ato 1') : null;
     });
-    // Status bar: beat count
+    // Status bar: beat count + save reminder
     const el = document.getElementById('dbg');
-    if (el) el.textContent = this.beats.length + ' beats';
-    this.renderSceneList(scenes);
+    if (el) {
+      const saved = localStorage.getItem('fw_project_saved');
+      el.textContent = this.beats.length + ' beats' + (!saved ? ' | 💾 Salve seu projeto' : '');
+    }
     this.renderSceneList(scenes);
   },
 
@@ -965,7 +970,8 @@ const app = {
         const writable = await this._fileHandle.createWritable();
         await writable.write(JSON.stringify(data, null, 2));
         await writable.close();
-        this.isModified = false; this.updateIndicator(); return;
+        this.isModified = false; this.updateIndicator();
+        localStorage.setItem('fw_project_saved', 'true'); return;
       } catch (e) { this._fileHandle = null; }
     }
     if (window.showSaveFilePicker) {
@@ -986,6 +992,7 @@ const app = {
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     }
     this.isModified = false; this.updateIndicator();
+    localStorage.setItem('fw_project_saved', 'true');
   },
 
   openProject() {
