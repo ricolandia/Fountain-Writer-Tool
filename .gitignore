@@ -3,6 +3,7 @@ __pycache__/
 .DS_Store
 *.zip
 *.tar.gz
+deploy/
 archive/
 Layout/
 PACKS/
