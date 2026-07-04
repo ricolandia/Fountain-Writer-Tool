@@ -611,6 +611,10 @@ const app = {
       if (t !== 'BLANK') prev = t;
     });
     let changed = false;
+    // Remove old-format auto beats (no unique scene_ref)
+    const oldLen = this.beats.length;
+    this.beats = this.beats.filter(b => !b.auto || (b.scene_ref && b.scene_ref.includes('|L')));
+    if (this.beats.length !== oldLen) changed = true;
     sceneData.forEach(({ heading, line }) => {
       const uniqueRef = heading + '|L' + line;
       const exists = this.beats.some(b => b.scene_ref === uniqueRef);
