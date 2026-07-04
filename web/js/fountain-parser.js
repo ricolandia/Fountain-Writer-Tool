@@ -49,6 +49,7 @@ const Fountain = (function () {
         if (!text) return text;
         text = text
             .replace(regex.note_inline, inlineReplace.note)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
             .replace(/\\\*/g, '[STAR]')
             .replace(/\\_/g,  '[UL]')
             .replace(/\n/g,   inlineReplace.line_break);

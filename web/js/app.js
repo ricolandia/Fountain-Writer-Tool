@@ -462,7 +462,7 @@ const app = {
       if (c.startsWith('>') && !c.endsWith('<')) { out += '<h2>' + esc(c.slice(1).trim()) + '</h2>'; prev = 'TRANSITION'; continue; }
       if (c.startsWith('.')) { out += '<h3>' + esc(c.slice(1).trim()) + '</h3>'; prev = 'SCENE'; continue; }
       if (/^(INT|EXT|EST|I\/E)[.\s]/i.test(c)) { out += '<h3>' + esc(c) + '</h3>'; prev = 'SCENE'; continue; }
-      if (/^[A-ZÀ-Ú\s]+(TO|PARA):$/.test(c)) { out += '<h2>' + esc(c) + '</h2>'; prev = 'TRANSITION'; continue; }
+      if (/^[A-ZÀ-Ú][A-ZÀ-Ú\s]{1,20}(TO|PARA):$/.test(c)) { out += '<h2>' + esc(c) + '</h2>'; prev = 'TRANSITION'; continue; }
       if (/^[A-ZÀ-Ú][A-ZÀ-Ú0-9\s\(\)\.\-']+$/.test(c) && !/^(INT|EXT|EST|I\/E)[.\s]/i.test(c)) {
         out += '<div class="dialogue"><h4>' + esc(c) + '</h4>'; prev = 'CHARACTER'; continue;
       }
@@ -890,13 +890,13 @@ const app = {
     if (scenes.length) {
       scenes.forEach(s => {
         const a = this._sceneActMap[s.line];
-        if (a && actFirstLine[a] === null) actFirstLine[a] = s.line;
+        if (a && actFirstLine[a] === undefined) actFirstLine[a] = s.line;
       });
     }
 
     const sorted = Object.entries(actFirstLine).sort((a, b) => a[1] - b[1]);
     const fontSize = this.fontSize || 12;
-    const lh = fontSize * 1.2;
+    const lh = parseFloat(getComputedStyle(this.editor).lineHeight) || this.editor.getBoundingClientRect().height;
     const sc = this.editor.scrollTop;
     sorted.forEach(([act, line]) => {
       const y = line * lh - sc;
@@ -914,22 +914,25 @@ const app = {
 
   /* ── File I/O ── */
   newFile() {
-    if (this.editor.value.trim() && confirm(_('save_before_new'))) { this.saveProject(); }
-    if (confirm(_('save_confirm'))) {
-      this.editor.value = ''; this.fileName = null; this.beats = []; this.titleData = null;
-      this.projectName = ''; localStorage.setItem('fw_beats', '[]');
-      localStorage.removeItem('fw_title'); localStorage.removeItem('fw_char_data');
-      localStorage.removeItem('fw_project_name'); localStorage.removeItem('fw_scene_colors');
-      localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
-      this.renderBeats(); this.update(); this.updateProjectNameDisplay();
+    if (this.editor.value.trim()) {
+      if (confirm(_('save_before_new'))) { this.saveProject(); }
+      else if (!confirm(_('save_confirm'))) return;
+    } else {
+      if (!confirm(_('save_confirm'))) return;
     }
+    this.editor.value = ''; this.fileName = null; this.beats = []; this.titleData = null;
+    this.projectName = ''; localStorage.setItem('fw_beats', '[]');
+    localStorage.removeItem('fw_title'); localStorage.removeItem('fw_char_data');
+    localStorage.removeItem('fw_project_name'); localStorage.removeItem('fw_scene_colors');
+    localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
+    this.renderBeats(); this.update(); this.updateProjectNameDisplay();
   },
   openFile() { document.getElementById('file-input').click(); },
   saveFile() {
     const blob = new Blob([this.editor.value], { type: 'text/plain;charset=utf-8' });
     const a = document.getElementById('download-link');
     a.href = URL.createObjectURL(blob); a.download = this.fileName || 'roteiro.fountain'; a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 500);
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     this.isModified = false;
     this.updateIndicator();
   },
@@ -1522,14 +1525,14 @@ function guessType(text, prev) {
   if (c.startsWith('.')) return 'SCENE';
   if (c.startsWith('>') && c.endsWith('<')) return 'CENTER';
   if (/^(INT|EXT|EST|I\/E)[.\s]/i.test(c)) return 'SCENE';
-  if (/^[A-ZÀ-Ú\s]+(TO|PARA):$/.test(c)) return 'TRANSITION';
+  if (/^[A-ZÀ-Ú][A-ZÀ-Ú\s]{1,20}(TO|PARA):$/.test(c)) return 'TRANSITION';
   if (/^[A-ZÀ-Ú][A-ZÀ-Ú0-9\s\(\)\.\-']+$/.test(c) && !/^(INT|EXT|EST|I\/E)[.\s]/i.test(c)) return 'CHARACTER';
   if (/^\s*\(.*\)\s*$/.test(c)) return 'PARENTHETICAL';
   if (prev === 'CHARACTER' || prev === 'PARENTHETICAL' || prev === 'DIALOGUE') return 'DIALOGUE';
   return 'ACTION';
 }
 
-function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;').replace(/"/g,'&quot;'); }
 
 /* ── File input handler ── */
 document.getElementById('file-input').addEventListener('change', function(e) {
