@@ -76,6 +76,6 @@ python3 main.py
 ---
 
 ### Imagens
+![Fountain Writer v2.0](imagens/2-0/Fountain_Writer_2-0_1.png)
 
-![screen capture](imagens/fountain-writer-1.webp)
-![screen capture](imagens/fountain-writer-2.webp)
+![Fountain Writer v2.0 preview](imagens/2-0/Fountain_Writer_2-0_2.png)
