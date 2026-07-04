@@ -84,8 +84,8 @@ HTML5, CSS3, JavaScript (ES6+), localStorage, File System Access API.
 
 ## Imagens
 
-![Fountain Writer](imagens/2-0/Fountain_Writer_2-0_1.png)
+![Fountain Writer](imagens/2-0/Fountain_Writer_2-0_1.webp)
 *Editor com sidebar de cenas e timeline*
 
-![Fountain Writer preview](imagens/2-0/Fountain_Writer_2-0_2.png)
+![Fountain Writer preview](imagens/2-0/Fountain_Writer_2-0_2.webp)
 *Preview ao vivo com formatação Fountain*
