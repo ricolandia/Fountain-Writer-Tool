@@ -19,5 +19,6 @@ fountain_writer_BR.py
 
 # Session / local
 SESSION.md
+LANDING.md
 *.session.*
 

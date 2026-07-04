@@ -18,6 +18,7 @@ const app = {
   _sceneActMap: {},
   _orcListenersAttached: false,
   _editingBeatIdx: -1,
+  _prevText: null,
 
   init() {
     this.translateUI();
@@ -70,6 +71,8 @@ const app = {
   /* ── Updates ── */
   update() {
     const text = this.editor.value;
+    this._resyncLineAnchors(this._prevText, text);
+    this._prevText = text;
     localStorage.setItem('fw_draft', text);
     this.isModified = true;
     this.updateIndicator();
@@ -81,6 +84,82 @@ const app = {
     const activeTab = document.querySelector('#right-tabs .tab.active');
     const tab = activeTab ? activeTab.dataset.tab : 'beats';
     if (tab === 'chars' || tab === 'locs') this.renderCharsLocs(text);
+  },
+
+  /* ── Line-anchor resync (scene colors + line marks) ──
+   * sceneColors and fw_line_marks key their data by raw line NUMBER. If
+   * lines are inserted/deleted above a colored scene or a highlighted
+   * line, that line number now points at different content — the color or
+   * mark silently "drifts" onto the wrong line. This compares the previous
+   * text to the new text, finds the common unchanged prefix/suffix of
+   * lines, and shifts anchors that fall in the untouched regions by the
+   * right offset. Anchors that fall inside the actually-edited region are
+   * dropped (safer than guessing where they went) instead of drifting. */
+  _resyncLineAnchors(oldText, newText) {
+    if (oldText == null || oldText === newText) return;
+    const oldLines = oldText.split('\n');
+    const newLines = newText.split('\n');
+    const oldLen = oldLines.length, newLen = newLines.length;
+    const maxCommon = Math.min(oldLen, newLen);
+    let prefix = 0;
+    while (prefix < maxCommon && oldLines[prefix] === newLines[prefix]) prefix++;
+    let suffix = 0;
+    const maxSuffix = maxCommon - prefix;
+    while (suffix < maxSuffix && oldLines[oldLen - 1 - suffix] === newLines[newLen - 1 - suffix]) suffix++;
+    const delta = newLen - oldLen;
+    const remap = (oldLine) => {
+      if (oldLine < prefix) return oldLine;
+      if (oldLine >= oldLen - suffix) return oldLine + delta;
+      return null; // inside the edited region — no longer trustworthy
+    };
+
+    let colorsChanged = false;
+    const newColors = {};
+    Object.entries(this.sceneColors).forEach(([lineStr, color]) => {
+      const nl = remap(parseInt(lineStr, 10));
+      if (nl !== null && nl >= 0) newColors[nl] = color;
+      if (nl === null || String(nl) !== lineStr) colorsChanged = true;
+    });
+    if (colorsChanged) {
+      this.sceneColors = newColors;
+      localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors));
+    }
+
+    const marks = this.getLineMarks();
+    let marksChanged = false;
+    const newMarks = {};
+    Object.entries(marks).forEach(([lineStr, type]) => {
+      const nl = remap(parseInt(lineStr, 10));
+      if (nl !== null && nl >= 0) newMarks[nl] = type;
+      if (nl === null || String(nl) !== lineStr) marksChanged = true;
+    });
+    if (marksChanged) this.saveLineMarks(newMarks);
+  },
+
+  /* Precise anchor remap for scene/act drag-reorder: `lineMap` gives the
+   * exact old-line → new-line correspondence (built from the block move
+   * itself, not guessed via text diffing). Anchors on lines outside any
+   * moved block (not expected here, but possible for stray content) are
+   * dropped rather than left pointing at the wrong scene. */
+  _remapAnchorsByLineMap(lineMap) {
+    let colorsChanged = false;
+    const newColors = {};
+    Object.entries(this.sceneColors).forEach(([lineStr, color]) => {
+      const nl = lineMap.get(parseInt(lineStr, 10));
+      if (nl !== undefined) newColors[nl] = color; else colorsChanged = true;
+    });
+    if (colorsChanged) {
+      this.sceneColors = newColors;
+      localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors));
+    }
+    const marks = this.getLineMarks();
+    const newMarks = {};
+    let marksChanged = false;
+    Object.entries(marks).forEach(([lineStr, type]) => {
+      const nl = lineMap.get(parseInt(lineStr, 10));
+      if (nl !== undefined) newMarks[nl] = type; else marksChanged = true;
+    });
+    if (marksChanged) this.saveLineMarks(newMarks);
   },
 
   updateIndicator() {
@@ -293,12 +372,14 @@ const app = {
     const blocks = this.getSceneBlocks(lines);
     if (blocks.length === 0) return;
 
-    // Build block→act mapping from BEATS (always current, never stale)
+    // Build block→act mapping from BEATS (always current, never stale).
+    // Uses _findBeatForScene (label+line) instead of matching by title
+    // alone, which is ambiguous whenever two scenes share the same heading.
     const blockToAct = {};
     blocks.forEach((b, i) => {
       blockToAct[i] = null;
       const label = lines[b.line].trim().replace(/^\./, '').slice(0, 60);
-      const beat = this.beats.find(bt => bt.title === label || bt.scene_ref === label);
+      const beat = this._findBeatForScene(label, b.line);
       if (beat && beat.act) blockToAct[i] = beat.act;
     });
 
@@ -333,15 +414,25 @@ const app = {
     const newLines = this.editor.value.split('\n');
     const newBlocks = this.getSceneBlocks(newLines);
     const rebuilt = {};
+    const lineMap = new Map();
     newOrderIdxs.forEach((oldIdx, newIdx) => {
       const act = blockToAct[oldIdx];
       if (act) {
         if (!rebuilt[act]) rebuilt[act] = [];
         rebuilt[act].push(newBlocks[newIdx].line);
       }
+      // Every line inside this block shifted by the same offset as its
+      // block's start — map them all so scene colors/highlights follow
+      // their scene instead of staying at the old absolute line number.
+      const oldBlock = blocks[oldIdx], newBlock = newBlocks[newIdx];
+      for (let j = 0; j < oldBlock.end - oldBlock.line; j++) {
+        lineMap.set(oldBlock.line + j, newBlock.line + j);
+      }
     });
     for (const aname of Object.keys(acts)) { if (!rebuilt[aname]) rebuilt[aname] = []; }
+    this._remapAnchorsByLineMap(lineMap);
     this.saveActs(rebuilt);
+    this._prevText = this.editor.value;
     this.updateScenes(this.editor.value);
   },
 
@@ -351,12 +442,14 @@ const app = {
     const blocks = this.getSceneBlocks(lines);
     if (blocks.length <= 1) return;
 
-    // Build block→act mapping from BEATS (always current)
+    // Build block→act mapping from BEATS (always current). Uses
+    // _findBeatForScene (label+line) instead of matching by title alone,
+    // which is ambiguous whenever two scenes share the same heading.
     const blockToAct = {};
     blocks.forEach((b, i) => {
       blockToAct[i] = null;
       const label = lines[b.line].trim().replace(/^\./, '').slice(0, 60);
-      const beat = this.beats.find(bt => bt.title === label || bt.scene_ref === label);
+      const beat = this._findBeatForScene(label, b.line);
       if (beat && beat.act) blockToAct[i] = beat.act;
     });
 
@@ -381,15 +474,22 @@ const app = {
     const newBlocks = this.getSceneBlocks(newLines);
     const acts = this.getActs();
     const rebuilt = {};
+    const lineMap = new Map();
     newOrder.forEach((oldIdx, newIdx) => {
       const act = blockToAct[oldIdx];
       if (act) {
         if (!rebuilt[act]) rebuilt[act] = [];
         rebuilt[act].push(newBlocks[newIdx].line);
       }
+      const oldBlock = blocks[oldIdx], newBlock = newBlocks[newIdx];
+      for (let j = 0; j < oldBlock.end - oldBlock.line; j++) {
+        lineMap.set(oldBlock.line + j, newBlock.line + j);
+      }
     });
     for (const aname of Object.keys(acts)) { if (!rebuilt[aname]) rebuilt[aname] = []; }
+    this._remapAnchorsByLineMap(lineMap);
     this.saveActs(rebuilt);
+    this._prevText = this.editor.value;
     this.updateScenes(this.editor.value);
   },
 
@@ -658,7 +758,10 @@ const app = {
     const oldLen = this.beats.length;
     this.beats = this.beats.filter(b => !b.auto || (b.scene_ref && currentRefs.has(b.scene_ref)));
     if (this.beats.length !== oldLen) changed = true;
-    const remappedRefs = new Set();
+    // Track by object identity (not by scene_ref string) so beats with no
+    // scene_ref yet (manually pre-planned beats) can also be matched once,
+    // without colliding on the shared "undefined" key.
+    const remappedBeats = new Set();
     // Count heading occurrences to only remap stale for unique headings
     const headingCount = {};
     sceneData.forEach(d => { headingCount[d.heading] = (headingCount[d.heading] || 0) + 1; });
@@ -669,11 +772,17 @@ const app = {
         // Only remap stale for unique headings (duplicates need their own beat)
         const isUnique = headingCount[heading] === 1;
         if (isUnique) {
+          // Candidates: a beat whose scene moved (has an old scene_ref that
+          // no longer matches any current scene) OR a manually-created
+          // "planning" beat that was never linked to a scene at all
+          // (scene_ref undefined) — both should adopt this scene instead of
+          // spawning a duplicate auto beat.
           const stale = this.beats.find(b =>
-            b.scene_ref && b.scene_ref.includes('|L') && b.title === heading && !remappedRefs.has(b.scene_ref)
+            b.title === heading && !remappedBeats.has(b) &&
+            (!b.scene_ref || b.scene_ref.includes('|L'))
           );
           if (stale) {
-            remappedRefs.add(stale.scene_ref);
+            remappedBeats.add(stale);
             stale.scene_ref = uniqueRef;
             changed = true;
             return;
@@ -1130,6 +1239,7 @@ const app = {
       if (!confirm(_('save_confirm'))) return;
     }
     this.editor.value = ''; this.fileName = null; this.beats = []; this.titleData = null;
+    this._prevText = null;
     this.projectName = ''; localStorage.setItem('fw_beats', '[]');
     localStorage.removeItem('fw_title'); localStorage.removeItem('fw_char_data');
     localStorage.removeItem('fw_project_name'); localStorage.removeItem('fw_scene_colors');
@@ -1212,6 +1322,7 @@ const app = {
         try {
           const data = JSON.parse(ev.target.result);
           this.editor.value = data.draft || '';
+          this._prevText = null;
           this.beats = data.beats || [];
           this.titleData = data.titleData || null;
           this.projectName = data.name || '';
@@ -1764,6 +1875,7 @@ const app = {
     if (idx < 0 || idx >= backups.length) return;
     if (!confirm(_('backup_restore_confirm'))) return;
     this.editor.value = backups[idx].text;
+    this._prevText = null;
     this.fileName = backups[idx].name;
     if (backups[idx].beats) { this.beats = backups[idx].beats; this.saveBeats(); }
     if (backups[idx].acts) { this.saveActs(backups[idx].acts); }
@@ -1798,7 +1910,7 @@ document.getElementById('file-input').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = ev => { app.editor.value = ev.target.result; app.fileName = file.name; app.update(); app.syncBeatsFromScenes(app.editor.value); };
+  reader.onload = ev => { app.editor.value = ev.target.result; app._prevText = null; app.fileName = file.name; app.update(); app.syncBeatsFromScenes(app.editor.value); };
   reader.readAsText(file, 'UTF-8');
   e.target.value = '';
 });
