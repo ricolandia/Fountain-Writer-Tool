@@ -99,22 +99,11 @@ const app = {
     });
     document.getElementById('scene-count').textContent = scenes.length;
     this._sceneActMap = {};
-    let sceneRefChanged = false;
     scenes.forEach(s => {
       const expectedRef = s.label + '|L' + s.line;
       const beat = this.beats.find(b => b.scene_ref === expectedRef || b.title === s.label || b.scene_ref === s.label);
-      if (beat) {
-        // Update scene_ref when scene moves (copy/paste changes line numbers)
-        if (beat.scene_ref !== expectedRef && beat.scene_ref !== s.label) {
-          beat.scene_ref = expectedRef;
-          sceneRefChanged = true;
-        }
-        this._sceneActMap[s.line] = beat.act || 'Ato 1';
-      } else {
-        this._sceneActMap[s.line] = null;
-      }
+      this._sceneActMap[s.line] = beat ? (beat.act || 'Ato 1') : null;
     });
-    if (sceneRefChanged) this.saveBeats();
     this.renderSceneList(scenes);
   },
 
@@ -630,10 +619,17 @@ const app = {
     if (this.beats.length !== oldLen) changed = true;
     sceneData.forEach(({ heading, line }) => {
       const uniqueRef = heading + '|L' + line;
-      const exists = this.beats.some(b => b.scene_ref === uniqueRef);
-      if (!exists) {
-        this.beats.push({ title: heading, act: 'Ato 1', desc: '', scene_ref: uniqueRef, order: this.beats.length, auto: true, plotline: 'Principal' });
-        changed = true;
+      const existing = this.beats.find(b => b.scene_ref === uniqueRef);
+      if (!existing) {
+        // Check if a beat with same title and |L format exists (stale line)
+        const stale = this.beats.find(b => b.scene_ref && b.scene_ref.includes('|L') && b.title === heading);
+        if (stale) {
+          stale.scene_ref = uniqueRef;
+          changed = true;
+        } else {
+          this.beats.push({ title: heading, act: 'Ato 1', desc: '', scene_ref: uniqueRef, order: this.beats.length, auto: true, plotline: 'Principal' });
+          changed = true;
+        }
       }
     });
     // Ensure default act exists in fw_acts for auto-created beats
