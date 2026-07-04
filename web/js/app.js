@@ -11,6 +11,8 @@ const app = {
   projectName: localStorage.getItem('fw_project_name') || '',
   fontSize: parseInt(localStorage.getItem('fw_font_size') || '12'),
   soundOn: localStorage.getItem('fw_sound') === 'true',
+  viewMode: 'roteiro',
+  projetoData: JSON.parse(localStorage.getItem('fw_projeto') || 'null'),
   _audioContext: null,
   _fileHandle: null,
   _sceneActMap: {},
@@ -919,6 +921,144 @@ const app = {
     this.findDo();
   },
 
+  /* ── Projeto Cultural ── */
+  toggleProjeto() {
+    this.viewMode = this.viewMode === 'roteiro' ? 'projeto' : 'roteiro';
+    const btn = document.getElementById('projeto-btn');
+    btn.textContent = this.viewMode === 'projeto' ? '✏ Roteiro' : '📋 Projeto';
+    const editorWrap = document.getElementById('textarea-wrap');
+    const previewWrap = document.getElementById('preview-wrap');
+    const projetoForm = document.getElementById('projeto-form');
+    const rightPane = document.getElementById('pane-right');
+    const leftPane = document.getElementById('pane-left');
+    if (this.viewMode === 'projeto') {
+      editorWrap.style.display = 'none';
+      previewWrap.style.display = 'none';
+      projetoForm.style.display = 'block';
+      rightPane.style.display = 'none';
+      leftPane.style.display = 'none';
+      this.carregarProjeto();
+      // Orçamento auto-calc
+      document.querySelectorAll('#projeto-form input[id^="proj-orc-"][id$="valor"]').forEach(el => {
+        el.addEventListener('input', () => this._atualizarOrcTotal());
+      });
+    } else {
+      editorWrap.style.display = 'block';
+      previewWrap.style.display = this.previewMode === 'preview' ? 'block' : 'none';
+      projetoForm.style.display = 'none';
+      rightPane.style.display = '';
+      leftPane.style.display = '';
+    }
+  },
+
+  carregarProjeto() {
+    const d = this.projetoData || {};
+    const map = {
+      'proj-nome':'nome','proj-proponente':'proponente','proj-cpf':'cpf',
+      'proj-segmento':'segmento','proj-produto':'produto','proj-valor':'valor','proj-periodo':'periodo',
+      'proj-resumo':'resumo','proj-obj-geral':'objGeral','proj-obj-espec':'objEspec','proj-justificativa':'justificativa',
+      'proj-equipe-direcao':'eqDirecao','proj-equipe-animacao':'eqAnimacao','proj-equipe-arte':'eqArte',
+      'proj-equipe-trilha':'eqTrilha','proj-equipe-producao':'eqProducao',
+      'proj-div-redes':'divRedes','proj-div-imprensa':'divImprensa','proj-div-material':'divMaterial',
+      'proj-acess-libras':'acessLibras','proj-acess-audio':'acessAudio','proj-acess-legendas':'acessLegendas','proj-acess-sessoes':'acessSessoes',
+      'proj-conta-social':'contaSocial','proj-conta-cultural':'contaCultural','proj-conta-imagem':'contaImagem',
+      'proj-orc-pre-desc':'orcPreDesc','proj-orc-pre-valor':'orcPreValor',
+      'proj-orc-prod-desc':'orcProdDesc','proj-orc-prod-valor':'orcProdValor',
+      'proj-orc-pos-desc':'orcPosDesc','proj-orc-pos-valor':'orcPosValor',
+      'proj-orc-div-desc':'orcDivDesc','proj-orc-div-valor':'orcDivValor',
+      'proj-orc-adm-desc':'orcAdmDesc','proj-orc-adm-valor':'orcAdmValor',
+      'proj-dist-publico':'distPublico','proj-dist-metas':'distMetas','proj-dist-municipios':'distMunicipios','proj-dist-festivais':'distFestivais',
+      'proj-mid-cartaz-formato':'midCartazFormato','proj-mid-cartaz-esp':'midCartazEsp',
+      'proj-mid-flyer-formato':'midFlyerFormato','proj-mid-flyer-esp':'midFlyerEsp',
+      'proj-mid-social-formato':'midSocialFormato','proj-mid-social-esp':'midSocialEsp',
+      'proj-mid-press-formato':'midPressFormato','proj-mid-press-esp':'midPressEsp'
+    };
+    Object.entries(map).forEach(([id, key]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const val = d[key];
+      if (el.type === 'checkbox') el.checked = !!val;
+      else el.value = val || '';
+    });
+    this._atualizarOrcTotal();
+  },
+
+  _atualizarOrcTotal() {
+    const ids = ['proj-orc-pre-valor','proj-orc-prod-valor','proj-orc-pos-valor','proj-orc-div-valor','proj-orc-adm-valor'];
+    const total = ids.reduce((sum, id) => {
+      const v = parseFloat((document.getElementById(id)?.value || '0').replace(/\./g,'').replace(',','.'));
+      return sum + (isNaN(v) ? 0 : v);
+    }, 0);
+    const el = document.getElementById('proj-orc-total');
+    if (el) el.textContent = 'Total: R$ ' + total.toLocaleString('pt-BR', {minimumFractionDigits:2});
+  },
+
+  salvarProjeto() {
+    const getVal = (id) => {
+      const el = document.getElementById(id);
+      if (!el) return '';
+      if (el.type === 'checkbox') return el.checked;
+      return el.value;
+    };
+    this.projetoData = {
+      nome: getVal('proj-nome'), proponente: getVal('proj-proponente'), cpf: getVal('proj-cpf'),
+      segmento: getVal('proj-segmento'), produto: getVal('proj-produto'), valor: getVal('proj-valor'), periodo: getVal('proj-periodo'),
+      resumo: getVal('proj-resumo'), objGeral: getVal('proj-obj-geral'), objEspec: getVal('proj-obj-espec'), justificativa: getVal('proj-justificativa'),
+      eqDirecao: getVal('proj-equipe-direcao'), eqAnimacao: getVal('proj-equipe-animacao'), eqArte: getVal('proj-equipe-arte'),
+      eqTrilha: getVal('proj-equipe-trilha'), eqProducao: getVal('proj-equipe-producao'),
+      divRedes: getVal('proj-div-redes'), divImprensa: getVal('proj-div-imprensa'), divMaterial: getVal('proj-div-material'),
+      acessLibras: getVal('proj-acess-libras'), acessAudio: getVal('proj-acess-audio'), acessLegendas: getVal('proj-acess-legendas'), acessSessoes: getVal('proj-acess-sessoes'),
+      contaSocial: getVal('proj-conta-social'), contaCultural: getVal('proj-conta-cultural'), contaImagem: getVal('proj-conta-imagem'),
+      orcPreDesc: getVal('proj-orc-pre-desc'), orcPreValor: getVal('proj-orc-pre-valor'),
+      orcProdDesc: getVal('proj-orc-prod-desc'), orcProdValor: getVal('proj-orc-prod-valor'),
+      orcPosDesc: getVal('proj-orc-pos-desc'), orcPosValor: getVal('proj-orc-pos-valor'),
+      orcDivDesc: getVal('proj-orc-div-desc'), orcDivValor: getVal('proj-orc-div-valor'),
+      orcAdmDesc: getVal('proj-orc-adm-desc'), orcAdmValor: getVal('proj-orc-adm-valor'),
+      distPublico: getVal('proj-dist-publico'), distMetas: getVal('proj-dist-metas'), distMunicipios: getVal('proj-dist-municipios'), distFestivais: getVal('proj-dist-festivais'),
+      midCartazFormato: getVal('proj-mid-cartaz-formato'), midCartazEsp: getVal('proj-mid-cartaz-esp'),
+      midFlyerFormato: getVal('proj-mid-flyer-formato'), midFlyerEsp: getVal('proj-mid-flyer-esp'),
+      midSocialFormato: getVal('proj-mid-social-formato'), midSocialEsp: getVal('proj-mid-social-esp'),
+      midPressFormato: getVal('proj-mid-press-formato'), midPressEsp: getVal('proj-mid-press-esp')
+    };
+    localStorage.setItem('fw_projeto', JSON.stringify(this.projetoData));
+    this.isModified = true;
+    this.updateIndicator();
+  },
+
+  exportProjetoPDF() {
+    this.salvarProjeto();
+    const d = this.projetoData || {};
+    const p = (v) => v || '';
+    const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Projeto Cultural</title>' +
+      '<style>body{font-family:Arial,sans-serif;font-size:11pt;margin:40px}h1{font-size:14pt}h2{font-size:12pt;margin-top:20px}' +
+      'table{width:100%;border-collapse:collapse;margin:10px 0}td,th{border:1px solid #ccc;padding:6px;text-align:left}th{background:#eee}' +
+      '.rubrica{text-align:right;font-weight:bold}</style></head><body>' +
+      '<h1>Projeto Cultural</h1>' +
+      '<h2>1. Dados do Proponente e Projeto</h2>' +
+      '<table><tr><td><b>Nome:</b> ' + p(d.nome) + '</td><td><b>Proponente:</b> ' + p(d.proponente) + '</td></tr>' +
+      '<tr><td><b>CPF:</b> ' + p(d.cpf) + '</td><td><b>Segmento:</b> ' + p(d.segmento) + '</td></tr>' +
+      '<tr><td><b>Produto:</b> ' + p(d.produto) + '</td><td><b>Valor:</b> R$ ' + p(d.valor) + '</td></tr></table>' +
+      '<h2>2. Perfil</h2><p><b>Resumo:</b> ' + p(d.resumo) + '</p>' +
+      '<p><b>Objetivo Geral:</b> ' + p(d.objGeral) + '</p>' +
+      '<p><b>Justificativa:</b> ' + p(d.justificativa) + '</p>' +
+      '<h2>3. Equipe</h2><p>Direção: ' + p(d.eqDirecao) + '<br>Animação: ' + p(d.eqAnimacao) + '<br>Arte: ' + p(d.eqArte) + '<br>Trilha: ' + p(d.eqTrilha) + '<br>Produção: ' + p(d.eqProducao) + '</p>' +
+      '<h2>4. Divulgação</h2><p>' + p(d.divRedes) + '</p>' +
+      '<h2>5. Acessibilidade</h2><p>Libras: ' + (d.acessLibras ? 'Sim' : 'Não') + ' | Audiodescrição: ' + (d.acessAudio ? 'Sim' : 'Não') + ' | Legendas: ' + (d.acessLegendas ? 'Sim' : 'Não') + '</p>' +
+      '<h2>6. Contrapartidas</h2><p><b>Social:</b> ' + p(d.contaSocial) + '<br><b>Cultural (CC):</b> ' + p(d.contaCultural) + '</p>' +
+      '<h2>7. Orçamento</h2><table><tr><th>Rubrica</th><th>Valor</th></tr>' +
+      '<tr><td>Pré-Produção</td><td>R$ ' + p(d.orcPreValor) + '</td></tr>' +
+      '<tr><td>Produção</td><td>R$ ' + p(d.orcProdValor) + '</td></tr>' +
+      '<tr><td>Pós-Produção</td><td>R$ ' + p(d.orcPosValor) + '</td></tr>' +
+      '<tr><td>Divulgação</td><td>R$ ' + p(d.orcDivValor) + '</td></tr>' +
+      '<tr><td>Despesas Adm.</td><td>R$ ' + p(d.orcAdmValor) + '</td></tr></table>' +
+      '<h2>9. Distribuição</h2><p><b>Público:</b> ' + p(d.distPublico) + '<br><b>Municípios:</b> ' + p(d.distMunicipios) + '</p>' +
+      '<p style="text-align:center;margin-top:40px;color:#999;font-size:9pt">Gerado por Fountain Writer</p>' +
+      '</body></html>';
+    const w = window.open('', '', 'width=800,height=600');
+    w.document.write(html); w.document.close(); w.focus();
+    w.print();
+  },
+
   /* ── File I/O ── */
   async newFile() {
     if (this.editor.value.trim()) {
@@ -954,6 +1094,7 @@ const app = {
       sceneColors: this.sceneColors,
       acts: this.getActs(),
       lineMarks: this.getLineMarks(),
+      projeto: this.projetoData,
       darkMode: this.darkMode,
       wordGoal: this.wordGoal,
       fontSize: this.fontSize,
@@ -1021,6 +1162,7 @@ const app = {
           if (data.timelineVisible !== undefined) this.timelineVisible = data.timelineVisible;
           if (data.focusOn) { this.focusOn = data.focusOn; document.body.classList.toggle('focus-mode', this.focusOn); }
           if (data.lang) { lang = data.lang; localStorage.setItem('fw_lang', lang); }
+          if (data.projeto) { this.projetoData = data.projeto; localStorage.setItem('fw_projeto', JSON.stringify(data.projeto)); }
           localStorage.setItem('fw_title', JSON.stringify(this.titleData));
           localStorage.setItem('fw_beats', JSON.stringify(this.beats));
           localStorage.setItem('fw_project_name', this.projectName);

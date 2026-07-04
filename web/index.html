@@ -33,6 +33,7 @@
     <span class="sep"></span>
     <button onclick="app.editProjectName()" id="project-name" data-i18n="tb_project_name">📁 Sem título</button>
     <button onclick="app.toggleTimeline()" data-i18n="tb_timeline">📊 Trama</button>
+    <button onclick="app.toggleProjeto()" id="projeto-btn">📋 Roteiro</button>
     <button onclick="app.toggleSound()" id="sound-btn" data-i18n="tb_sound">🔇 Som</button>
     <button onclick="app.copyScript()" id="copy-btn" title="Copiar roteiro">📋</button>
     <button onclick="app.toggleFocus()" data-i18n="tb_focus">🎯 Foco</button>
@@ -61,6 +62,125 @@
     <div id="pane-center" class="pane">
       <div id="textarea-wrap"><textarea id="editor" data-i18n-placeholder="editor_placeholder"></textarea></div>
       <div id="preview-wrap"><div id="preview"></div></div>
+      <div id="projeto-form" style="display:none;padding:20px 40px;overflow-y:auto;flex:1;background:var(--editor-bg)">
+        <h2 style="margin-bottom:16px;font-size:13pt">Projeto Cultural</h2>
+        <!-- 1. Dados do Projeto -->
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">1. Dados do Proponente e Projeto ▸</h3>
+          <div class="proj-corpo">
+            <div class="proj-linha"><label>Nome do Projeto</label><input type="text" id="proj-nome" style="flex:1"></div>
+            <div class="proj-linha"><label>Proponente</label><input type="text" id="proj-proponente" style="flex:1"></div>
+            <div class="proj-linha"><label>CPF</label><input type="text" id="proj-cpf" style="flex:1" placeholder="000.000.000-00"></div>
+            <div class="proj-linha"><label>Segmento Cultural</label><input type="text" id="proj-segmento" style="flex:1"></div>
+            <div class="proj-linha"><label>Produto Cultural</label><input type="text" id="proj-produto" style="flex:1"></div>
+            <div class="proj-linha"><label>Valor Solicitado (R$)</label><input type="text" id="proj-valor" style="flex:1" placeholder="180.000,00"></div>
+            <div class="proj-linha"><label>Período (meses)</label><input type="number" id="proj-periodo" style="flex:1;width:80px" value="12"></div>
+          </div>
+        </div>
+        <!-- 2. Perfil -->
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">2. Perfil do Projeto ▸</h3>
+          <div class="proj-corpo">
+            <div class="proj-linha"><label>Resumo</label><textarea id="proj-resumo" rows="4" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label>Objetivo Geral</label><textarea id="proj-obj-geral" rows="3" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label>Objetivos Específicos</label><textarea id="proj-obj-espec" rows="3" style="flex:1" placeholder="Um por linha"></textarea></div>
+            <div class="proj-linha"><label>Justificativa</label><textarea id="proj-justificativa" rows="5" style="flex:1"></textarea></div>
+          </div>
+        </div>
+        <!-- 3. Equipe -->
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">3. Equipe Principal ▸</h3>
+          <div class="proj-corpo">
+            <div class="proj-linha"><label>Direção e Roteiro</label><input type="text" id="proj-equipe-direcao" style="flex:1"></div>
+            <div class="proj-linha"><label>Direção de Animação</label><input type="text" id="proj-equipe-animacao" style="flex:1"></div>
+            <div class="proj-linha"><label>Direção de Arte</label><input type="text" id="proj-equipe-arte" style="flex:1"></div>
+            <div class="proj-linha"><label>Trilha Sonora</label><input type="text" id="proj-equipe-trilha" style="flex:1"></div>
+            <div class="proj-linha"><label>Coordenação de Produção</label><input type="text" id="proj-equipe-producao" style="flex:1"></div>
+          </div>
+        </div>
+        <!-- 4. Divulgação -->
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">4. Plano de Divulgação e Mídia ▸</h3>
+          <div class="proj-corpo">
+            <div class="proj-linha"><label>Redes Sociais</label><textarea id="proj-div-redes" rows="3" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label>Assessoria de Imprensa</label><textarea id="proj-div-imprensa" rows="3" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label>Material Gráfico</label><textarea id="proj-div-material" rows="3" style="flex:1" placeholder="Cartaz, filipetas, etc"></textarea></div>
+          </div>
+        </div>
+        <!-- 5. Acessibilidade -->
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">5. Acessibilidade e Democratização ▸</h3>
+          <div class="proj-corpo">
+            <div class="proj-linha"><label>Intérprete de Libras</label><input type="checkbox" id="proj-acess-libras" style="width:auto"></div>
+            <div class="proj-linha"><label>Audiodescrição</label><input type="checkbox" id="proj-acess-audio" style="width:auto"></div>
+            <div class="proj-linha"><label>Legendas Descritivas</label><input type="checkbox" id="proj-acess-legendas" style="width:auto"></div>
+            <div class="proj-linha"><label>Sessões Gratuitas</label><textarea id="proj-acess-sessoes" rows="2" style="flex:1" placeholder="Quantidade e locais"></textarea></div>
+          </div>
+        </div>
+        <!-- 6. Contrapartidas -->
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">6. Contrapartidas ▸</h3>
+          <div class="proj-corpo">
+            <div class="proj-linha"><label>Social/Educacional</label><textarea id="proj-conta-social" rows="3" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label>Cultural (Creative Commons)</label><textarea id="proj-conta-cultural" rows="3" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label>Imagem do Patrocinador</label><textarea id="proj-conta-imagem" rows="2" style="flex:1"></textarea></div>
+          </div>
+        </div>
+        <!-- 7. Orçamento -->
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">7. Orçamento Detalhado ▸</h3>
+          <div class="proj-corpo">
+            <div style="display:grid;grid-template-columns:2fr 1fr 80px;gap:8px;font-weight:bold;font-size:9pt;margin-bottom:6px;color:var(--fg-sec)">
+              <span>Rubrica</span><span>Descrição</span><span>Valor (R$)</span>
+            </div>
+            <div class="proj-linha"><label>Pré-Produção</label><input type="text" id="proj-orc-pre-desc" style="flex:1" placeholder="Descrição"><input type="text" id="proj-orc-pre-valor" style="width:100px" placeholder="0,00"></div>
+            <div class="proj-linha"><label>Produção</label><input type="text" id="proj-orc-prod-desc" style="flex:1" placeholder="Descrição"><input type="text" id="proj-orc-prod-valor" style="width:100px" placeholder="0,00"></div>
+            <div class="proj-linha"><label>Pós-Produção</label><input type="text" id="proj-orc-pos-desc" style="flex:1" placeholder="Descrição"><input type="text" id="proj-orc-pos-valor" style="width:100px" placeholder="0,00"></div>
+            <div class="proj-linha"><label>Divulgação</label><input type="text" id="proj-orc-div-desc" style="flex:1" placeholder="Descrição"><input type="text" id="proj-orc-div-valor" style="width:100px" placeholder="0,00"></div>
+            <div class="proj-linha"><label>Despesas Adm.</label><input type="text" id="proj-orc-adm-desc" style="flex:1" placeholder="Descrição"><input type="text" id="proj-orc-adm-valor" style="width:100px" placeholder="0,00"></div>
+            <div style="text-align:right;font-weight:bold;margin-top:4px" id="proj-orc-total">Total: R$ 0,00</div>
+          </div>
+        </div>
+        <!-- 8. Cronograma -->
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">8. Cronograma de Execução ▸</h3>
+          <div class="proj-corpo" style="overflow-x:auto">
+            <div id="proj-cronograma" style="display:grid;grid-template-columns:140px repeat(12,1fr);gap:2px;font-size:8pt;min-width:600px">
+              <div style="font-weight:bold;color:var(--fg-sec)">Etapa / Mês</div>
+              <script>for(let m=1;m<=12;m++)document.write('<div style="text-align:center;font-weight:bold;color:var(--fg-sec)">'+m+'</div>')</script>
+              <script>
+                const etapas=['Pré-Produção','Produção','Pós-Produção','Divulgação','Exibições/Oficina','Prestação de Contas'];
+                const meses=[[0,1],[2,3],[4,5],[2,11],[10,10],[11,11]];
+                etapas.forEach((e,i)=>{
+                  document.write('<div style="font-size:8pt">'+e+'</div>');
+                  for(let m=0;m<12;m++){
+                    const ativo=m>=meses[i][0]&&m<=meses[i][1];
+                    document.write('<div style="background:'+(ativo?'var(--accent)':'transparent')+';border-radius:2px;min-height:18px"></div>');
+                  }
+                });
+              </script>
+            </div>
+          </div>
+        </div>
+        <!-- 9. Plano de Distribuição -->
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">9. Plano de Distribuição ▸</h3>
+          <div class="proj-corpo">
+            <div class="proj-linha"><label>Público-Alvo</label><textarea id="proj-dist-publico" rows="3" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label>Metas de Alcance</label><textarea id="proj-dist-metas" rows="3" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label>Municípios</label><input type="text" id="proj-dist-municipios" style="flex:1" placeholder="Separados por vírgula"></div>
+            <div class="proj-linha"><label>Festivais</label><textarea id="proj-dist-festivais" rows="2" style="flex:1"></textarea></div>
+          </div>
+        </div>
+        <!-- 10. Mídia / Especificações Técnicas -->
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">10. Especificações Técnicas das Peças ▸</h3>
+          <div class="proj-corpo">
+            <div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:8px;font-weight:bold;font-size:9pt;margin-bottom:6px;color:var(--fg-sec)">
+              <span>Tipo</span><span>Formato</span><span>Especificações</span>
+            </div>
+            <div class="proj-linha"><label>Cartaz</label><input type="text" id="proj-mid-cartaz-formato" style="flex:1" placeholder="A3"><input type="text" id="proj-mid-cartaz-esp" style="flex:2" placeholder="Especificações"></div>
+            <div class="proj-linha"><label>Filipeta</label><input type="text" id="proj-mid-flyer-formato" style="flex:1" placeholder="A5"><input type="text" id="proj-mid-flyer-esp" style="flex:2" placeholder="Especificações"></div>
+            <div class="proj-linha"><label>Social Media</label><input type="text" id="proj-mid-social-formato" style="flex:1" placeholder="1080x1080"><input type="text" id="proj-mid-social-esp" style="flex:2" placeholder="Especificações"></div>
+            <div class="proj-linha"><label>Press-kit</label><input type="text" id="proj-mid-press-formato" style="flex:1" placeholder="PDF"><input type="text" id="proj-mid-press-esp" style="flex:2" placeholder="Especificações"></div>
+          </div>
+        </div>
+        <!-- Ações -->
+        <div style="display:flex;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+          <button onclick="app.salvarProjeto()">💾 Salvar Dados</button>
+          <button onclick="app.exportProjetoPDF()">🖨 Exportar PDF</button>
+        </div>
+      </div>
     </div>
 
     <div id="pane-right" class="pane">
