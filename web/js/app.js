@@ -962,10 +962,15 @@ const app = {
       charData: JSON.parse(localStorage.getItem('fw_char_data') || '{}'),
       sceneColors: this.sceneColors,
       acts: this.getActs(),
+      lineMarks: this.getLineMarks(),
       darkMode: this.darkMode,
       wordGoal: this.wordGoal,
       fontSize: this.fontSize,
       soundOn: this.soundOn,
+      timelineVisible: this.timelineVisible,
+      previewMode: this.previewMode,
+      focusOn: this.focusOn,
+      lang: lang,
       updated: new Date().toISOString()
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -996,6 +1001,10 @@ const app = {
           if (data.fontSize !== undefined) { this.fontSize = data.fontSize; this.applyFontSize(); }
           if (data.soundOn !== undefined) { this.soundOn = data.soundOn; localStorage.setItem('fw_sound', data.soundOn ? 'true' : 'false'); }
           if (data.acts) localStorage.setItem('fw_acts', JSON.stringify(data.acts));
+          if (data.lineMarks) localStorage.setItem('fw_line_marks', JSON.stringify(data.lineMarks));
+          if (data.timelineVisible !== undefined) this.timelineVisible = data.timelineVisible;
+          if (data.focusOn) { this.focusOn = data.focusOn; document.body.classList.toggle('focus-mode', this.focusOn); }
+          if (data.lang) { lang = data.lang; localStorage.setItem('fw_lang', lang); }
           localStorage.setItem('fw_title', JSON.stringify(this.titleData));
           localStorage.setItem('fw_beats', JSON.stringify(this.beats));
           localStorage.setItem('fw_project_name', this.projectName);
