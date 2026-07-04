@@ -936,7 +936,7 @@ const app = {
       const onclick = btn.getAttribute('onclick');
       const text = btn.textContent;
       if (onclick && text) {
-        html.push(`<button onclick="${onclick}">${text}</button>`);
+        html.push(`<button onclick="${onclick};app.toggleMenu()">${text}</button>`);
       }
     });
     drawer.innerHTML = html.join('');
