@@ -1,92 +1,91 @@
-# Fountain Writer
+# Fountain Writer — Editor de Roteiros Fountain
 
-Editor de roteiros no formato **Fountain** — duas versões: **Desktop (PySide6)** e **Web (HTML/CSS/JS)**.
+**Editor Fountain em HTML/CSS/JS puro. Zero dependências. Funciona em qualquer navegador.**
 
-[![Forgejo MIRROR](https://img.shields.io/badge/Mirror-Forgejo-orange?logo=gitea)](https://repo.rizomatico.org/ricograca/Fountain-Writer-Tool)
-
----
-
-## Escolha sua versão
-
-| Versão | Stack | Como usar |
-|--------|-------|-----------|
-| **Desktop** (`desktop/`) | PySide6 (Qt6) | `pip install PySide6 reportlab` → `python3 desktop/main.py` |
-| **Web** (`web/`) | HTML5 + CSS3 + JS | Abrir `web/index.html` no navegador |
+Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 
 ---
 
-## Desktop — `desktop/`
+## Funcionalidades
 
-Editor desktop com syntax highlighting, navegador de cenas, beat board, busca/substituição, modo foco, export PDF, temas claro/escuro.
+| Funcionalidade | Descrição |
+|---|---|
+| **Editor** | Textarea com auto-save a cada 10s (localStorage) |
+| **Preview** | Live rendering Fountain (CHARACTER 37%, DIALOGUE 20%) |
+| **Sidebar de cenas** | Lista com separadores visuais de ato (Ato 1–7 fixos, ✕ para remover) |
+| **Atribuição por beat** | Muda o ato da cena pelo modal do beat — sidebar atualiza |
+| **Beats** | CRUD com plotline (Principal/A/B), inserção no texto (↗), drag reorder |
+| **Timeline** | Grid atos × tramas, mostra cenas em cada célula |
+| **Personagens** | Extraídos automaticamente, com editor de perfil |
+| **Locais** | Extraídos automaticamente do texto |
+| **Find/Replace** | Case-sensitive, replace all |
+| **Folha de rosto** | Formulário salvo em localStorage |
+| **Side-by-side** | Editor / Preview / Split (👁) |
+| **Temas** | Claro/escuro (detecção automática + manual) |
+| **Idiomas** | Português / English (recarrega) |
+| **Export HTML** | Download .html formatado |
+| **Export PDF** | Via impressão do navegador |
+| **⬇ Fountain** | Download .fountain (texto puro) |
+| **📄 Importar** | Importa .fountain (texto puro) |
+| **📂 Abrir** | Abre projeto .fountain.json |
+| **💾 Salvar** | Salva projeto completo .json |
+| **Pomodoro** | Timer de escrita + Pomodoro 25min |
+| **Metas diárias** | Meta de palavras com progresso |
+| **Highlights** | Marcação colorida por linha (Ctrl+1/2/3) |
+| **Auto-backup** | A cada 5min, 10 versões, com restore |
+| **Estatísticas** | Cenas, palavras, top personagens |
+| **Gráfico** | Produtividade dos últimos 7 dias |
+| **Som** | Efeito sonoro de teclas (toggle) |
+| **Zoom** | Ctrl+=/-/0 para ajustar fonte |
+| **Foco** | F11: esconde painéis, só o editor |
+| **Atalhos** | Ctrl+B/I/U (bold/italic/underline) |
 
-```
-desktop/
-├── main.py              ← Entry point
-├── app/
-│   ├── main_window.py   ← QMainWindow
-│   ├── editor/          ← QPlainTextEdit, highlighter, line numbers
-│   ├── dockers/         ← Scene navigator, beat board, character/location
-│   ├── dialogs/         ← Find/replace, title page, help
-│   ├── models/          ← Fountain parser + meta
-│   └── core/            ← Config, i18n, theme, exporter
-```
+## 💾 Sobre Salvar
 
-**Requisitos:** `pip install PySide6 reportlab`
+O Fountain Writer usa dois sistemas de persistência:
 
-```bash
-python3 desktop/main.py
-```
+| Método | O que salva | Quando |
+|---|---|---|
+| **localStorage** | Texto + beats + atos | Auto-save a cada 10s |
+| **Backup** | Texto + beats + atos | A cada 5min (10 versões) |
+| **💾 Salvar** | Projeto completo .json | Manual |
 
----
+**💾 Salvar no Chrome/Edge/Opera:**
+- 1ª vez: abre diálogo "Salvar como" (escolha a pasta)
+- 2ª vez em diante: salva **no mesmo arquivo**, sem perguntar
 
-## Web — `web/`
+**💾 Salvar no Firefox/Safari:**
+- Sempre baixa o .fountain.json para a pasta de Downloads
 
-Versão para navegador com preview ao vivo, pomodoro timer, timeline de beats, gráfico de produtividade, temas, i18n. Zero dependências (para uso local).
+**Proteção contra perda de dados:**
+- Antes de fechar/recarregar, se houver alterações, o navegador pergunta "Tem certeza?"
+- Lembrete "💾 Salve seu projeto" na barra de status até o primeiro save
+- Backups restauráveis via botão 💾 Backups
 
-```
-web/
-├── index.html           ← Página principal
-├── css/app.css          ← Tema claro/escuro
-├── js/                  ← app.js, fountain-parser.js, i18n.js
-├── server.py            ← FastAPI (PDF export opcional)
-├── Dockerfile           ← Container da API
-└── docker-compose.yml   ← Orquestração
-```
+## Como usar
 
-**Uso local:** abrir `web/index.html` no navegador.
+Abra `web/index.html` em qualquer navegador moderno.
 
-**API (PDF/HTML):**
+### Deploy estático
+
+Copie a pasta `deploy/` para o servidor FTP.
+
+### Docker (API opcional para PDF/HTML)
+
 ```bash
 cd web
 docker compose up -d
 # http://localhost:8000
 ```
 
----
+## Tecnologias
 
-## Recursos compartilhados
+HTML5, CSS3, JavaScript (ES6+), localStorage, File System Access API.
 
-- `resources/lang/` — Traduções PT-BR / EN
-- `resources/styles/` — QSS temas claro/escuro
-- `imagens/` — Screenshots
+## Imagens
 
----
+![Fountain Writer](imagens/2-0/Fountain_Writer_2-0_1.png)
+*Editor com sidebar de cenas e timeline*
 
-## ⌨️ Atalhos (Desktop)
-
-| Atalho | Ação |
-|--------|------|
-| `Ctrl+S` | Salvar |
-| `Ctrl+O` | Abrir |
-| `Ctrl+N` | Novo |
-| `Ctrl+H/F` | Buscar e substituir |
-| `F11` | Modo foco |
-| `Esc` | Sair do modo foco |
-| `Ctrl+↑/↓` | Rolar 55 linhas |
-
----
-
-### Imagens
-
-![Fountain Writer v2.0](imagens/2-0/Fountain_Writer_2-0_1.png)
-![Fountain Writer v2.0 preview](imagens/2-0/Fountain_Writer_2-0_2.png)
+![Fountain Writer preview](imagens/2-0/Fountain_Writer_2-0_2.png)
+*Preview ao vivo com formatação Fountain*
