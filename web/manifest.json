@@ -1,0 +1,10 @@
+{
+  "name": "Fountain Writer",
+  "short_name": "Fountain",
+  "description": "Editor de roteiros no formato Fountain",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f5f5f0",
+  "theme_color": "#888888",
+  "icons": []
+}

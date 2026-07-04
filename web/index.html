@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Fountain Writer</title>
+<link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -33,6 +34,7 @@
     <button onclick="app.toggleTimeline()" style="font-size:9pt" data-i18n="tb_timeline">📊 Trama</button>
     <span class="spacer"></span>
     <button onclick="app.toggleSound()" id="sound-btn" style="font-size:9pt" data-i18n="tb_sound">🔇 Som</button>
+    <button onclick="app.copyScript()" id="copy-btn" title="Copiar roteiro">📋</button>
     <button onclick="app.toggleFocus()" data-i18n="tb_focus">🎯 Foco</button>
     <button onclick="app.toggleTheme()">🌗</button>
     <button onclick="app.openHelp()">❓</button>

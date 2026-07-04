@@ -1070,6 +1070,14 @@ const app = {
     this.displayTimer();
   },
 
+  /* ── Copy ── */
+  copyScript() {
+    navigator.clipboard.writeText(this.editor.value).then(() => {
+      const btn = document.getElementById('copy-btn');
+      if (btn) { btn.textContent = '✓'; setTimeout(() => { btn.textContent = '📋'; }, 2000); }
+    }).catch(() => {});
+  },
+
   tick() {
     if (this.timerMode === 'writing') {
       this.timerSec++;
@@ -1091,9 +1099,14 @@ const app = {
     const el = document.getElementById('timer-display');
     if (!el) return;
     if (this.timerMode === 'writing') {
-      const m = Math.floor(this.timerSec / 60);
-      const s = this.timerSec % 60;
-      el.textContent = '⏱ ' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+      const h = Math.floor(this.timerSec / 3600);
+      const r = this.timerSec % 3600;
+      const m = Math.floor(r / 60);
+      const s = r % 60;
+      if (h > 0)
+        el.textContent = '⏱ ' + h + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+      else
+        el.textContent = '⏱ ' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
     } else {
       const m = Math.floor(this.pomodoroSec / 60);
       const s = this.pomodoroSec % 60;
