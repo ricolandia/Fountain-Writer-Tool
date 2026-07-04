@@ -100,7 +100,7 @@ const app = {
     document.getElementById('scene-count').textContent = scenes.length;
     this._sceneActMap = {};
     scenes.forEach(s => {
-      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label);
+      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label + '|L' + s.line || b.scene_ref === s.label);
       this._sceneActMap[s.line] = beat ? (beat.act || 'Ato 1') : null;
     });
     this.renderSceneList(scenes);
@@ -159,7 +159,7 @@ const app = {
       const mc = {'!':'#fff3b0', '*':'#c8e6c9', '?':'#ffcdd2'};
       li.style.backgroundColor = mc[marks[s.line]] || '';
     }
-    const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label);
+    const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label + '|L' + s.line || b.scene_ref === s.label);
     let plot = beat ? beat.plotline || 'Principal' : '';
     if (plot === 'C' || plot === 'D') plot = 'B';
     li.innerHTML = (i + 1) + '. ' + esc(s.label) +
@@ -600,21 +600,22 @@ const app = {
   /* ── Auto-sync beats from scenes ── */
   syncBeatsFromScenes(text) {
     const lines = text.split('\n');
-    const sceneHeadings = [];
+    const sceneData = [];
     let prev = 'ACTION';
-    lines.forEach(line => {
+    lines.forEach((line, i) => {
       const t = guessType(line, prev);
       if (t === 'SCENE') {
         const clean = line.trim().replace(/^\./, '');
-        sceneHeadings.push(clean);
+        sceneData.push({ heading: clean, line: i });
       }
       if (t !== 'BLANK') prev = t;
     });
     let changed = false;
-    sceneHeadings.forEach(heading => {
-      const exists = this.beats.some(b => b.title === heading || b.scene_ref === heading);
+    sceneData.forEach(({ heading, line }) => {
+      const uniqueRef = heading + '|L' + line;
+      const exists = this.beats.some(b => b.title === heading || b.scene_ref === uniqueRef || b.scene_ref === heading);
       if (!exists) {
-        this.beats.push({ title: heading, act: 'Ato 1', desc: '', scene_ref: heading, order: this.beats.length, auto: true, plotline: 'Principal' });
+        this.beats.push({ title: heading, act: 'Ato 1', desc: '', scene_ref: uniqueRef, order: this.beats.length, auto: true, plotline: 'Principal' });
         changed = true;
       }
     });
@@ -649,7 +650,11 @@ const app = {
     });
 
     const acts = this.getActs();
-    const actNames = Object.keys(acts);
+    const actNames = Object.keys(acts).sort((a, b) => {
+      const na = parseInt(a.match(/\d+/)) || 0;
+      const nb = parseInt(b.match(/\d+/)) || 0;
+      return na - nb;
+    });
     const plotlines = ['Principal', 'A', 'B'];
     const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
     const plotColors = {'Principal':'#569cd6','A':'#ce9178','B':'#4ec9b0'};
@@ -657,7 +662,7 @@ const app = {
     // Map scene → plotline (from matching beats)
     const scenePlot = {};
     scenes.forEach(s => {
-      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label);
+      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label + '|L' + s.line || b.scene_ref === s.label);
       let pl = beat ? beat.plotline || 'Principal' : 'Principal';
       if (pl === 'C' || pl === 'D') pl = 'B';
       scenePlot[s.line] = pl;
@@ -666,7 +671,7 @@ const app = {
     // Map scene → act (from beats)
     const sceneAct = {};
     scenes.forEach(s => {
-      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label);
+      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label + '|L' + s.line || b.scene_ref === s.label);
       sceneAct[s.line] = beat ? (beat.act || 'Ato 1') : null;
     });
 
