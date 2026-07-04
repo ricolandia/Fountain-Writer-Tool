@@ -189,9 +189,11 @@ const app = {
 
   _findBeatForScene(label, line) {
     const ref = label + '|L' + line;
-    // Exact scene_ref first — unambiguous even with duplicate headings.
-    // Only fall back to title/legacy scene_ref when no beat is precisely
-    // linked to this scene's line.
+    // Exact scene_ref match first: it's the only unambiguous key when
+    // multiple scenes share the same heading. Only fall back to matching
+    // by title/legacy scene_ref when no beat is precisely linked to this
+    // scene's line — otherwise duplicate-titled scenes could resolve to
+    // whichever beat happens to come first in the array.
     return this.beats.find(b => b.scene_ref === ref) ||
       this.beats.find(b => b.title === label || b.scene_ref === label);
   },
@@ -597,10 +599,14 @@ const app = {
     if (!title) return;
     const idx = this._editingBeatIdx;
     if (idx >= 0 && idx < this.beats.length) {
-      // Preserve scene_ref — don't re-derive by scanning text.
-      // Recalculating scene_ref from the heading text breaks when
-      // multiple scenes share the same heading: it always finds the
-      // FIRST occurrence, relinking this beat to the wrong scene.
+      // Preserve the scene this beat is already linked to (scene_ref's line
+      // number never changes here). Re-deriving scene_ref by searching the
+      // text for a scene whose label matches the (possibly just-edited)
+      // title breaks as soon as two scenes share a heading: it always finds
+      // the FIRST matching occurrence in the document, silently relinking
+      // the beat to the wrong scene and orphaning the real one — which is
+      // what caused the act update to land on the wrong scene and the
+      // orphaned scene to be re-created as a duplicate beat on next sync.
       this.beats[idx].title = title;
       this.beats[idx].act = act;
       this.beats[idx].plotline = plot;
