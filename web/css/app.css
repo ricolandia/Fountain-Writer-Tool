@@ -58,8 +58,7 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
   border-left: 1px solid var(--border); }
 
 /* ── Textarea / Preview ── */
-#textarea-wrap { flex: 1; padding: 40px 60px; background: var(--editor-bg); overflow: auto; position: relative; }
-#act-markers { position: absolute; top: 40px; left: 60px; right: 60px; bottom: 0; pointer-events: none; z-index: 5; }
+#textarea-wrap { flex: 1; padding: 40px 60px; background: var(--editor-bg); overflow: auto; }
 #editor { width: 100%; height: 100%; border: none; resize: none; outline: none;
   background: transparent; color: var(--fg);
   font: 12pt 'Courier New', Courier, monospace; line-height: 1.2; }

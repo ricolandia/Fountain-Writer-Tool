@@ -55,7 +55,6 @@ const app = {
     this.renderProductivity();
     this.initAutoSave();
     this.initBackup();
-    this.editor.addEventListener('scroll', () => this.renderActMarkers());
     this.update();
     this.syncBeatsFromScenes(this.editor.value);
     this.renderBeats();
@@ -72,7 +71,6 @@ const app = {
     this.updateStats(text);
     this.updatePreview(text);
     this.renderTimeline();
-    this.renderActMarkers();
     // Debounced beat sync (only after user pauses typing)
     clearTimeout(this._syncTimer);
     this._syncTimer = setTimeout(() => this.syncBeatsFromScenes(text), 1500);
@@ -595,7 +593,7 @@ const app = {
     // Ensure act exists in fw_acts
     const fwActs = this.getActs();
     if (!fwActs[act]) { fwActs[act] = []; this.saveActs(fwActs); }
-    this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value); this.renderActMarkers();
+    this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value);
     this.closeBeatModal();
   },
 
@@ -606,7 +604,7 @@ const app = {
 
   addBeat() { this.openBeatModal(-1); },
   editBeat(i) { this.openBeatModal(i); },
-  deleteBeat(i) { this.beats.splice(i, 1); this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value); this.renderActMarkers(); },
+  deleteBeat(i) { this.beats.splice(i, 1); this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value); },
   insertBeat(i) {
     const b = this.beats[i];
     if (!b) return;
@@ -656,7 +654,7 @@ const app = {
     // Ensure default act exists in fw_acts for auto-created beats
     const fwActs = this.getActs();
     if (!fwActs['Ato 1']) { fwActs['Ato 1'] = []; this.saveActs(fwActs); }
-    if (changed) { this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value); this.renderActMarkers(); }
+    if (changed) { this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value); }
   },
 
   /* ── Timeline grid (atos × tramas) ── */
@@ -894,50 +892,6 @@ const app = {
     this.editor.value = this.editor.value.replace(re, document.getElementById('replace-input').value);
     this.update();
     this.findDo();
-  },
-
-  /* ── Act markers overlay ── */
-  renderActMarkers() {
-    const wrap = document.getElementById('textarea-wrap');
-    const container = document.getElementById('act-markers');
-    if (!container) return;
-    container.innerHTML = '';
-    const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
-
-    // Find first scene line for each act from beats+text
-    const text = this.editor.value;
-    const scenes = this.parseScenes(text);
-
-    const actFirstLine = {};
-    if (scenes.length) {
-      scenes.forEach(s => {
-        const a = this._sceneActMap[s.line];
-        if (a && actFirstLine[a] === undefined) actFirstLine[a] = s.line;
-      });
-    }
-    // Empty acts at the end
-    const allActs = this.getActs();
-    const lastLine = scenes.length ? scenes[scenes.length - 1].line + 2 : 0;
-    this._sortActs(Object.keys(allActs)).forEach(actName => {
-      if (actFirstLine[actName] === undefined) actFirstLine[actName] = lastLine;
-    });
-
-    const sorted = Object.entries(actFirstLine).sort((a, b) => a[1] - b[1]);
-    const fontSize = this.fontSize || 12;
-    const lh = parseFloat(getComputedStyle(this.editor).lineHeight) || this.editor.getBoundingClientRect().height;
-    const sc = this.editor.scrollTop;
-    sorted.forEach(([act, line]) => {
-      const y = line * lh - sc - lh * 0.35;
-      // Only render if visible
-      if (y < -10 || y > wrap.clientHeight + 10) return;
-      const bar = document.createElement('div');
-      bar.style.cssText = 'position:absolute;top:' + y + 'px;left:0;right:0;height:0;border-top:1px dashed ' + (actColors[act] || '#888') + ';opacity:0.5';
-      const lbl = document.createElement('span');
-      lbl.style.cssText = 'position:absolute;top:' + y + 'px;left:0;font-size:7pt;color:' + (actColors[act] || '#888') + ';font-weight:bold;white-space:nowrap;transform:translateY(-50%);background:var(--editor-bg);padding:0 4px';
-      lbl.textContent = act + ' L' + line;
-      container.appendChild(bar);
-      container.appendChild(lbl);
-    });
   },
 
   /* ── File I/O ── */
