@@ -20,7 +20,7 @@ const app = {
     this.preview = document.getElementById('preview');
     const stored = localStorage.getItem('fw_draft');
     if (stored) this.editor.value = stored;
-    else this.editor.value = 'INT. ESCRITÓRIO - DIA\n\nJOÃO (CEO)\nPrecisamos de resultados!\n\nINT. CAFETERIA - DIA\n\nMARIA (secretária)\nEle nem me olha mais...\n\nEXT. PARQUE - DIA\n\nJOÃO\nO que importa é o lucro!\n\nINT. ESCRITÓRIO - DIA\n\nPEDRO (amigo)\nEla gosta de você, cara.\n\nINT. CAFETERIA - DIA\n\nJOÃO\nMaria, posso sentar?';
+    else this.editor.value = 'INT. ESCRITÓRIO - DIA\n\nJOÃO (CEO)\nPrecisamos de resultados!\n\nINT. CAFETERIA - DIA\n\nMARIA (SEC)\nEle nem me olha mais...\n\nEXT. PARQUE - DIA\n\nJOÃO\nO que importa é o lucro!\n\nINT. ESCRITÓRIO - DIA\n\nPEDRO (AMIGO)\nEla gosta de você, cara.\n\nINT. CAFETERIA - DIA\n\nJOÃO\nMaria, posso sentar?';
 
     // Tab switching
     document.querySelectorAll('#right-tabs .tab').forEach(t => {
