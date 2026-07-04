@@ -159,7 +159,7 @@ const app = {
     if (plot === 'C' || plot === 'D') plot = 'B';
     li.innerHTML = (i + 1) + '. ' + esc(s.label) +
       (plot ? ' <span style="font-size:7pt;color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '') +
-      ' <span style="font-size:6pt;color:var(--fg-sec)">L' + s.line + '</span>';
+      ' <span style="font-size:6pt;color:var(--fg-sec)">' + (this._sceneActMap[s.line] || '?') + ' L' + s.line + '</span>';
     li.dataset.line = s.line;
     li.addEventListener('click', e => {
       if (e.target.closest('.act-remove')) return;
@@ -593,7 +593,8 @@ const app = {
     // Ensure act exists in fw_acts
     const fwActs = this.getActs();
     if (!fwActs[act]) { fwActs[act] = []; this.saveActs(fwActs); }
-    this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value);
+    this.saveBeats(); this.renderBeats(); this.renderTimeline();
+    this.updateScenes(this.editor.value);
     this.closeBeatModal();
   },
 
