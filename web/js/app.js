@@ -99,10 +99,22 @@ const app = {
     });
     document.getElementById('scene-count').textContent = scenes.length;
     this._sceneActMap = {};
+    let sceneRefChanged = false;
     scenes.forEach(s => {
-      const beat = this.beats.find(b => b.scene_ref === s.label + '|L' + s.line || b.title === s.label || b.scene_ref === s.label);
-      this._sceneActMap[s.line] = beat ? (beat.act || 'Ato 1') : null;
+      const expectedRef = s.label + '|L' + s.line;
+      const beat = this.beats.find(b => b.scene_ref === expectedRef || b.title === s.label || b.scene_ref === s.label);
+      if (beat) {
+        // Update scene_ref when scene moves (copy/paste changes line numbers)
+        if (beat.scene_ref !== expectedRef && beat.scene_ref !== s.label) {
+          beat.scene_ref = expectedRef;
+          sceneRefChanged = true;
+        }
+        this._sceneActMap[s.line] = beat.act || 'Ato 1';
+      } else {
+        this._sceneActMap[s.line] = null;
+      }
     });
+    if (sceneRefChanged) this.saveBeats();
     this.renderSceneList(scenes);
   },
 
