@@ -71,9 +71,6 @@ const app = {
     this.updateStats(text);
     this.updatePreview(text);
     this.renderTimeline();
-    // Debounced beat sync (only after user pauses typing)
-    clearTimeout(this._syncTimer);
-    this._syncTimer = setTimeout(() => this.syncBeatsFromScenes(text), 1500);
     const activeTab = document.querySelector('#right-tabs .tab.active');
     const tab = activeTab ? activeTab.dataset.tab : 'beats';
     if (tab === 'chars' || tab === 'locs') this.renderCharsLocs(text);
@@ -659,9 +656,10 @@ const app = {
       if (t !== 'BLANK') prev = t;
     });
     let changed = false;
-    // Remove old-format auto beats (no unique scene_ref)
+    // Remove auto beats with stale scene_ref (old format or deleted scenes)
+    const currentRefs = new Set(sceneData.map(d => d.heading + '|L' + d.line));
     const oldLen = this.beats.length;
-    this.beats = this.beats.filter(b => !b.auto || (b.scene_ref && b.scene_ref.includes('|L')));
+    this.beats = this.beats.filter(b => !b.auto || (b.scene_ref && currentRefs.has(b.scene_ref)));
     if (this.beats.length !== oldLen) changed = true;
     const remappedRefs = new Set();
     // Count heading occurrences to only remap stale for unique headings
