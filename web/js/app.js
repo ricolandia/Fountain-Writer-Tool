@@ -634,21 +634,28 @@ const app = {
     this.beats = this.beats.filter(b => !b.auto || (b.scene_ref && b.scene_ref.includes('|L')));
     if (this.beats.length !== oldLen) changed = true;
     const remappedRefs = new Set();
+    // Count heading occurrences to only remap stale for unique headings
+    const headingCount = {};
+    sceneData.forEach(d => { headingCount[d.heading] = (headingCount[d.heading] || 0) + 1; });
     sceneData.forEach(({ heading, line }) => {
       const uniqueRef = heading + '|L' + line;
       const existing = this.beats.find(b => b.scene_ref === uniqueRef);
       if (!existing) {
-        const stale = this.beats.find(b =>
-          b.scene_ref && b.scene_ref.includes('|L') && b.title === heading && !remappedRefs.has(b.scene_ref)
-        );
-        if (stale) {
-          remappedRefs.add(stale.scene_ref);
-          stale.scene_ref = uniqueRef;
-          changed = true;
-        } else {
-          this.beats.push({ title: heading, act: 'Ato 1', desc: '', scene_ref: uniqueRef, order: this.beats.length, auto: true, plotline: 'Principal' });
-          changed = true;
+        // Only remap stale for unique headings (duplicates need their own beat)
+        const isUnique = headingCount[heading] === 1;
+        if (isUnique) {
+          const stale = this.beats.find(b =>
+            b.scene_ref && b.scene_ref.includes('|L') && b.title === heading && !remappedRefs.has(b.scene_ref)
+          );
+          if (stale) {
+            remappedRefs.add(stale.scene_ref);
+            stale.scene_ref = uniqueRef;
+            changed = true;
+            return;
+          }
         }
+        this.beats.push({ title: heading, act: 'Ato 1', desc: '', scene_ref: uniqueRef, order: this.beats.length, auto: true, plotline: 'Principal' });
+        changed = true;
       }
     });
     // Ensure default act exists in fw_acts for auto-created beats
