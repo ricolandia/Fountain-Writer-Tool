@@ -98,7 +98,9 @@ const app = {
     let dbg = '';
     scenes.forEach(s => {
       const b = this._findBeatForScene(s.label, s.line);
-      dbg += s.label.slice(0, 16) + ':' + (b ? b.act : '?') + ' ';
+      const ref = s.label + '|L' + s.line;
+      const foundBeat = b ? ('idx=' + this.beats.indexOf(b) + ' act=' + b.act + ' sr=' + b.scene_ref) : 'NONE';
+      dbg += s.label.slice(0, 12) + ':' + foundBeat + ' ';
     });
     const el = document.getElementById('dbg');
     if (el) el.textContent = dbg;
