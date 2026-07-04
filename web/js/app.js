@@ -57,13 +57,6 @@ const app = {
     this.initBackup();
     this.update();
     this.renderBeats();
-    // Close dropdown on outside click
-    document.addEventListener('click', e => {
-      const dd = document.getElementById('more-dropdown');
-      if (dd && !e.target.closest('#more-btn') && !e.target.closest('#more-dropdown')) {
-        dd.style.display = 'none';
-      }
-    });
   },
 
   /* ── Updates ── */
@@ -802,33 +795,7 @@ const app = {
   closeHelp() { document.getElementById('help-modal').style.display = 'none'; },
 
   /* ── More dropdown ── */
-  toggleMore() {
-    const dd = document.getElementById('more-dropdown');
-    if (!dd) return;
-    dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
-    if (dd.style.display !== 'block') return;
-    const items = [
-      ['📂 Projeto', 'app.openProject()'],
-      ['💾 Projeto', 'app.saveProject()'],
-      ['📄 Título', 'app.openTitle()'],
-      ['📊 Stats', 'app.openStats()'],
-      ['🎯 Meta', 'app.openGoal()'],
-      ['💾 Backups', 'app.openBackups()'],
-      ['🖍 Revisar', "app.markHighlight('!')"],
-      ['🖍 OK', "app.markHighlight('*')"],
-      ['🖍 Problema', "app.markHighlight('?')"],
-      ['📁 Nome', 'app.editProjectName()'],
-      ['🔇 Som', 'app.toggleSound()'],
-      ['🎯 Foco', 'app.toggleFocus()'],
-      ['📋 Copiar', 'app.copyScript()'],
-      ['⏱ Escrita', 'app.toggleTimerMode()'],
-      ['▶ ⏸ Iniciar', 'app.toggleTimer()'],
-      ['⏹ Reset', 'app.resetTimer()'],
-    ];
-    dd.innerHTML = items.map(([label, onclick]) =>
-      `<button onclick="${onclick};app.toggleMore();" style="display:block;width:100%;text-align:left;padding:6px 10px;border:none;background:transparent;color:var(--fg);font:10pt 'Courier New',monospace;cursor:pointer;border-radius:4px">${label}</button>`
-    ).join('');
-  },
+  closeStats() { document.getElementById('stats-modal').style.display = 'none'; },
 
   /* ── Character editing ── */
   openChar(name) {

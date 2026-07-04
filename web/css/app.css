@@ -13,7 +13,7 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
 /* ── Toolbar ── */
 #toolbar { display: flex; align-items: center; gap: 4px; padding: 4px 8px;
   background: var(--surface); border-bottom: 1px solid var(--border);
-  font-size: 11pt; overflow-x: auto; white-space: nowrap; flex-shrink: 0; }
+  font-size: 11pt; flex-wrap: wrap; flex-shrink: 0; }
 #toolbar button, #toolbar select { background: transparent; color: var(--fg);
   border: none; border-radius: 4px; padding: 4px 6px; cursor: pointer;
   font: 10pt 'Courier New', monospace; flex-shrink: 0; }
@@ -22,9 +22,6 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
 #toolbar .sep { width: 1px; height: 20px; background: var(--border); margin: 0 2px; flex-shrink: 0; }
 #toolbar .spacer { flex: 1; min-width: 4px; }
 #toolbar .timer { font-size: 9pt; font-weight: bold; flex-shrink: 0; }
-#toolbar .toolbar-group { display: inline-flex; align-items: center; flex-shrink: 0; }
-#more-dropdown button:hover { background: var(--surface2) !important; }
-#more-dropdown { z-index: 9999 !important; }
 #toolbar .toolbar-group { display: inline-flex; gap: 2px; align-items: center; }
 #menu-btn { display: none; }
 
