@@ -213,7 +213,7 @@ const app = {
   /* ── Acts ── */
   getActs() {
     let acts = JSON.parse(localStorage.getItem('fw_acts') || 'null');
-    if (!acts) { acts = {}; this.saveActs(acts); }
+    if (!acts) { acts = {'Ato 1': [], 'Ato 2': [], 'Ato 3': [], 'Ato 4': [], 'Ato 5': [], 'Ato 6': [], 'Ato 7': []}; this.saveActs(acts); }
     return acts;
   },
   saveActs(acts) { localStorage.setItem('fw_acts', JSON.stringify(acts)); },
