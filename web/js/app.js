@@ -986,6 +986,51 @@ const app = {
       else el.value = val || '';
     });
     this._atualizarOrcTotal();
+    this._renderCronograma();
+  },
+
+  _renderCronograma() {
+    const grid = document.getElementById('proj-cronograma');
+    if (!grid) return;
+    const etapas = ['Pré-Produção','Produção','Pós-Produção','Divulgação','Exibições/Oficina','Prestação de Contas'];
+    const data = (this.projetoData && this.projetoData.cronograma) || [];
+    // Default all false
+    const crono = etapas.map((_, i) => data[i] ? [...data[i]] : Array(12).fill(false));
+
+    grid.innerHTML = '';
+    // Header
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'font-weight:bold;color:var(--fg-sec)';
+    hdr.textContent = 'Etapa / Mês';
+    grid.appendChild(hdr);
+    for (let m = 1; m <= 12; m++) {
+      const d = document.createElement('div');
+      d.style.cssText = 'text-align:center;font-weight:bold;color:var(--fg-sec)';
+      d.textContent = m;
+      grid.appendChild(d);
+    }
+    // Rows
+    etapas.forEach((etapa, i) => {
+      const label = document.createElement('div');
+      label.style.cssText = 'font-size:8pt';
+      label.textContent = etapa;
+      grid.appendChild(label);
+      for (let m = 0; m < 12; m++) {
+        const cell = document.createElement('div');
+        cell.style.cssText = 'border-radius:2px;min-height:20px;cursor:pointer;background:' + (crono[i][m] ? 'var(--accent)' : 'transparent') + ';border:1px solid var(--border)';
+        cell.dataset.stage = i;
+        cell.dataset.month = m;
+        cell.addEventListener('click', () => {
+          crono[i][m] = !crono[i][m];
+          cell.style.background = crono[i][m] ? 'var(--accent)' : 'transparent';
+          if (this.projetoData) {
+            this.projetoData.cronograma = crono;
+            localStorage.setItem('fw_projeto', JSON.stringify(this.projetoData));
+          }
+        });
+        grid.appendChild(cell);
+      }
+    });
   },
 
   _atualizarOrcTotal() {

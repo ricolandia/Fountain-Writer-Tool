@@ -69,7 +69,7 @@
           <div class="proj-corpo">
             <div class="proj-linha"><label>Nome do Projeto</label><input type="text" id="proj-nome" style="flex:1"></div>
             <div class="proj-linha"><label>Proponente</label><input type="text" id="proj-proponente" style="flex:1"></div>
-            <div class="proj-linha"><label>CPF</label><input type="text" id="proj-cpf" style="flex:1" placeholder="000.000.000-00"></div>
+            <div class="proj-linha"><label>CPF/CNPJ</label><input type="text" id="proj-cpf" style="flex:1" placeholder="000.000.000-00"></div>
             <div class="proj-linha"><label>Segmento Cultural</label><input type="text" id="proj-segmento" style="flex:1"></div>
             <div class="proj-linha"><label>Produto Cultural</label><input type="text" id="proj-produto" style="flex:1"></div>
             <div class="proj-linha"><label>Valor Solicitado (R$)</label><input type="text" id="proj-valor" style="flex:1" placeholder="180.000,00"></div>
@@ -137,21 +137,8 @@
         <!-- 8. Cronograma -->
         <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">8. Cronograma de Execução ▸</h3>
           <div class="proj-corpo" style="overflow-x:auto">
-            <div id="proj-cronograma" style="display:grid;grid-template-columns:140px repeat(12,1fr);gap:2px;font-size:8pt;min-width:600px">
-              <div style="font-weight:bold;color:var(--fg-sec)">Etapa / Mês</div>
-              <script>for(let m=1;m<=12;m++)document.write('<div style="text-align:center;font-weight:bold;color:var(--fg-sec)">'+m+'</div>')</script>
-              <script>
-                const etapas=['Pré-Produção','Produção','Pós-Produção','Divulgação','Exibições/Oficina','Prestação de Contas'];
-                const meses=[[0,1],[2,3],[4,5],[2,11],[10,10],[11,11]];
-                etapas.forEach((e,i)=>{
-                  document.write('<div style="font-size:8pt">'+e+'</div>');
-                  for(let m=0;m<12;m++){
-                    const ativo=m>=meses[i][0]&&m<=meses[i][1];
-                    document.write('<div style="background:'+(ativo?'var(--accent)':'transparent')+';border-radius:2px;min-height:18px"></div>');
-                  }
-                });
-              </script>
-            </div>
+            <p style="font-size:8pt;color:var(--fg-sec);margin-bottom:6px">Clique nas células para marcar/desmarcar</p>
+            <div id="proj-cronograma" style="display:grid;grid-template-columns:140px repeat(12,1fr);gap:2px;font-size:8pt;min-width:600px"></div>
           </div>
         </div>
         <!-- 9. Plano de Distribuição -->
