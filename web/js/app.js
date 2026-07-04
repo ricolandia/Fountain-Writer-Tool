@@ -117,20 +117,29 @@ const app = {
 
     // Render flat list in text order with visual act separators
     let lastAct = null;
+    const seenActs = new Set();
     scenes.forEach((s, i) => {
       const sceneAct = beatActMap[s.line];
       if (sceneAct && sceneAct !== lastAct) {
-        // Act separator
-        const sep = document.createElement('li');
-        sep.style.cssText = 'padding:3px 6px;font-weight:bold;font-size:8pt;color:var(--fg-sec);background:var(--surface2);border-radius:3px;margin:4px 0 2px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid ' + (actColors[sceneAct] || '#888');
-        sep.innerHTML = '<span>' + esc(sceneAct) + '</span><span class="act-remove" style="cursor:pointer;color:var(--fg-sec);font-size:7pt" title="Remover ato">✕</span>';
-        sep.querySelector('.act-remove').addEventListener('click', e => { e.stopPropagation(); this.removeAct(sceneAct); });
-        list.appendChild(sep);
+        seenActs.add(sceneAct);
+        this._renderActSeparator(list, sceneAct, actColors);
         lastAct = sceneAct;
       }
       const li = this._makeSceneLi(s, i, plotColors);
       list.appendChild(li);
     });
+    // Remaining acts (empty acts) at the end
+    Object.keys(acts).sort().forEach(actName => {
+      if (!seenActs.has(actName)) this._renderActSeparator(list, actName, actColors);
+    });
+  },
+
+  _renderActSeparator(list, actName, actColors) {
+    const sep = document.createElement('li');
+    sep.style.cssText = 'padding:3px 6px;font-weight:bold;font-size:8pt;color:var(--fg-sec);background:var(--surface2);border-radius:3px;margin:4px 0 2px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid ' + (actColors[actName] || '#888');
+    sep.innerHTML = '<span>' + esc(actName) + '</span><span class="act-remove" style="cursor:pointer;color:var(--fg-sec);font-size:7pt" title="Remover ato">✕</span>';
+    sep.querySelector('.act-remove').addEventListener('click', e => { e.stopPropagation(); this.removeAct(actName); });
+    list.appendChild(sep);
   },
 
   _makeSceneLi(s, i, plotColors) {
