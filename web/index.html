@@ -14,37 +14,25 @@
     <button onclick="app.newFile()" data-i18n="tb_new">📄 Novo</button>
     <button onclick="app.openFile()" data-i18n="tb_open">📂 Abrir</button>
     <button onclick="app.saveFile()" data-i18n="tb_save">💾 Salvar</button>
-    <button onclick="app.openProject()" data-i18n="tb_project_open">📂 Projeto</button>
-    <button onclick="app.saveProject()" data-i18n="tb_project_save">💾 Projeto</button>
     <span class="sep"></span>
     <button onclick="app.exportHTML()" data-i18n="tb_html">📑 HTML</button>
     <button onclick="app.printPDF()" data-i18n="tb_pdf">🖨 PDF</button>
     <button onclick="app.togglePreview()">👁</button>
     <button onclick="app.openFind()">🔍</button>
-    <button onclick="app.openTitle()" data-i18n="tb_title">📄 Título</button>
-    <button onclick="app.openStats()" data-i18n="tb_stats">📊 Stats</button>
-    <button onclick="app.openGoal()" data-i18n="tb_goal">🎯 Meta</button>
-    <button onclick="app.openBackups()" data-i18n="tb_backup">💾 Backups</button>
     <span class="sep"></span>
-    <button onclick="app.markHighlight('!')" class="hl-btn" style="background:#fff3b0" data-i18n="tb_review">🖍 Revisar</button>
-    <button onclick="app.markHighlight('*')" class="hl-btn" style="background:#c8e6c9" data-i18n="tb_ok">🖍 OK</button>
-    <button onclick="app.markHighlight('?')" class="hl-btn" style="background:#ffcdd2" data-i18n="tb_problem">🖍 Problema</button>
+    <button onclick="app.addBeat()" data-i18n="tb_add_beat">+ Beat</button>
+    <button onclick="app.toggleTimeline()" data-i18n="tb_timeline">📊 Trama</button>
     <span class="sep"></span>
-    <button onclick="app.editProjectName()" style="font-size:9pt" id="project-name" data-i18n="tb_project_name">📁 Sem título</button>
-    <button onclick="app.toggleTimeline()" style="font-size:9pt" data-i18n="tb_timeline">📊 Trama</button>
-    <span class="spacer"></span>
-    <button onclick="app.toggleSound()" id="sound-btn" style="font-size:9pt" data-i18n="tb_sound">🔇 Som</button>
-    <button onclick="app.copyScript()" id="copy-btn" title="Copiar roteiro">📋</button>
-    <button onclick="app.toggleFocus()" data-i18n="tb_focus">🎯 Foco</button>
     <button onclick="app.toggleTheme()">🌗</button>
     <button onclick="app.openHelp()">❓</button>
     <button onclick="app.toggleLang()" id="lang-btn" style="font-size:9pt">PT</button>
     <span class="spacer"></span>
     <span id="save-indicator" style="font-size:10pt;color:var(--fg-sec)">💾</span>
-    <button onclick="app.toggleTimerMode()" id="timer-mode-btn" style="font-size:9pt;padding:2px 4px" data-i18n="tb_timer">⏱ Escrita</button>
-    <button onclick="app.toggleTimer()" id="timer-start-btn" style="font-size:9pt;padding:2px 4px">▶</button>
-    <button onclick="app.resetTimer()" id="timer-reset-btn" style="font-size:9pt;padding:2px 4px">⏹</button>
     <span class="timer" id="timer-display">⏱ 00:00</span>
+    <div class="toolbar-group" style="position:relative">
+      <button onclick="app.toggleMore()" id="more-btn" style="font-size:12pt;padding:2px 6px">⋮</button>
+      <div id="more-dropdown" style="display:none;position:absolute;top:100%;right:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;z-index:100;min-width:180px;padding:4px;max-height:400px;overflow-y:auto"></div>
+    </div>
   </div>
 
   <!-- Mobile menu overlay -->

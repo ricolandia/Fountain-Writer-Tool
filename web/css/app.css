@@ -22,6 +22,8 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
 #toolbar .sep { width: 1px; height: 20px; background: var(--border); margin: 0 2px; flex-shrink: 0; }
 #toolbar .spacer { flex: 1; min-width: 4px; }
 #toolbar .timer { font-size: 9pt; font-weight: bold; flex-shrink: 0; }
+#toolbar .toolbar-group { display: inline-flex; align-items: center; flex-shrink: 0; }
+#more-dropdown button:hover { background: var(--surface2) !important; }
 #toolbar .toolbar-group { display: inline-flex; gap: 2px; align-items: center; }
 #menu-btn { display: none; }
 
