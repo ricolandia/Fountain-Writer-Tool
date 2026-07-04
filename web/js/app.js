@@ -109,10 +109,33 @@ const app = {
 
     // Render scenes grouped by act
     Object.entries(acts).forEach(([actName, lines]) => {
-      // Act header
+      // Act header (draggable)
       const hdr = document.createElement('li');
-      hdr.style.cssText = 'padding:4px 8px;font-weight:bold;font-size:9pt;color:var(--accent);cursor:default;background:var(--surface2);border-radius:4px;margin:4px 0 2px';
+      hdr.draggable = true;
+      hdr.style.cssText = 'padding:4px 8px;font-weight:bold;font-size:9pt;color:var(--accent);cursor:grab;background:var(--surface2);border-radius:4px;margin:4px 0 2px';
       hdr.textContent = actName;
+      hdr.dataset.act = actName;
+      hdr.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', 'ACT:' + actName);
+        hdr.style.opacity = '0.4';
+      });
+      hdr.addEventListener('dragend', () => { hdr.style.opacity = '1'; });
+      hdr.addEventListener('dragover', e => e.preventDefault());
+      hdr.addEventListener('drop', e => {
+        e.preventDefault();
+        const data = e.dataTransfer.getData('text/plain');
+        if (data.startsWith('ACT:')) {
+          const fromAct = data.slice(4);
+          if (fromAct === actName) return;
+          // Swap act names in the acts object
+          const acts2 = this.getActs();
+          const temp = acts2[fromAct];
+          acts2[fromAct] = acts2[actName];
+          acts2[actName] = temp;
+          this.saveActs(acts2);
+          this.updateScenes(this.editor.value);
+        }
+      });
       list.appendChild(hdr);
 
       // Scenes in this act
@@ -229,24 +252,18 @@ const app = {
   },
 
   /* ── Acts ── */
-  getActs() { return JSON.parse(localStorage.getItem('fw_acts') || '{}'); },
+  getActs() {
+    let acts = JSON.parse(localStorage.getItem('fw_acts') || 'null');
+    if (!acts) { acts = {'Ato 1': []}; this.saveActs(acts); }
+    return acts;
+  },
   saveActs(acts) { localStorage.setItem('fw_acts', JSON.stringify(acts)); },
 
   addAct() {
-    const name = prompt('Nome do ato (ex: ATO 1):');
+    const name = prompt('Nome do ato (ex: Ato 2):');
     if (!name) return;
     const acts = this.getActs();
     if (!acts[name]) acts[name] = [];
-    const cursor = this.editor.selectionStart;
-    const text = this.editor.value;
-    const line = text.slice(0, cursor).split('\n').length - 1;
-    let prev = 'ACTION', sceneLine = 0;
-    text.split('\n').forEach((l, i) => {
-      const t = guessType(l, prev);
-      if (t === 'SCENE' && i <= line) sceneLine = i;
-      if (t !== 'BLANK') prev = t;
-    });
-    acts[name].push(sceneLine);
     this.saveActs(acts);
     this.updateScenes(this.editor.value);
   },
@@ -440,23 +457,40 @@ const app = {
   },
 
   /* ── Beats ── */
-  addBeat() {
-    const title = prompt('Título do beat:');
+  openBeatModal(index) {
+    this._editingBeatIdx = index;
+    const b = index >= 0 && index < this.beats.length ? this.beats[index] : null;
+    document.getElementById('beat-title').value = b ? b.title : '';
+    document.getElementById('beat-act').value = b ? (b.act || 'Ato 1') : 'Ato 1';
+    document.getElementById('beat-plot').value = b && b.plotline ? b.plotline : 'Principal';
+    document.getElementById('beat-modal').style.display = 'flex';
+    document.getElementById('beat-title').focus();
+  },
+
+  saveBeatModal() {
+    const title = document.getElementById('beat-title').value.trim();
+    const act = document.getElementById('beat-act').value.trim() || 'Ato 1';
+    const plot = document.getElementById('beat-plot').value;
     if (!title) return;
-    let plot = prompt('Trama (Enter = Principal, B, C, D):') || 'Principal';
-    if (!['Principal','B','C','D'].includes(plot)) plot = 'Principal';
-    this.beats.push({ title, act: 'Ato 1', desc: '', plotline: plot, order: this.beats.length });
+    const idx = this._editingBeatIdx;
+    if (idx >= 0 && idx < this.beats.length) {
+      this.beats[idx].title = title;
+      this.beats[idx].act = act;
+      this.beats[idx].plotline = plot;
+    } else {
+      this.beats.push({ title, act, plotline: plot, order: this.beats.length });
+    }
     this.saveBeats(); this.renderBeats();
+    this.closeBeatModal();
   },
-  editBeat(i) {
-    if (i < 0 || i >= this.beats.length) return;
-    const b = this.beats[i];
-    let plot = prompt('Trama (Principal, B, C, D) — Enter mantém atual:', b.plotline || 'Principal');
-    if (plot !== null && ['Principal','B','C','D'].includes(plot)) b.plotline = plot;
-    const title = prompt('Título:', b.title);
-    if (title !== null) b.title = title;
-    this.saveBeats(); this.renderBeats();
+
+  closeBeatModal() {
+    document.getElementById('beat-modal').style.display = 'none';
+    this._editingBeatIdx = -1;
   },
+
+  addBeat() { this.openBeatModal(-1); },
+  editBeat(i) { this.openBeatModal(i); },
   deleteBeat(i) { this.beats.splice(i, 1); this.saveBeats(); this.renderBeats(); },
   insertBeat(i) {
     const b = this.beats[i];

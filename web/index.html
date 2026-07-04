@@ -225,6 +225,30 @@
   </div>
 </div>
 
+<!-- Beat Edit Modal -->
+<div id="beat-modal" class="modal-overlay" style="display:none">
+  <div class="modal" style="width:380px">
+    <div class="modal-header">Editar Beat</div>
+    <div class="modal-body">
+      <div class="form-row"><label>Título:</label><input type="text" id="beat-title" style="flex:1"></div>
+      <div class="form-row"><label>Ato:</label><input type="text" id="beat-act" style="flex:1" value="Ato 1"></div>
+      <div class="form-row"><label>Trama:</label>
+        <select id="beat-plot" style="flex:1;padding:4px;border:1px solid var(--border);border-radius:4px;background:var(--surface3);color:var(--fg);font:10pt monospace">
+          <option value="Principal">Principal</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="D">D</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span style="flex:1"></span>
+      <button onclick="app.saveBeatModal()">Salvar</button>
+      <button onclick="app.closeBeatModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <input type="file" id="file-input" accept=".fountain,.txt" style="display:none">
 <a id="download-link" style="display:none"></a>
 
