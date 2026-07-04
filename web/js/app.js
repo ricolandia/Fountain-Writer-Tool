@@ -12,6 +12,7 @@ const app = {
   fontSize: parseInt(localStorage.getItem('fw_font_size') || '12'),
   soundOn: localStorage.getItem('fw_sound') === 'true',
   _audioContext: null,
+  _fileHandle: null,
   _sceneActMap: {},
 
   init() {
@@ -90,16 +91,10 @@ const app = {
       const beat = this._findBeatForScene(s.label, s.line);
       this._sceneActMap[s.line] = beat ? (beat.act || 'Ato 1') : null;
     });
-    // Debug: show matching result in status bar
-    let dbg = '';
-    scenes.forEach(s => {
-      const b = this._findBeatForScene(s.label, s.line);
-      const ref = s.label + '|L' + s.line;
-      const foundBeat = b ? ('idx=' + this.beats.indexOf(b) + ' act=' + b.act + ' sr=' + b.scene_ref) : 'NONE';
-      dbg += s.label.slice(0, 12) + ':' + foundBeat + ' ';
-    });
+    // Status bar: beat count
     const el = document.getElementById('dbg');
-    if (el) el.textContent = dbg;
+    if (el) el.textContent = this.beats.length + ' beats';
+    this.renderSceneList(scenes);
     this.renderSceneList(scenes);
   },
 
@@ -164,8 +159,7 @@ const app = {
     let plot = beat ? beat.plotline || 'Principal' : '';
     if (plot === 'C' || plot === 'D') plot = 'B';
     li.innerHTML = (i + 1) + '. ' + esc(s.label) +
-      (plot ? ' <span style="font-size:7pt;color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '') +
-      ' <span style="font-size:6pt;color:var(--fg-sec)">' + (this._sceneActMap[s.line] || '?') + ' L' + s.line + '</span>';
+      (plot ? ' <span style="font-size:7pt;color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '');
     li.dataset.line = s.line;
     li.addEventListener('click', e => {
       if (e.target.closest('.act-remove')) return;
@@ -607,14 +601,6 @@ const app = {
     } else {
       this.beats.push({ title, act, plotline: plot, order: this.beats.length });
     }
-    // Debug: show matching result in status bar
-    let dbg = '';
-    this.parseScenes(this.editor.value).forEach(s => {
-      const b = this._findBeatForScene(s.label, s.line);
-      dbg += s.label.slice(0, 12) + ':' + (b ? 'idx=' + this.beats.indexOf(b) + ' act=' + b.act + ' sr=' + b.scene_ref : '?') + ' ';
-    });
-    const el = document.getElementById('dbg');
-    if (el) el.textContent = dbg;
     // Ensure act exists in fw_acts
     const fwActs = this.getActs();
     if (!fwActs[act]) { fwActs[act] = []; this.saveActs(fwActs); }
@@ -929,9 +915,9 @@ const app = {
   },
 
   /* ── File I/O ── */
-  newFile() {
+  async newFile() {
     if (this.editor.value.trim()) {
-      if (confirm(_('save_before_new'))) { this.saveProject(); }
+      if (confirm(_('save_before_new'))) { await this.saveProject(); }
       else if (!confirm(_('save_confirm'))) return;
     } else {
       if (!confirm(_('save_confirm'))) return;
@@ -953,7 +939,7 @@ const app = {
     this.updateIndicator();
   },
 
-  saveProject() {
+  async saveProject() {
     const data = {
       name: this.projectName || 'roteiro',
       draft: this.editor.value,
@@ -973,10 +959,33 @@ const app = {
       lang: lang,
       updated: new Date().toISOString()
     };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const a = document.getElementById('download-link');
-    a.href = URL.createObjectURL(blob); a.download = (this.projectName || 'roteiro') + '.fountain.json'; a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 500);
+    const name = (this.projectName || 'roteiro') + '.fountain.json';
+    if (window.showSaveFilePicker && this._fileHandle) {
+      try {
+        const writable = await this._fileHandle.createWritable();
+        await writable.write(JSON.stringify(data, null, 2));
+        await writable.close();
+        this.isModified = false; this.updateIndicator(); return;
+      } catch (e) { this._fileHandle = null; }
+    }
+    if (window.showSaveFilePicker) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: name,
+          types: [{ description: 'Projeto Fountain', accept: { 'application/json': ['.json'] } }]
+        });
+        this._fileHandle = handle;
+        const writable = await handle.createWritable();
+        await writable.write(JSON.stringify(data, null, 2));
+        await writable.close();
+      } catch (e) { return; }
+    } else {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.getElementById('download-link');
+      a.href = URL.createObjectURL(blob); a.download = name; a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }
+    this.isModified = false; this.updateIndicator();
   },
 
   openProject() {
