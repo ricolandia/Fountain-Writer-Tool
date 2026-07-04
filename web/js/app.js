@@ -110,26 +110,19 @@ const app = {
     list.innerHTML = '';
     if (scenes.length === 0) { list.innerHTML = '<li class="list-empty" style="cursor:default">' + _('empty_scenes') + '</li>'; return; }
 
-    const acts = this.getActs();
     const plotColors = {'Principal':'#569cd6','A':'#ce9178','B':'#4ec9b0'};
     const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
 
     // Render flat list in text order with visual act separators
     let lastAct = null;
-    const seenActs = new Set();
     scenes.forEach((s, i) => {
       const sceneAct = this._sceneActMap[s.line];
       if (sceneAct && sceneAct !== lastAct) {
-        seenActs.add(sceneAct);
         this._renderActSeparator(list, sceneAct, actColors);
         lastAct = sceneAct;
       }
       const li = this._makeSceneLi(s, i, plotColors);
       list.appendChild(li);
-    });
-    // Remaining acts (empty acts) at the end
-    Object.keys(acts).sort().forEach(actName => {
-      if (!seenActs.has(actName)) this._renderActSeparator(list, actName, actColors);
     });
   },
 
@@ -188,7 +181,7 @@ const app = {
   /* ── Acts ── */
   getActs() {
     let acts = JSON.parse(localStorage.getItem('fw_acts') || 'null');
-    if (!acts) { acts = {'Ato 1': [], 'Ato 2': [], 'Ato 3': []}; this.saveActs(acts); }
+    if (!acts) { acts = {}; this.saveActs(acts); }
     return acts;
   },
   saveActs(acts) { localStorage.setItem('fw_acts', JSON.stringify(acts)); },
@@ -232,12 +225,6 @@ const app = {
     Object.keys(acts).forEach(actName => {
       const valid = acts[actName].filter(l => currentSceneSet.has(l));
       if (valid.length !== acts[actName].length) { acts[actName] = valid; changed = true; }
-    });
-    // Assign unassigned scenes to Ato 1
-    const assignedLines = new Set(Object.values(acts).flat());
-    if (!acts['Ato 1']) acts['Ato 1'] = [];
-    allScenes.forEach(line => {
-      if (!assignedLines.has(line)) { acts['Ato 1'].push(line); changed = true; }
     });
     if (changed) this.saveActs(acts);
   },
@@ -616,6 +603,9 @@ const app = {
         changed = true;
       }
     });
+    // Ensure default act exists in fw_acts for auto-created beats
+    const fwActs = this.getActs();
+    if (!fwActs['Ato 1']) { fwActs['Ato 1'] = []; this.saveActs(fwActs); }
     if (changed) { this.saveBeats(); this.renderBeats(); this.renderTimeline(); }
   },
 
@@ -863,7 +853,6 @@ const app = {
     const container = document.getElementById('act-markers');
     if (!container) return;
     container.innerHTML = '';
-    const acts = this.getActs();
     const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
 
     // Find first scene line for each act from beats+text
@@ -878,21 +867,19 @@ const app = {
     });
 
     const actFirstLine = {};
-    Object.keys(acts).forEach(a => actFirstLine[a] = null);
     if (scenes.length) {
       scenes.forEach(s => {
         const a = this._sceneActMap[s.line];
         if (a && actFirstLine[a] === null) actFirstLine[a] = s.line;
       });
     }
-    // Empty acts (line===null) render at y=0.5 * lineHeight
 
-    const sorted = Object.entries(actFirstLine).sort((a, b) => (a[1] ?? Infinity) - (b[1] ?? Infinity));
+    const sorted = Object.entries(actFirstLine).sort((a, b) => a[1] - b[1]);
     const fontSize = this.fontSize || 12;
     const lh = fontSize * 1.2;
     const sc = this.editor.scrollTop;
     sorted.forEach(([act, line]) => {
-      const y = (line !== null ? line * lh : lh * 0.5) - sc;
+      const y = line * lh - sc;
       // Only render if visible
       if (y < -10 || y > wrap.clientHeight + 10) return;
       const bar = document.createElement('div');
