@@ -901,7 +901,7 @@ const app = {
     const lh = parseFloat(getComputedStyle(this.editor).lineHeight) || this.editor.getBoundingClientRect().height;
     const sc = this.editor.scrollTop;
     sorted.forEach(([act, line]) => {
-      const y = line * lh - sc;
+      const y = line * lh - sc - lh * 0.35;
       // Only render if visible
       if (y < -10 || y > wrap.clientHeight + 10) return;
       const bar = document.createElement('div');
