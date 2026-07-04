@@ -100,7 +100,7 @@ const app = {
     document.getElementById('scene-count').textContent = scenes.length;
     this._sceneActMap = {};
     scenes.forEach(s => {
-      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label + '|L' + s.line || b.scene_ref === s.label);
+      const beat = this.beats.find(b => b.scene_ref === s.label + '|L' + s.line || b.title === s.label || b.scene_ref === s.label);
       this._sceneActMap[s.line] = beat ? (beat.act || 'Ato 1') : null;
     });
     this.renderSceneList(scenes);
@@ -159,7 +159,7 @@ const app = {
       const mc = {'!':'#fff3b0', '*':'#c8e6c9', '?':'#ffcdd2'};
       li.style.backgroundColor = mc[marks[s.line]] || '';
     }
-    const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label + '|L' + s.line || b.scene_ref === s.label);
+    const beat = this.beats.find(b => b.scene_ref === s.label + '|L' + s.line || b.title === s.label || b.scene_ref === s.label);
     let plot = beat ? beat.plotline || 'Principal' : '';
     if (plot === 'C' || plot === 'D') plot = 'B';
     li.innerHTML = (i + 1) + '. ' + esc(s.label) +
@@ -626,7 +626,7 @@ const app = {
     // Ensure default act exists in fw_acts for auto-created beats
     const fwActs = this.getActs();
     if (!fwActs['Ato 1']) { fwActs['Ato 1'] = []; this.saveActs(fwActs); }
-    if (changed) { this.saveBeats(); this.renderBeats(); this.renderTimeline(); }
+    if (changed) { this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value); }
   },
 
   /* ── Timeline grid (atos × tramas) ── */
@@ -666,7 +666,7 @@ const app = {
     // Map scene → plotline (from matching beats)
     const scenePlot = {};
     scenes.forEach(s => {
-      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label + '|L' + s.line || b.scene_ref === s.label);
+      const beat = this.beats.find(b => b.scene_ref === s.label + '|L' + s.line || b.title === s.label || b.scene_ref === s.label);
       let pl = beat ? beat.plotline || 'Principal' : 'Principal';
       if (pl === 'C' || pl === 'D') pl = 'B';
       scenePlot[s.line] = pl;
@@ -675,7 +675,7 @@ const app = {
     // Map scene → act (from beats)
     const sceneAct = {};
     scenes.forEach(s => {
-      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label + '|L' + s.line || b.scene_ref === s.label);
+      const beat = this.beats.find(b => b.scene_ref === s.label + '|L' + s.line || b.title === s.label || b.scene_ref === s.label);
       sceneAct[s.line] = beat ? (beat.act || 'Ato 1') : null;
     });
 
