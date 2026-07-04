@@ -864,8 +864,11 @@ const app = {
     const container = document.getElementById('act-markers');
     if (!container) return;
     container.innerHTML = '';
+    const acts = this.getActs();
+    const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
+
+    // Find first scene line for each act from beats+text
     const text = this.editor.value;
-    if (!text.trim()) return;
     const lines = text.split('\n');
     const scenes = [];
     let prev = 'ACTION';
@@ -874,27 +877,28 @@ const app = {
       if (t === 'SCENE') scenes.push({ line: i, label: line.trim().replace(/^\./, '').slice(0, 60) });
       if (t !== 'BLANK') prev = t;
     });
-    if (!scenes.length) return;
-    const acts = this.getActs();
-    const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
-    const lineToAct = {};
-    scenes.forEach(s => {
-      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label);
-      lineToAct[s.line] = beat ? (beat.act || 'Ato 1') : null;
-    });
+
     const actFirstLine = {};
     Object.keys(acts).forEach(a => actFirstLine[a] = null);
-    scenes.forEach(s => {
-      const a = lineToAct[s.line];
-      if (a && actFirstLine[a] === null) actFirstLine[a] = s.line;
-    });
+    if (scenes.length) {
+      const lineToAct = {};
+      scenes.forEach(s => {
+        const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label);
+        lineToAct[s.line] = beat ? (beat.act || 'Ato 1') : null;
+      });
+      scenes.forEach(s => {
+        const a = lineToAct[s.line];
+        if (a && actFirstLine[a] === null) actFirstLine[a] = s.line;
+      });
+    }
+    // Empty acts (line===null) render at y=0.5 * lineHeight
+
     const sorted = Object.entries(actFirstLine).sort((a, b) => (a[1] ?? Infinity) - (b[1] ?? Infinity));
     const fontSize = this.fontSize || 12;
     const lh = fontSize * 1.2;
     const sc = this.editor.scrollTop;
     sorted.forEach(([act, line]) => {
-      if (line === null) return;
-      const y = line * lh - sc;
+      const y = (line !== null ? line * lh : lh * 0.5) - sc;
       // Only render if visible
       if (y < -10 || y > wrap.clientHeight + 10) return;
       const bar = document.createElement('div');
