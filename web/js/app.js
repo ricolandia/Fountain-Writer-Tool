@@ -575,7 +575,7 @@ const app = {
     // Ensure act exists in fw_acts
     const fwActs = this.getActs();
     if (!fwActs[act]) { fwActs[act] = []; this.saveActs(fwActs); }
-    this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value);
+    this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value); this.renderActMarkers();
     this.closeBeatModal();
   },
 
@@ -586,7 +586,7 @@ const app = {
 
   addBeat() { this.openBeatModal(-1); },
   editBeat(i) { this.openBeatModal(i); },
-  deleteBeat(i) { this.beats.splice(i, 1); this.saveBeats(); this.renderBeats(); this.renderTimeline(); },
+  deleteBeat(i) { this.beats.splice(i, 1); this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value); this.renderActMarkers(); },
   insertBeat(i) {
     const b = this.beats[i];
     if (!b) return;
@@ -626,7 +626,7 @@ const app = {
     // Ensure default act exists in fw_acts for auto-created beats
     const fwActs = this.getActs();
     if (!fwActs['Ato 1']) { fwActs['Ato 1'] = []; this.saveActs(fwActs); }
-    if (changed) { this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value); }
+    if (changed) { this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value); this.renderActMarkers(); }
   },
 
   /* ── Timeline grid (atos × tramas) ── */
