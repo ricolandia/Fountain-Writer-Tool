@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fountain Writer</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="app">
+  <div id="toolbar">
+    <button id="menu-btn" onclick="app.toggleMenu()">☰</button>
+    <button onclick="app.newFile()" data-i18n="tb_new">📄 Novo</button>
+    <button onclick="app.openFile()" data-i18n="tb_open">📂 Abrir</button>
+    <button onclick="app.saveFile()" data-i18n="tb_save">💾 Salvar</button>
+    <button onclick="app.openProject()" data-i18n="tb_project_open">📂 Projeto</button>
+    <button onclick="app.saveProject()" data-i18n="tb_project_save">💾 Projeto</button>
+    <span class="sep"></span>
+    <button onclick="app.exportHTML()" data-i18n="tb_html">📑 HTML</button>
+    <button onclick="app.printPDF()" data-i18n="tb_pdf">🖨 PDF</button>
+    <button onclick="app.togglePreview()">👁</button>
+    <button onclick="app.openFind()">🔍</button>
+    <button onclick="app.openTitle()" data-i18n="tb_title">📄 Título</button>
+    <button onclick="app.openStats()" data-i18n="tb_stats">📊 Stats</button>
+    <button onclick="app.openGoal()" data-i18n="tb_goal">🎯 Meta</button>
+    <button onclick="app.openBackups()" data-i18n="tb_backup">💾 Backups</button>
+    <span class="sep"></span>
+    <button onclick="app.markHighlight('!')" class="hl-btn" style="background:#fff3b0" data-i18n="tb_review">🖍 Revisar</button>
+    <button onclick="app.markHighlight('*')" class="hl-btn" style="background:#c8e6c9" data-i18n="tb_ok">🖍 OK</button>
+    <button onclick="app.markHighlight('?')" class="hl-btn" style="background:#ffcdd2" data-i18n="tb_problem">🖍 Problema</button>
+    <span class="sep"></span>
+    <button onclick="app.editProjectName()" style="font-size:9pt" id="project-name" data-i18n="tb_project_name">📁 Sem título</button>
+    <button onclick="app.toggleTimeline()" style="font-size:9pt" data-i18n="tb_timeline">📊 Trama</button>
+    <span class="spacer"></span>
+    <button onclick="app.toggleSound()" id="sound-btn" style="font-size:9pt" data-i18n="tb_sound">🔇 Som</button>
+    <button onclick="app.toggleFocus()" data-i18n="tb_focus">🎯 Foco</button>
+    <button onclick="app.toggleTheme()">🌗</button>
+    <button onclick="app.toggleLang()" id="lang-btn" style="font-size:9pt">PT</button>
+    <span class="spacer"></span>
+    <span id="save-indicator" style="font-size:10pt;color:var(--fg-sec)">💾</span>
+    <button onclick="app.toggleTimerMode()" id="timer-mode-btn" style="font-size:9pt;padding:2px 4px" data-i18n="tb_timer">⏱ Escrita</button>
+    <span class="timer" id="timer-display">⏱ 00:00</span>
+  </div>
+
+  <!-- Mobile menu overlay -->
+  <div id="menu-overlay">
+    <div id="menu-backdrop" onclick="app.toggleMenu()"></div>
+    <div id="menu-drawer"></div>
+  </div>
+
+  <div id="panes">
+    <div id="pane-left" class="pane">
+      <div class="pane-header"><span data-i18n="tb_scenes">CENAS</span><span><span id="scene-count">0</span> <button onclick="app.toggleSceneView()" id="scene-view-btn" style="font-size:8pt;padding:1px 4px">▦</button></span></div>
+      <ul id="scene-list"></ul>
+      <div id="scene-cards" style="display:none;padding:4px"></div>
+    </div>
+
+    <div id="pane-center" class="pane">
+      <div id="textarea-wrap"><textarea id="editor" data-i18n-placeholder="editor_placeholder"></textarea></div>
+      <div id="preview-wrap"><div id="preview"></div></div>
+    </div>
+
+    <div id="pane-right" class="pane">
+      <div class="tabs" id="right-tabs">
+        <button class="tab active" data-tab="beats" data-i18n="tb_beats">BEATS</button>
+        <button class="tab" data-tab="chars" data-i18n="tb_chars">PERS</button>
+        <button class="tab" data-tab="locs" data-i18n="tb_locs">LOC</button>
+      </div>
+      <div class="tab-content active" id="tab-beats">
+        <p style="padding:4px;display:flex;gap:4px">
+          <button onclick="app.addBeat()" data-i18n="tb_add_beat">+ Beat</button>
+          <button onclick="app.sortBeats()" style="font-size:9pt" data-i18n="tb_sort">Ordenar</button>
+        </p>
+        <div id="beat-list"></div>
+      </div>
+      <div class="tab-content" id="tab-chars"><div id="char-list"></div></div>
+      <div class="tab-content" id="tab-locs"><div id="loc-list"></div></div>
+    </div>
+  </div>
+
+  <div id="timeline-bar" style="display:none;padding:4px 8px;background:var(--surface);border-top:1px solid var(--border);gap:6px;align-items:stretch;min-height:350px"></div>
+
+  <div id="status">
+    <span id="stat-cenas">Cen:0</span>
+    <span id="stat-palavras">Pal:0</span>
+    <span id="stat-chars">Car:0</span>
+    <span id="stat-pagina">Pg:1</span>
+    <span id="stat-duration">~0min</span>
+    <span id="stat-goal" style="display:none"></span>
+    <span id="stat-selection" style="display:none"></span>
+    <div id="productivity-chart" style="width:80px;height:20px;margin-left:auto;flex-shrink:0"></div>
+  </div>
+</div>
+
+<div id="find-modal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header" data-i18n="find_title">Buscar / Substituir</div>
+    <div class="modal-body">
+      <input type="text" id="find-input" data-i18n-placeholder="find_find" style="width:100%;margin-bottom:6px">
+      <input type="text" id="replace-input" data-i18n-placeholder="find_replace" style="width:100%">
+      <label style="margin-top:6px;display:block"><input type="checkbox" id="find-case"> <span data-i18n="find_case">Diferenciar maiúsculas</span></label>
+      <div id="find-count" class="find-nav"></div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="app.findPrev()" data-i18n="find_prev">◀</button>
+      <button onclick="app.findNext()" data-i18n="find_next">▶</button>
+      <button onclick="app.findReplace()" data-i18n="find_rep">Substituir</button>
+      <button onclick="app.findReplaceAll()" data-i18n="find_rep_all">Tudo</button>
+      <span style="flex:1"></span>
+      <button onclick="app.closeFind()" data-i18n="find_close">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div id="title-modal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header" data-i18n="title_header">Folha de Rosto</div>
+    <div class="modal-body">
+      <div class="form-row"><label>Título:</label><input type="text" id="tp-title"></div>
+      <div class="form-row"><label>Crédito:</label><input type="text" id="tp-credit"></div>
+      <div class="form-row"><label>Autor:</label><input type="text" id="tp-author"></div>
+      <div class="form-row"><label>Fonte:</label><input type="text" id="tp-source"></div>
+      <div class="form-row"><label>Data:</label><input type="text" id="tp-draft-date"></div>
+      <div class="form-row"><label>Contato:</label><textarea id="tp-contact" rows="3"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="app.saveTitle()" data-i18n="title_save">Salvar</button>
+      <button onclick="app.clearTitle()" data-i18n="title_remove">Remover</button>
+      <span style="flex:1"></span>
+      <button onclick="app.closeTitle()" data-i18n="title_close">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div id="char-modal" class="modal-overlay" style="display:none">
+  <div class="modal" style="width:420px">
+    <div class="modal-header" data-i18n="char_header">Editar Personagem</div>
+    <div class="modal-body">
+      <div class="form-row"><label>Nome:</label><input type="text" id="ce-name" readonly style="background:var(--surface2)"></div>
+      <div class="form-row"><label>Idade:</label><input type="text" id="ce-age"></div>
+      <div class="form-row"><label>Arquétipo:</label><input type="text" id="ce-archetype"></div>
+      <div class="form-row"><label>Física:</label><input type="text" id="ce-physical"></div>
+      <div class="form-row"><label>Personalidade:</label><input type="text" id="ce-personality"></div>
+      <div class="form-row"><label>Biografia:</label><textarea id="ce-biography" rows="2"></textarea></div>
+      <div class="form-row"><label>Objetivo:</label><input type="text" id="ce-goal"></div>
+      <div class="form-row"><label>Medo:</label><input type="text" id="ce-fear"></div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="app.saveChar()" data-i18n="char_save">Salvar</button>
+      <button onclick="app.deleteChar()" data-i18n="char_remove">Remover dados</button>
+      <span style="flex:1"></span>
+      <button onclick="app.closeChar()" data-i18n="char_close">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div id="stats-modal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header" data-i18n="stats_header">Estatísticas</div>
+    <div class="modal-body" id="stats-body"></div>
+    <div class="modal-footer">
+      <span style="flex:1"></span>
+      <button onclick="app.closeStats()" data-i18n="stats_close">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div id="backup-modal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header" data-i18n="backup_header">Backups automáticos</div>
+    <div class="modal-body" id="backup-body"></div>
+    <div class="modal-footer">
+      <span style="flex:1"></span>
+      <button onclick="app.closeBackups()" data-i18n="backup_close">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div id="goal-modal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header" data-i18n="goal_header">Meta diária de palavras</div>
+    <div class="modal-body">
+      <p data-i18n="goal_text">Quantas palavras você quer escrever por dia?</p>
+      <input type="number" id="goal-input" min="100" max="10000" step="100" style="width:100%;margin-top:8px">
+    </div>
+    <div class="modal-footer">
+      <button onclick="app.saveGoal()" data-i18n="goal_save">Salvar</button>
+      <button onclick="app.clearGoal()" data-i18n="goal_remove">Remover meta</button>
+      <span style="flex:1"></span>
+      <button onclick="app.closeGoal()" data-i18n="goal_close">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="file-input" accept=".fountain,.txt" style="display:none">
+<a id="download-link" style="display:none"></a>
+
+<script src="js/fountain-parser.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

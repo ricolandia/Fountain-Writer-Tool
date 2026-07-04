@@ -1,87 +1,81 @@
-# Fountain Writer v1.0
+# Fountain Writer v2.0 (PySide6)
 
-First public version of Fountain Writer, a lightweight and complete screenplay editor.
-
-**Note:** This project is mirrored on my personal **Forgejo server**. You can also access the repository by clicking below:
+Editor de roteiros no formato **Fountain** — agora construído com **Qt6 (PySide6)**.
 
 [![Forgejo MIRROR](https://img.shields.io/badge/Mirror-Forgejo-orange?logo=gitea)](https://repo.rizomatico.org/ricograca/Fountain-Writer-Tool)
 
-## 🆕 What’s included
+## ✨ Funcionalidades
 
-- Editor with Fountain syntax highlighting
-- Sidebar with scene navigation
-- Find and replace (Ctrl+H)
-- Focus mode for distraction-free writing (F11)
-- Light and dark themes
-- Smart character autocomplete
-- Line numbers with page separator
-- Word, character count, and estimated duration
-- Export to PDF (requires reportlab)
-- Persistent settings (theme, window, preferences)
+- **Destaque de sintaxe Fountain** via `QSyntaxHighlighter` — cenas, personagens, diálogos, transições, rubricas
+- **Navegador de cenas** em `QDockWidget` — clique para saltar para qualquer cena
+- **Busca e substituição** (Ctrl+H) com navegação entre resultados
+- **Autocomplete de personagens** — sugestão contextual ao digitar MAIÚSCULAS
+- **Números de linha** com separador visual a cada 55 linhas (padrão cinematográfico)
+- **Destaque da linha atual** — fundo sutil na linha em edição
+- **Contador de palavras / caracteres / duração estimada** em tempo real
+- **Modo foco** (F11) — toolbar e sidebar ocultos, papel centralizado
+- **Exportação para PDF** (com reportlab)
+- **Temas claro/escuro** via QSS
+- **Configuração persistente** via QSettings
 
-## 🖥️ Supported platforms
+## Arquitetura
 
-- Windows
-- macOS
-- Linux
+```
+├── main.py                      ← Entry point
+├── app/
+│   ├── main_window.py           ← QMainWindow (toolbar, docks, status bar)
+│   ├── editor/
+│   │   ├── editor.py            ← QPlainTextEdit customizado
+│   │   ├── highlighter.py       ← QSyntaxHighlighter (Fountain)
+│   │   ├── line_numbers.py      ← Gutter com números de linha
+│   │   └── autocomplete.py      ← QCompleter
+│   ├── dockers/
+│   │   └── scene_navigator.py   ← QDockWidget (navegador de cenas)
+│   ├── dialogs/
+│   │   ├── find_replace.py      ← Busca e substituição
+│   │   └── help_dialog.py       ← Janela de ajuda
+│   ├── models/
+│   │   └── fountain.py          ← Parser Fountain + funções utilitárias
+│   └── core/
+│       ├── config.py            ← QSettings
+│       └── theme.py             ← QSS + cores
+├── resources/
+│   └── styles/
+└── archive/                     ← Versão anterior (Tkinter)
+```
 
-## 🔧 Requirements
+## 🖥️ Plataformas
 
-- Python 3.10 or higher
-- (Optional) reportlab for PDF export
-
-## 💾 Download and Installation
-
-To save space and ensure fast downloads, the executable files (Windows, Mac, and Linux) are compiled and hosted via GitHub Actions.
-
-👉 **[Click here to download the latest version](https://github.com/ricolandia/Fountain-Writer-Tool/releases/latest)**
-
-*(Just access the link above, scroll down to the "Assets" section, and download the file corresponding to your operating system).*
-
----
-
-## ( Em Português do Brasil )
-Primeira versão pública do Fountain Writer, um editor de roteiros leve e completo.
-
-**Nota:** Esse projeto é espelhado no meu servidor pessoal **Forgejo server**. Você pode acessar esse repositório pelo link abaixo:
-
-[![Espelho Forgejo](https://img.shields.io/badge/Mirror-Forgejo-orange?logo=gitea)](https://repo.rizomatico.org/ricograca/Fountain-Writer-Tool)
-
-## 🆕 O que está incluído
-
-- Editor com realce de sintaxe Fountain
-- Barra lateral com navegação por cenas
-- Busca e substituição (Ctrl+H)
-- Modo foco para escrita sem distrações (F11)
-- Temas claro e escuro
-- Autocomplete inteligente de personagens
-- Números de linha com separador de página
-- Contador de palavras, caracteres e duração estimada
-- Exportação para PDF (requer reportlab)
-- Configuração persistente (tema, janela, preferências)
-
-## 🖥️ Plataformas suportadas
-
-- Windows
-- macOS
-- Linux
+- Windows, macOS, Linux
 
 ## 🔧 Requisitos
 
-- Python 3.10 ou superior
-- (Opcional) reportlab para exportação PDF
+```bash
+pip install PySide6
+pip install reportlab   # opcional, para PDF
+```
 
-## 💾 Download e Instalação
+## 🚀 Executar
 
-Para economizar espaço e garantir downloads rápidos, os arquivos executáveis (Windows, Mac e Linux) são compilados e hospedados via GitHub Actions.
+```bash
+python3 main.py
+```
 
-👉 **[Clique aqui para baixar a versão mais recente](https://github.com/ricolandia/Fountain-Writer-Tool/releases/latest)**
+## ⌨️ Atalhos
 
-*(Basta acessar o link acima, rolar até a seção "Assets" e baixar o arquivo correspondente ao seu sistema operacional).*
+| Atalho | Ação |
+|--------|------|
+| `Ctrl+S` | Salvar |
+| `Ctrl+O` | Abrir |
+| `Ctrl+N` | Novo |
+| `Ctrl+H/F` | Buscar e substituir |
+| `F11` | Modo foco |
+| `Esc` | Sair do modo foco |
+| `Ctrl+↑/↓` | Rolar 55 linhas |
 
 ---
 
-### Images  
+### Imagens
 
 ![screen capture](imagens/fountain-writer-1.webp)
 ![screen capture](imagens/fountain-writer-2.webp)
