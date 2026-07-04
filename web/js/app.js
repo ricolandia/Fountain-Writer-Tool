@@ -140,6 +140,10 @@ const app = {
         list.appendChild(li);
       }
     });
+    // Empty acts at the end
+    Object.keys(this.getActs()).sort().forEach(actName => {
+      if (!actFirstLine[actName]) this._renderActSeparator(list, actName, actColors);
+    });
   },
 
   _renderActSeparator(list, actName, actColors) {
@@ -908,6 +912,12 @@ const app = {
         if (a && actFirstLine[a] === undefined) actFirstLine[a] = s.line;
       });
     }
+    // Empty acts at the end
+    const allActs = this.getActs();
+    const lastLine = scenes.length ? scenes[scenes.length - 1].line + 2 : 0;
+    Object.keys(allActs).sort().forEach(actName => {
+      if (actFirstLine[actName] === undefined) actFirstLine[actName] = lastLine;
+    });
 
     const sorted = Object.entries(actFirstLine).sort((a, b) => a[1] - b[1]);
     const fontSize = this.fontSize || 12;
