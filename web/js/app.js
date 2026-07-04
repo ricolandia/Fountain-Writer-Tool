@@ -578,6 +578,7 @@ const app = {
 
   /* ── Beats ── */
   openBeatModal(index) {
+    this.syncBeatsFromScenes(this.editor.value);
     this._editingBeatIdx = index;
     const b = index >= 0 && index < this.beats.length ? this.beats[index] : null;
     document.getElementById('beat-title').value = b ? b.title : '';
