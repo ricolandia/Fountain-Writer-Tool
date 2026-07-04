@@ -78,6 +78,14 @@ docker compose up -d
 # http://localhost:8000
 ```
 
+## Sincronização via nuvem (Dropbox, OneDrive, Google Drive)
+
+1. Coloque a pasta `Fountain-Writer-Tool/` dentro da sua pasta de nuvem
+2. Crie uma subpasta (ex: `roteiros/`, `projetos/` ou `scripts/`)
+3. Ao salvar (💾), escolha essa pasta como destino
+4. Pronto — o navegador lembra e salva sempre no mesmo lugar
+5. Seus roteiros sincronizam em todos os dispositivos
+
 ## Tecnologias
 
 HTML5, CSS3, JavaScript (ES6+), localStorage, File System Access API.
