@@ -89,19 +89,11 @@ const app = {
   },
 
   updateScenes(text) {
-    const lines = text.split('\n');
-    const scenes = [];
-    let prev = 'ACTION';
-    lines.forEach((line, i) => {
-      const t = guessType(line, prev);
-      if (t === 'SCENE') { scenes.push({ line: i, label: line.trim().replace(/^\./, '').slice(0, 60), text: line.trim() }); }
-      if (t !== 'BLANK') prev = t;
-    });
+    const scenes = this.parseScenes(text);
     document.getElementById('scene-count').textContent = scenes.length;
     this._sceneActMap = {};
     scenes.forEach(s => {
-      const expectedRef = s.label + '|L' + s.line;
-      const beat = this.beats.find(b => b.scene_ref === expectedRef || b.title === s.label || b.scene_ref === s.label);
+      const beat = this._findBeatForScene(s.label, s.line);
       this._sceneActMap[s.line] = beat ? (beat.act || 'Ato 1') : null;
     });
     this.renderSceneList(scenes);
@@ -141,8 +133,8 @@ const app = {
       }
     });
     // Empty acts at the end
-    Object.keys(this.getActs()).sort().forEach(actName => {
-      if (!actFirstLine[actName]) this._renderActSeparator(list, actName, actColors);
+    this._sortActs(Object.keys(this.getActs())).forEach(actName => {
+      if (actFirstLine[actName] === undefined) this._renderActSeparator(list, actName, actColors);
     });
   },
 
@@ -164,7 +156,7 @@ const app = {
       const mc = {'!':'#fff3b0', '*':'#c8e6c9', '?':'#ffcdd2'};
       li.style.backgroundColor = mc[marks[s.line]] || '';
     }
-    const beat = this.beats.find(b => b.scene_ref === s.label + '|L' + s.line || b.title === s.label || b.scene_ref === s.label);
+    const beat = this._findBeatForScene(s.label, s.line);
     let plot = beat ? beat.plotline || 'Principal' : '';
     if (plot === 'C' || plot === 'D') plot = 'B';
     li.innerHTML = (i + 1) + '. ' + esc(s.label) +
@@ -181,11 +173,32 @@ const app = {
   goToScene(line) {
     const lines2 = this.editor.value.split('\n');
     let n = 0;
-    for (let j = 0; j <= line; j++) { n += lines2[j].length + 1; }
-    this.editor.selectionStart = n - lines2[line].length - 1;
-    this.editor.selectionEnd = n - 1 - 1;
+    for (let j = 0; j < line; j++) { n += lines2[j].length + 1; }
+    this.editor.selectionStart = n;
+    this.editor.selectionEnd = n;
     this.editor.focus();
     this.editor.scrollTop = Math.max(0, line * 18 - 200);
+  },
+
+  _findBeatForScene(label, line) {
+    const ref = label + '|L' + line;
+    return this.beats.find(b => b.scene_ref === ref || b.title === label || b.scene_ref === label);
+  },
+
+  _sortActs(actNames) {
+    return actNames.sort((a, b) => (parseInt(a.match(/\d+/)) || 0) - (parseInt(b.match(/\d+/)) || 0));
+  },
+
+  parseScenes(text) {
+    const lines = text.split('\n');
+    const scenes = [];
+    let prev = 'ACTION';
+    lines.forEach((line, i) => {
+      const t = guessType(line, prev);
+      if (t === 'SCENE') scenes.push({ line: i, label: line.trim().replace(/^\./, '').slice(0, 60) });
+      if (t !== 'BLANK') prev = t;
+    });
+    return scenes;
   },
 
   /* ── Scene colors ── */
@@ -253,6 +266,7 @@ const app = {
   removeAct(actName) {
     const acts = this.getActs();
     delete acts[actName];
+    if (!acts['Ato 1']) acts['Ato 1'] = [];
     this.saveActs(acts);
     // Update beats that referenced the removed act
     this.beats.forEach(b => { if (b.act === actName) b.act = 'Ato 1'; });
@@ -621,13 +635,16 @@ const app = {
     const oldLen = this.beats.length;
     this.beats = this.beats.filter(b => !b.auto || (b.scene_ref && b.scene_ref.includes('|L')));
     if (this.beats.length !== oldLen) changed = true;
+    const remappedRefs = new Set();
     sceneData.forEach(({ heading, line }) => {
       const uniqueRef = heading + '|L' + line;
       const existing = this.beats.find(b => b.scene_ref === uniqueRef);
       if (!existing) {
-        // Check if a beat with same title and |L format exists (stale line)
-        const stale = this.beats.find(b => b.scene_ref && b.scene_ref.includes('|L') && b.title === heading);
+        const stale = this.beats.find(b =>
+          b.scene_ref && b.scene_ref.includes('|L') && b.title === heading && !remappedRefs.has(b.scene_ref)
+        );
         if (stale) {
+          remappedRefs.add(stale.scene_ref);
           stale.scene_ref = uniqueRef;
           changed = true;
         } else {
@@ -657,14 +674,7 @@ const app = {
     el.innerHTML = '';
 
     const text = this.editor.value;
-    const lines = text.split('\n');
-    const scenes = [];
-    let prev = 'ACTION';
-    lines.forEach((line, i) => {
-      const t = guessType(line, prev);
-      if (t === 'SCENE') scenes.push({ line: i, label: line.trim().replace(/^\./, '').slice(0, 60) });
-      if (t !== 'BLANK') prev = t;
-    });
+    const scenes = this.parseScenes(text);
 
     const acts = this.getActs();
     const actNames = Object.keys(acts).sort((a, b) => {
@@ -679,7 +689,7 @@ const app = {
     // Map scene → plotline (from matching beats)
     const scenePlot = {};
     scenes.forEach(s => {
-      const beat = this.beats.find(b => b.scene_ref === s.label + '|L' + s.line || b.title === s.label || b.scene_ref === s.label);
+      const beat = this._findBeatForScene(s.label, s.line);
       let pl = beat ? beat.plotline || 'Principal' : 'Principal';
       if (pl === 'C' || pl === 'D') pl = 'B';
       scenePlot[s.line] = pl;
@@ -688,7 +698,7 @@ const app = {
     // Map scene → act (from beats)
     const sceneAct = {};
     scenes.forEach(s => {
-      const beat = this.beats.find(b => b.scene_ref === s.label + '|L' + s.line || b.title === s.label || b.scene_ref === s.label);
+      const beat = this._findBeatForScene(s.label, s.line);
       sceneAct[s.line] = beat ? (beat.act || 'Ato 1') : null;
     });
 
@@ -896,14 +906,7 @@ const app = {
 
     // Find first scene line for each act from beats+text
     const text = this.editor.value;
-    const lines = text.split('\n');
-    const scenes = [];
-    let prev = 'ACTION';
-    lines.forEach((line, i) => {
-      const t = guessType(line, prev);
-      if (t === 'SCENE') scenes.push({ line: i, label: line.trim().replace(/^\./, '').slice(0, 60) });
-      if (t !== 'BLANK') prev = t;
-    });
+    const scenes = this.parseScenes(text);
 
     const actFirstLine = {};
     if (scenes.length) {
@@ -915,7 +918,7 @@ const app = {
     // Empty acts at the end
     const allActs = this.getActs();
     const lastLine = scenes.length ? scenes[scenes.length - 1].line + 2 : 0;
-    Object.keys(allActs).sort().forEach(actName => {
+    this._sortActs(Object.keys(allActs)).forEach(actName => {
       if (actFirstLine[actName] === undefined) actFirstLine[actName] = lastLine;
     });
 
