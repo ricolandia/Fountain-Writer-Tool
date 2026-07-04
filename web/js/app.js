@@ -613,7 +613,7 @@ const app = {
     let changed = false;
     sceneData.forEach(({ heading, line }) => {
       const uniqueRef = heading + '|L' + line;
-      const exists = this.beats.some(b => b.title === heading || b.scene_ref === uniqueRef || b.scene_ref === heading);
+      const exists = this.beats.some(b => b.scene_ref === uniqueRef);
       if (!exists) {
         this.beats.push({ title: heading, act: 'Ato 1', desc: '', scene_ref: uniqueRef, order: this.beats.length, auto: true, plotline: 'Principal' });
         changed = true;
