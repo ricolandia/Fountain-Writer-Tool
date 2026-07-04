@@ -38,9 +38,11 @@ const app = {
     this.editor.addEventListener('input', () => {
       clearTimeout(timer);
       timer = setTimeout(() => { this.update(); this.trackProductivity(); }, 100);
-      if (!this.timerOn) { this.timerOn = true; this.tick(); }
       this.playTick();
     });
+    this.editor.addEventListener('mouseup', () => this.updateMarkButtonStates());
+    this.editor.addEventListener('keyup', () => this.updateMarkButtonStates());
+    this.editor.addEventListener('keyup', () => this.updateMarkButtonStates());
     this.editor.addEventListener('keydown', e => this.handleKey(e));
 
     // Drag reorder via Sortable-like manual implementation
@@ -66,6 +68,7 @@ const app = {
     this.updateScenes(text);
     this.updateStats(text);
     this.updatePreview(text);
+    this.syncBeatsFromScenes(text);
     const activeTab = document.querySelector('#right-tabs .tab.active');
     const tab = activeTab ? activeTab.dataset.tab : 'beats';
     if (tab === 'chars' || tab === 'locs') this.renderCharsLocs(text);
@@ -102,6 +105,11 @@ const app = {
       const li = document.createElement('li');
       const color = this.sceneColors[s.line];
       if (color) li.style.borderLeftColor = color;
+      const marks = this.getLineMarks();
+      if (marks[s.line]) {
+        const mc = {'!':'#fff3b0', '*':'#c8e6c9', '?':'#ffcdd2'};
+        li.style.backgroundColor = mc[marks[s.line]] || '';
+      }
       li.textContent = (i + 1) + '. ' + s.label;
       li.dataset.line = s.line;
       li.addEventListener('click', () => this.goToScene(s.line));
@@ -391,9 +399,29 @@ const app = {
     this.update(); ta.focus();
   },
   saveBeats() { localStorage.setItem('fw_beats', JSON.stringify(this.beats)); },
-  sortBeats() {
-    this.beats.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-    this.saveBeats(); this.renderBeats();
+
+  /* ── Auto-sync beats from scenes ── */
+  syncBeatsFromScenes(text) {
+    const lines = text.split('\n');
+    const sceneHeadings = [];
+    let prev = 'ACTION';
+    lines.forEach(line => {
+      const t = guessType(line, prev);
+      if (t === 'SCENE') {
+        const clean = line.trim().replace(/^\./, '');
+        sceneHeadings.push(clean);
+      }
+      if (t !== 'BLANK') prev = t;
+    });
+    let changed = false;
+    sceneHeadings.forEach(heading => {
+      const exists = this.beats.some(b => b.title === heading || b.scene_ref === heading);
+      if (!exists) {
+        this.beats.push({ title: heading, act: 'Ato 1', desc: '', scene_ref: heading, order: this.beats.length, auto: true });
+        changed = true;
+      }
+    });
+    if (changed) { this.saveBeats(); this.renderBeats(); }
   },
 
   /* ── Timeline (horizontal acima da status bar) ── */
@@ -560,7 +588,8 @@ const app = {
   },
 
   /* ── File I/O ── */
-  newFile() { if (confirm(_('save_confirm'))) { this.editor.value = ''; this.fileName = null; this.beats = []; this.titleData = null; this.projectName = ''; localStorage.setItem('fw_beats', '[]'); localStorage.removeItem('fw_title'); localStorage.removeItem('fw_char_data'); localStorage.removeItem('fw_project_name'); localStorage.removeItem('fw_scene_colors'); this.renderBeats(); this.update(); this.updateProjectNameDisplay(); } },
+  newFile() { if (confirm(_('save_confirm'))) { this.editor.value = ''; this.fileName = null; this.beats = []; this.titleData = null; this.projectName = ''; localStorage.setItem('fw_beats', '[]'); localStorage.removeItem('fw_title'); localStorage.removeItem('fw_char_data'); localStorage.removeItem('fw_project_name'); localStorage.removeItem('fw_scene_colors'); this.renderBeats(); this.update(); this.updateProjectNameDisplay();     }
+  },
   openFile() { document.getElementById('file-input').click(); },
   saveFile() {
     const blob = new Blob([this.editor.value], { type: 'text/plain;charset=utf-8' });
@@ -664,19 +693,50 @@ const app = {
     w.print();
   },
 
-  /* ── Highlights ── */
+  /* ── Line Marks ── */
+  getCurrentLine() {
+    const pos = this.editor.selectionStart;
+    return this.editor.value.slice(0, pos).split('\n').length - 1;
+  },
+
+  getLineMarks() {
+    return JSON.parse(localStorage.getItem('fw_line_marks') || '{}');
+  },
+
+  saveLineMarks(marks) {
+    localStorage.setItem('fw_line_marks', JSON.stringify(marks));
+  },
+
   markHighlight(type) {
-    const ta = this.editor;
-    const start = ta.selectionStart;
-    const end = ta.selectionEnd;
-    if (start === end) return;
-    const selected = ta.value.slice(start, end);
-    const marker = '{' + type + selected + '}';
-    ta.value = ta.value.slice(0, start) + marker + ta.value.slice(end);
-    this.update();
-    ta.focus();
-    ta.selectionStart = start;
-    ta.selectionEnd = start + marker.length;
+    const line = this.getCurrentLine();
+    const marks = this.getLineMarks();
+    if (marks[line] === type) {
+      delete marks[line];
+    } else {
+      marks[line] = type;
+    }
+    this.saveLineMarks(marks);
+    this.updateScenes(this.editor.value);
+    this.updateMarkButtonStates();
+  },
+
+  updateMarkButtonStates() {
+    const line = this.getCurrentLine();
+    const marks = this.getLineMarks();
+    const current = marks[line] || '';
+    const buttons = document.querySelectorAll('.hl-btn');
+    buttons.forEach(btn => {
+      const onclick = btn.getAttribute('onclick');
+      if (!onclick) return;
+      const type = onclick.match(/markHighlight\('([!*?])'\)/);
+      if (type && type[1] === current) {
+        btn.style.boxShadow = '0 0 0 2px #000';
+        btn.style.outline = '2px solid #000';
+      } else {
+        btn.style.boxShadow = '';
+        btn.style.outline = '';
+      }
+    });
   },
 
   /* ── Statistics ── */
@@ -987,7 +1047,23 @@ const app = {
     this.timerMode = this.timerMode === 'writing' ? 'pomodoro' : 'writing';
     document.getElementById('timer-mode-btn').textContent = this.timerMode === 'writing' ? '⏱ ' + _('tb_timer') : '🍅 Pomodoro';
     this.timerSec = 0;
+    this.pomodoroSec = 25 * 60;
     this.timerOn = false;
+    document.getElementById('timer-start-btn').textContent = '▶';
+    this.displayTimer();
+  },
+
+  toggleTimer() {
+    this.timerOn = !this.timerOn;
+    document.getElementById('timer-start-btn').textContent = this.timerOn ? '⏸' : '▶';
+    if (this.timerOn) this.tick();
+  },
+
+  resetTimer() {
+    this.timerOn = false;
+    this.timerSec = 0;
+    this.pomodoroSec = 25 * 60;
+    document.getElementById('timer-start-btn').textContent = '▶';
     this.displayTimer();
   },
 

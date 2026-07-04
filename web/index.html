@@ -39,6 +39,8 @@
     <span class="spacer"></span>
     <span id="save-indicator" style="font-size:10pt;color:var(--fg-sec)">💾</span>
     <button onclick="app.toggleTimerMode()" id="timer-mode-btn" style="font-size:9pt;padding:2px 4px" data-i18n="tb_timer">⏱ Escrita</button>
+    <button onclick="app.toggleTimer()" id="timer-start-btn" style="font-size:9pt;padding:2px 4px">▶</button>
+    <button onclick="app.resetTimer()" id="timer-reset-btn" style="font-size:9pt;padding:2px 4px">⏹</button>
     <span class="timer" id="timer-display">⏱ 00:00</span>
   </div>
 
@@ -69,7 +71,6 @@
       <div class="tab-content active" id="tab-beats">
         <p style="padding:4px;display:flex;gap:4px">
           <button onclick="app.addBeat()" data-i18n="tb_add_beat">+ Beat</button>
-          <button onclick="app.sortBeats()" style="font-size:9pt" data-i18n="tb_sort">Ordenar</button>
         </p>
         <div id="beat-list"></div>
       </div>

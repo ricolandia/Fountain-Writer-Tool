@@ -1,6 +1,7 @@
 const i18n = {
   'pt-BR': {
     tb_new: 'Novo', tb_open: 'Abrir', tb_save: 'Salvar',
+    tb_undo: 'Desfazer', tb_redo: 'Refazer',
     tb_project_open: 'Projeto', tb_project_save: 'Projeto',
     tb_html: 'HTML', tb_pdf: 'PDF', tb_preview: 'Preview',
     tb_find: 'Buscar', tb_title: 'Título', tb_stats: 'Stats',
@@ -39,6 +40,7 @@ const i18n = {
   },
   en: {
     tb_new: 'New', tb_open: 'Open', tb_save: 'Save',
+    tb_undo: 'Undo', tb_redo: 'Redo',
     tb_project_open: 'Project', tb_project_save: 'Project',
     tb_html: 'HTML', tb_pdf: 'PDF', tb_preview: 'Preview',
     tb_find: 'Find', tb_title: 'Title', tb_stats: 'Stats',
