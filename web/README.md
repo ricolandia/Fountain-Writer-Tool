@@ -38,6 +38,7 @@ Abra `web/index.html` em qualquer navegador moderno.
 
 **Docker:**
 ```bash
+cd web
 docker compose up -d
 # Abre http://localhost:8000
 ```
@@ -80,6 +81,7 @@ Open `web/index.html` in any modern browser.
 
 **Docker:**
 ```bash
+cd web
 docker compose up -d
 # Opens http://localhost:8000
 ```

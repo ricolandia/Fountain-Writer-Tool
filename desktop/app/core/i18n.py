@@ -11,7 +11,7 @@ import json
 import os
 
 _LANG_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
     "resources", "lang")
 
 

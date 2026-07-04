@@ -1,8 +1,10 @@
 services:
   api:
-    build: .
+    build:
+      context: ..
+      dockerfile: web/Dockerfile
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - ..:/app
     command: uvicorn web.server:app --host 0.0.0.0 --port 8000 --reload

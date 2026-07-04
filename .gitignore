@@ -7,4 +7,5 @@ Layout/
 PACKS/
 imagens/*
 !/imagens/2-0/
+*.bak.*
 
