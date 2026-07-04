@@ -114,16 +114,30 @@ const app = {
     const plotColors = {'Principal':'#569cd6','A':'#ce9178','B':'#4ec9b0'};
     const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
 
-    // Render flat list in text order with visual act separators
-    let lastAct = null;
+    // Group scenes by act, preserving text order within each act
+    const actGroups = {};
+    const actFirstLine = {};
     scenes.forEach((s, i) => {
-      const sceneAct = this._sceneActMap[s.line];
-      if (sceneAct && sceneAct !== lastAct) {
-        this._renderActSeparator(list, sceneAct, actColors);
-        lastAct = sceneAct;
+      const a = this._sceneActMap[s.line];
+      if (a) {
+        if (!actGroups[a]) { actGroups[a] = []; actFirstLine[a] = s.line; }
+        actGroups[a].push(i);
       }
-      const li = this._makeSceneLi(s, i, plotColors);
-      list.appendChild(li);
+    });
+    // Render acts sorted by first scene position
+    Object.entries(actFirstLine).sort((a, b) => a[1] - b[1]).forEach(([actName]) => {
+      this._renderActSeparator(list, actName, actColors);
+      actGroups[actName].forEach(idx => {
+        const li = this._makeSceneLi(scenes[idx], idx, plotColors);
+        list.appendChild(li);
+      });
+    });
+    // Unassigned scenes (no beat) at the end
+    scenes.forEach((s, i) => {
+      if (!this._sceneActMap[s.line]) {
+        const li = this._makeSceneLi(s, i, plotColors);
+        list.appendChild(li);
+      }
     });
   },
 
