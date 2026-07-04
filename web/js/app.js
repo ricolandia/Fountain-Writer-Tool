@@ -13,6 +13,7 @@ const app = {
   soundOn: localStorage.getItem('fw_sound') === 'true',
   _audioContext: null,
   _syncTimer: null,
+  _sceneActMap: {},
 
   init() {
     this.translateUI();
@@ -96,6 +97,11 @@ const app = {
       if (t !== 'BLANK') prev = t;
     });
     document.getElementById('scene-count').textContent = scenes.length;
+    this._sceneActMap = {};
+    scenes.forEach(s => {
+      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label);
+      this._sceneActMap[s.line] = beat ? (beat.act || 'Ato 1') : null;
+    });
     this.renderSceneList(scenes);
   },
 
@@ -108,18 +114,11 @@ const app = {
     const plotColors = {'Principal':'#569cd6','A':'#ce9178','B':'#4ec9b0'};
     const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
 
-    // Build scene→act mapping from BEATS
-    const beatActMap = {};
-    scenes.forEach(s => {
-      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label);
-      beatActMap[s.line] = beat ? (beat.act || 'Ato 1') : null;
-    });
-
     // Render flat list in text order with visual act separators
     let lastAct = null;
     const seenActs = new Set();
     scenes.forEach((s, i) => {
-      const sceneAct = beatActMap[s.line];
+      const sceneAct = this._sceneActMap[s.line];
       if (sceneAct && sceneAct !== lastAct) {
         seenActs.add(sceneAct);
         this._renderActSeparator(list, sceneAct, actColors);
@@ -881,13 +880,8 @@ const app = {
     const actFirstLine = {};
     Object.keys(acts).forEach(a => actFirstLine[a] = null);
     if (scenes.length) {
-      const lineToAct = {};
       scenes.forEach(s => {
-        const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label);
-        lineToAct[s.line] = beat ? (beat.act || 'Ato 1') : null;
-      });
-      scenes.forEach(s => {
-        const a = lineToAct[s.line];
+        const a = this._sceneActMap[s.line];
         if (a && actFirstLine[a] === null) actFirstLine[a] = s.line;
       });
     }
