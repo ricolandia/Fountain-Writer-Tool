@@ -588,6 +588,8 @@ const app = {
   },
 
   saveBeatModal() {
+    // Ensure beats are up to date before editing
+    this.syncBeatsFromScenes(this.editor.value);
     const title = document.getElementById('beat-title').value.trim();
     const act = document.getElementById('beat-act').value.trim() || 'Ato 1';
     const plot = document.getElementById('beat-plot').value;
@@ -597,6 +599,14 @@ const app = {
       this.beats[idx].title = title;
       this.beats[idx].act = act;
       this.beats[idx].plotline = plot;
+      // Find matching scene line for this beat's title
+      const scenes = this.parseScenes(this.editor.value);
+      for (const s of scenes) {
+        if (s.label === title || s.label.startsWith(title) || title.startsWith(s.label)) {
+          this.beats[idx].scene_ref = title + '|L' + s.line;
+          break;
+        }
+      }
     } else {
       this.beats.push({ title, act, plotline: plot, order: this.beats.length });
     }
@@ -604,7 +614,7 @@ const app = {
     let dbg = '';
     this.parseScenes(this.editor.value).forEach(s => {
       const b = this._findBeatForScene(s.label, s.line);
-      dbg += s.label.slice(0, 16) + ':' + (b ? b.act : '?') + ' ';
+      dbg += s.label.slice(0, 12) + ':' + (b ? 'idx=' + this.beats.indexOf(b) + ' act=' + b.act + ' sr=' + b.scene_ref : '?') + ' ';
     });
     const el = document.getElementById('dbg');
     if (el) el.textContent = dbg;
