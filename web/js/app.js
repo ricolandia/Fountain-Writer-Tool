@@ -924,6 +924,7 @@ const app = {
   toggleMenu() {
     const overlay = document.getElementById('menu-overlay');
     overlay.classList.toggle('open');
+    document.body.classList.toggle('menu-open');
   },
 
   populateMenu() {

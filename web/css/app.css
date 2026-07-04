@@ -46,6 +46,7 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
   font: 10pt 'Courier New', monospace; cursor: pointer; border-radius: 4px;
 }
 #menu-drawer button:hover { background: var(--surface2); }
+.menu-open #toolbar { display: none; }
 
 /* ── Panes ── */
 #panes { display: flex; flex: 1; overflow: hidden; }
