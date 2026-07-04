@@ -1497,7 +1497,13 @@ const app = {
   },
 
   /* ── Auto-save ── */
-  initAutoSave() { setInterval(() => { localStorage.setItem('fw_draft', this.editor.value); }, 10000); },
+  initAutoSave() {
+    setInterval(() => {
+      localStorage.setItem('fw_draft', this.editor.value);
+      this.saveBeats();
+      this.saveActs(this.getActs());
+    }, 10000);
+  },
 
   /* ── Auto-backup ── */
   initBackup() {
@@ -1505,7 +1511,10 @@ const app = {
       const text = this.editor.value;
       if (!text.trim()) return;
       const backups = JSON.parse(localStorage.getItem('fw_backups') || '[]');
-      backups.push({ text, name: this.fileName || 'roteiro', time: Date.now() });
+      backups.push({
+        text, beats: this.beats, acts: this.getActs(),
+        name: this.fileName || 'roteiro', time: Date.now()
+      });
       if (backups.length > 10) backups.splice(0, backups.length - 10);
       localStorage.setItem('fw_backups', JSON.stringify(backups));
     }, 300000); // 5 minutes
@@ -1541,6 +1550,8 @@ const app = {
     if (!confirm(_('backup_restore_confirm'))) return;
     this.editor.value = backups[idx].text;
     this.fileName = backups[idx].name;
+    if (backups[idx].beats) { this.beats = backups[idx].beats; this.saveBeats(); }
+    if (backups[idx].acts) { this.saveActs(backups[idx].acts); }
     this.update();
     this.closeBackups();
   },
