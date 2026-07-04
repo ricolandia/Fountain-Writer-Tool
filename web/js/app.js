@@ -577,7 +577,6 @@ const app = {
 
   /* ── Beats ── */
   openBeatModal(index) {
-    this.syncBeatsFromScenes(this.editor.value);
     this._editingBeatIdx = index;
     const b = index >= 0 && index < this.beats.length ? this.beats[index] : null;
     document.getElementById('beat-title').value = b ? b.title : '';
@@ -588,8 +587,6 @@ const app = {
   },
 
   saveBeatModal() {
-    // Ensure beats are up to date before editing
-    this.syncBeatsFromScenes(this.editor.value);
     const title = document.getElementById('beat-title').value.trim();
     const act = document.getElementById('beat-act').value.trim() || 'Ato 1';
     const plot = document.getElementById('beat-plot').value;
