@@ -57,6 +57,7 @@ const app = {
     this.initBackup();
     this.editor.addEventListener('scroll', () => this.renderActMarkers());
     this.update();
+    this.syncBeatsFromScenes(this.editor.value);
     this.renderBeats();
   },
 
@@ -965,6 +966,7 @@ const app = {
           this.saveBeats();
           this.updateProjectNameDisplay();
           this.update();
+          this.syncBeatsFromScenes(this.editor.value);
           this.renderBeats();
         } catch (err) { alert('Erro ao ler projeto: ' + err.message); }
       };
@@ -1515,7 +1517,7 @@ document.getElementById('file-input').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = ev => { app.editor.value = ev.target.result; app.fileName = file.name; app.update(); };
+  reader.onload = ev => { app.editor.value = ev.target.result; app.fileName = file.name; app.update(); app.syncBeatsFromScenes(app.editor.value); };
   reader.readAsText(file, 'UTF-8');
   e.target.value = '';
 });
