@@ -17,8 +17,8 @@
 
   <div id="toolbar">
     <button id="menu-btn" onclick="app.toggleMenu()">☰</button>
-    <label for="show-scenes" class="pane-btn mobile-only">🎬 Cenas</label>
-    <label for="show-beats" class="pane-btn mobile-only">📋 Beats</label>
+    <span class="mobile-only"><label for="show-scenes" class="pane-btn">🎬 Cenas</label></span>
+    <span class="mobile-only"><label for="show-beats" class="pane-btn">📋 Beats</label></span>
     <button onclick="app.newFile()" data-i18n="tb_new">📄 Novo</button>
     <button onclick="app.openProject()" data-i18n="tb_open">📂 Abrir</button>
     <button onclick="app.saveProject()" data-i18n="tb_save">💾 Salvar</button>
