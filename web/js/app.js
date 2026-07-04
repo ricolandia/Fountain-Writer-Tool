@@ -16,6 +16,8 @@ const app = {
   _audioContext: null,
   _fileHandle: null,
   _sceneActMap: {},
+  _orcListenersAttached: false,
+  _editingBeatIdx: -1,
 
   init() {
     this.translateUI();
@@ -938,13 +940,16 @@ const app = {
       rightPane.style.display = 'none';
       leftPane.style.display = 'none';
       this.carregarProjeto();
-      // Orçamento auto-calc
-      document.querySelectorAll('#projeto-form input[id^="proj-orc-"][id$="valor"]').forEach(el => {
-        el.addEventListener('input', () => this._atualizarOrcTotal());
-      });
+      // Orçamento auto-calc (once)
+      if (!this._orcListenersAttached) {
+        document.querySelectorAll('#projeto-form input[id^="proj-orc-"][id$="valor"]').forEach(el => {
+          el.addEventListener('input', () => this._atualizarOrcTotal());
+        });
+        this._orcListenersAttached = true;
+      }
     } else {
       editorWrap.style.display = 'block';
-      previewWrap.style.display = this.previewMode === 'preview' ? 'block' : 'none';
+      previewWrap.style.display = (this.previewMode === 'preview' || this.previewMode === 'split') ? 'block' : 'none';
       projetoForm.style.display = 'none';
       rightPane.style.display = '';
       leftPane.style.display = '';
@@ -986,7 +991,9 @@ const app = {
   _atualizarOrcTotal() {
     const ids = ['proj-orc-pre-valor','proj-orc-prod-valor','proj-orc-pos-valor','proj-orc-div-valor','proj-orc-adm-valor'];
     const total = ids.reduce((sum, id) => {
-      const v = parseFloat((document.getElementById(id)?.value || '0').replace(/\./g,'').replace(',','.'));
+      const raw = (document.getElementById(id)?.value || '0').trim();
+      const normalized = raw.replace(/\./g, '').replace(',', '.');
+      const v = parseFloat(normalized);
       return sum + (isNaN(v) ? 0 : v);
     }, 0);
     const el = document.getElementById('proj-orc-total');
@@ -1028,30 +1035,37 @@ const app = {
   exportProjetoPDF() {
     this.salvarProjeto();
     const d = this.projetoData || {};
-    const p = (v) => v || '';
+    const e = (v) => esc(v || '');
+    const s = (v) => v ? 'Sim' : 'Não';
     const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Projeto Cultural</title>' +
       '<style>body{font-family:Arial,sans-serif;font-size:11pt;margin:40px}h1{font-size:14pt}h2{font-size:12pt;margin-top:20px}' +
       'table{width:100%;border-collapse:collapse;margin:10px 0}td,th{border:1px solid #ccc;padding:6px;text-align:left}th{background:#eee}' +
-      '.rubrica{text-align:right;font-weight:bold}</style></head><body>' +
+      '</style></head><body>' +
       '<h1>Projeto Cultural</h1>' +
       '<h2>1. Dados do Proponente e Projeto</h2>' +
-      '<table><tr><td><b>Nome:</b> ' + p(d.nome) + '</td><td><b>Proponente:</b> ' + p(d.proponente) + '</td></tr>' +
-      '<tr><td><b>CPF:</b> ' + p(d.cpf) + '</td><td><b>Segmento:</b> ' + p(d.segmento) + '</td></tr>' +
-      '<tr><td><b>Produto:</b> ' + p(d.produto) + '</td><td><b>Valor:</b> R$ ' + p(d.valor) + '</td></tr></table>' +
-      '<h2>2. Perfil</h2><p><b>Resumo:</b> ' + p(d.resumo) + '</p>' +
-      '<p><b>Objetivo Geral:</b> ' + p(d.objGeral) + '</p>' +
-      '<p><b>Justificativa:</b> ' + p(d.justificativa) + '</p>' +
-      '<h2>3. Equipe</h2><p>Direção: ' + p(d.eqDirecao) + '<br>Animação: ' + p(d.eqAnimacao) + '<br>Arte: ' + p(d.eqArte) + '<br>Trilha: ' + p(d.eqTrilha) + '<br>Produção: ' + p(d.eqProducao) + '</p>' +
-      '<h2>4. Divulgação</h2><p>' + p(d.divRedes) + '</p>' +
-      '<h2>5. Acessibilidade</h2><p>Libras: ' + (d.acessLibras ? 'Sim' : 'Não') + ' | Audiodescrição: ' + (d.acessAudio ? 'Sim' : 'Não') + ' | Legendas: ' + (d.acessLegendas ? 'Sim' : 'Não') + '</p>' +
-      '<h2>6. Contrapartidas</h2><p><b>Social:</b> ' + p(d.contaSocial) + '<br><b>Cultural (CC):</b> ' + p(d.contaCultural) + '</p>' +
-      '<h2>7. Orçamento</h2><table><tr><th>Rubrica</th><th>Valor</th></tr>' +
-      '<tr><td>Pré-Produção</td><td>R$ ' + p(d.orcPreValor) + '</td></tr>' +
-      '<tr><td>Produção</td><td>R$ ' + p(d.orcProdValor) + '</td></tr>' +
-      '<tr><td>Pós-Produção</td><td>R$ ' + p(d.orcPosValor) + '</td></tr>' +
-      '<tr><td>Divulgação</td><td>R$ ' + p(d.orcDivValor) + '</td></tr>' +
-      '<tr><td>Despesas Adm.</td><td>R$ ' + p(d.orcAdmValor) + '</td></tr></table>' +
-      '<h2>9. Distribuição</h2><p><b>Público:</b> ' + p(d.distPublico) + '<br><b>Municípios:</b> ' + p(d.distMunicipios) + '</p>' +
+      '<table><tr><td><b>Nome:</b> ' + e(d.nome) + '</td><td><b>Proponente:</b> ' + e(d.proponente) + '</td></tr>' +
+      '<tr><td><b>CPF:</b> ' + e(d.cpf) + '</td><td><b>Segmento:</b> ' + e(d.segmento) + '</td></tr>' +
+      '<tr><td><b>Produto:</b> ' + e(d.produto) + '</td><td><b>Valor:</b> R$ ' + e(d.valor) + '</td></tr></table>' +
+      '<h2>2. Perfil</h2><p><b>Resumo:</b> ' + e(d.resumo) + '</p>' +
+      '<p><b>Objetivo Geral:</b> ' + e(d.objGeral) + '</p>' +
+      '<p><b>Objetivos Específicos:</b> ' + e(d.objEspec) + '</p>' +
+      '<p><b>Justificativa:</b> ' + e(d.justificativa) + '</p>' +
+      '<h2>3. Equipe</h2><p>Direção: ' + e(d.eqDirecao) + '<br>Animação: ' + e(d.eqAnimacao) + '<br>Arte: ' + e(d.eqArte) + '<br>Trilha: ' + e(d.eqTrilha) + '<br>Produção: ' + e(d.eqProducao) + '</p>' +
+      '<h2>4. Plano de Divulgação</h2><p><b>Redes Sociais:</b> ' + e(d.divRedes) + '<br><b>Assessoria de Imprensa:</b> ' + e(d.divImprensa) + '<br><b>Material Gráfico:</b> ' + e(d.divMaterial) + '</p>' +
+      '<h2>5. Acessibilidade e Democratização</h2><p>Libras: ' + s(d.acessLibras) + ' | Audiodescrição: ' + s(d.acessAudio) + ' | Legendas: ' + s(d.acessLegendas) + '</p><p><b>Sessões Gratuitas:</b> ' + e(d.acessSessoes) + '</p>' +
+      '<h2>6. Contrapartidas</h2><p><b>Social:</b> ' + e(d.contaSocial) + '<br><b>Cultural (CC):</b> ' + e(d.contaCultural) + '<br><b>Imagem do Patrocinador:</b> ' + e(d.contaImagem) + '</p>' +
+      '<h2>7. Orçamento</h2><table><tr><th>Rubrica</th><th>Descrição</th><th>Valor</th></tr>' +
+      '<tr><td>Pré-Produção</td><td>' + e(d.orcPreDesc) + '</td><td>R$ ' + e(d.orcPreValor) + '</td></tr>' +
+      '<tr><td>Produção</td><td>' + e(d.orcProdDesc) + '</td><td>R$ ' + e(d.orcProdValor) + '</td></tr>' +
+      '<tr><td>Pós-Produção</td><td>' + e(d.orcPosDesc) + '</td><td>R$ ' + e(d.orcPosValor) + '</td></tr>' +
+      '<tr><td>Divulgação</td><td>' + e(d.orcDivDesc) + '</td><td>R$ ' + e(d.orcDivValor) + '</td></tr>' +
+      '<tr><td>Despesas Adm.</td><td>' + e(d.orcAdmDesc) + '</td><td>R$ ' + e(d.orcAdmValor) + '</td></tr></table>' +
+      '<h2>8. Plano de Distribuição</h2><p><b>Público-Alvo:</b> ' + e(d.distPublico) + '<br><b>Metas de Alcance:</b> ' + e(d.distMetas) + '<br><b>Municípios:</b> ' + e(d.distMunicipios) + '<br><b>Festivais:</b> ' + e(d.distFestivais) + '</p>' +
+      '<h2>9. Especificações Técnicas das Peças</h2><table><tr><th>Tipo</th><th>Formato</th><th>Especificações</th></tr>' +
+      '<tr><td>Cartaz</td><td>' + e(d.midCartazFormato) + '</td><td>' + e(d.midCartazEsp) + '</td></tr>' +
+      '<tr><td>Filipeta</td><td>' + e(d.midFlyerFormato) + '</td><td>' + e(d.midFlyerEsp) + '</td></tr>' +
+      '<tr><td>Social Media</td><td>' + e(d.midSocialFormato) + '</td><td>' + e(d.midSocialEsp) + '</td></tr>' +
+      '<tr><td>Press-kit</td><td>' + e(d.midPressFormato) + '</td><td>' + e(d.midPressEsp) + '</td></tr></table>' +
       '<p style="text-align:center;margin-top:40px;color:#999;font-size:9pt">Gerado por Fountain Writer</p>' +
       '</body></html>';
     const w = window.open('', '', 'width=800,height=600');
@@ -1072,6 +1086,7 @@ const app = {
     localStorage.removeItem('fw_title'); localStorage.removeItem('fw_char_data');
     localStorage.removeItem('fw_project_name'); localStorage.removeItem('fw_scene_colors');
     localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
+    this.projetoData = null; localStorage.removeItem('fw_projeto');
     this.renderBeats(); this.update(); this.updateProjectNameDisplay();
   },
   openFile() { document.getElementById('file-input').click(); },
@@ -1101,6 +1116,7 @@ const app = {
       soundOn: this.soundOn,
       timelineVisible: this.timelineVisible,
       previewMode: this.previewMode,
+      viewMode: this.viewMode,
       focusOn: this.focusOn,
       lang: lang,
       updated: new Date().toISOString()
@@ -1162,7 +1178,9 @@ const app = {
           if (data.timelineVisible !== undefined) this.timelineVisible = data.timelineVisible;
           if (data.focusOn) { this.focusOn = data.focusOn; document.body.classList.toggle('focus-mode', this.focusOn); }
           if (data.lang) { lang = data.lang; localStorage.setItem('fw_lang', lang); }
-          if (data.projeto) { this.projetoData = data.projeto; localStorage.setItem('fw_projeto', JSON.stringify(data.projeto)); }
+          if (data.previewMode !== undefined) this.previewMode = data.previewMode;
+          if (data.viewMode !== undefined) this.viewMode = data.viewMode;
+          if (data.projeto !== undefined) { this.projetoData = data.projeto; localStorage.setItem('fw_projeto', JSON.stringify(data.projeto)); }
           localStorage.setItem('fw_title', JSON.stringify(this.titleData));
           localStorage.setItem('fw_beats', JSON.stringify(this.beats));
           localStorage.setItem('fw_project_name', this.projectName);
