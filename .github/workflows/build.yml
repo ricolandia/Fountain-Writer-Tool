@@ -1,0 +1,47 @@
+name: Build and Release
+
+on: 
+  push:
+    branches: [ "main" ]
+    tags:
+      - 'v*' # Habilita o gatilho para quando você criar tags como v1.0.0
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: write # Necessário para a Action poder criar o Release na sua página
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install pyinstaller reportlab
+
+      # Ajuste no nome: Adicionei o SO no final para evitar que o Mac e o Linux tenham o exato mesmo nome no Release
+      - name: Build with PyInstaller
+        run: pyinstaller --onefile --windowed --name "Fountain-Writer-${{ matrix.os }}" fountain_writer.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Fountain-Writer-${{ matrix.os }}
+          path: dist/*
+
+      # Passo final: Faz o upload direto para o Release se for uma Tag
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v') 
+        with:
+          files: dist/*

@@ -9,8 +9,16 @@
 </head>
 <body>
 <div id="app">
+  <!-- Mobile pane toggles (checkbox hack, no JS) -->
+  <input type="checkbox" id="show-scenes" class="pane-toggle">
+  <input type="checkbox" id="show-beats" class="pane-toggle">
+  <label for="show-scenes" class="backdrop" id="backdrop-scenes"></label>
+  <label for="show-beats" class="backdrop" id="backdrop-beats"></label>
+
   <div id="toolbar">
     <button id="menu-btn" onclick="app.toggleMenu()">☰</button>
+    <label for="show-scenes" class="pane-btn mobile-only">🎬 Cenas</label>
+    <label for="show-beats" class="pane-btn mobile-only">📋 Beats</label>
     <button onclick="app.newFile()" data-i18n="tb_new">📄 Novo</button>
     <button onclick="app.openProject()" data-i18n="tb_open">📂 Abrir</button>
     <button onclick="app.saveProject()" data-i18n="tb_save">💾 Salvar</button>
