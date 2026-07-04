@@ -12,10 +12,10 @@
   <div id="toolbar">
     <button id="menu-btn" onclick="app.toggleMenu()">☰</button>
     <button onclick="app.newFile()" data-i18n="tb_new">📄 Novo</button>
-    <button onclick="app.openFile()" data-i18n="tb_open">📂 Abrir</button>
-    <button onclick="app.saveFile()" data-i18n="tb_save">💾 Salvar</button>
-    <button onclick="app.openProject()" data-i18n="tb_project_open">📂 Projeto</button>
-    <button onclick="app.saveProject()" data-i18n="tb_project_save">💾 Projeto</button>
+    <button onclick="app.openProject()" data-i18n="tb_open">📂 Abrir</button>
+    <button onclick="app.saveProject()" data-i18n="tb_save">💾 Salvar</button>
+    <button onclick="app.openFile()" data-i18n="tb_import">📄 Importar</button>
+    <button onclick="app.saveFile()" data-i18n="tb_fountain">⬇ Fountain</button>
     <span class="sep"></span>
     <button onclick="app.exportHTML()" data-i18n="tb_html">📑 HTML</button>
     <button onclick="app.printPDF()" data-i18n="tb_pdf">🖨 PDF</button>
@@ -54,13 +54,12 @@
 
   <div id="panes">
     <div id="pane-left" class="pane">
-      <div class="pane-header"><span data-i18n="tb_scenes">CENAS</span><span><span id="scene-count">0</span> <button onclick="app.toggleSceneView()" id="scene-view-btn" style="font-size:8pt;padding:1px 4px">▦</button> <button onclick="app.addAct()" style="font-size:8pt;padding:1px 4px" title="Adicionar ato">🎬</button></span></div>
+      <div class="pane-header"><span data-i18n="tb_scenes">CENAS</span><span><span id="scene-count">0</span> <button onclick="app.addAct()" style="font-size:8pt;padding:1px 4px" title="Adicionar ato">🎬</button></span></div>
       <ul id="scene-list"></ul>
-      <div id="scene-cards" style="display:none;padding:4px"></div>
     </div>
 
     <div id="pane-center" class="pane">
-      <div id="textarea-wrap"><textarea id="editor" data-i18n-placeholder="editor_placeholder"></textarea></div>
+      <div id="textarea-wrap"><div id="act-markers"></div><textarea id="editor" data-i18n-placeholder="editor_placeholder"></textarea></div>
       <div id="preview-wrap"><div id="preview"></div></div>
     </div>
 
@@ -235,9 +234,8 @@
       <div class="form-row"><label>Trama:</label>
         <select id="beat-plot" style="flex:1;padding:4px;border:1px solid var(--border);border-radius:4px;background:var(--surface3);color:var(--fg);font:10pt monospace">
           <option value="Principal">Principal</option>
+          <option value="A">A</option>
           <option value="B">B</option>
-          <option value="C">C</option>
-          <option value="D">D</option>
         </select>
       </div>
     </div>

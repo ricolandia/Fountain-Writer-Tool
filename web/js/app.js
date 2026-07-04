@@ -7,13 +7,12 @@ const app = {
   isModified: false, timerMode: 'writing', pomodoroSec: 25 * 60,
   wordGoal: parseInt(localStorage.getItem('fw_goal') || '0'),
   sceneColors: JSON.parse(localStorage.getItem('fw_scene_colors') || '{}'),
-  sceneView: 'list', // 'list' or 'cards'
   timelineVisible: false,
-  timelineMode: 'act',
   projectName: localStorage.getItem('fw_project_name') || '',
   fontSize: parseInt(localStorage.getItem('fw_font_size') || '12'),
   soundOn: localStorage.getItem('fw_sound') === 'true',
   _audioContext: null,
+  _syncTimer: null,
 
   init() {
     this.translateUI();
@@ -43,7 +42,6 @@ const app = {
     });
     this.editor.addEventListener('mouseup', () => this.updateMarkButtonStates());
     this.editor.addEventListener('keyup', () => this.updateMarkButtonStates());
-    this.editor.addEventListener('keyup', () => this.updateMarkButtonStates());
     this.editor.addEventListener('keydown', e => this.handleKey(e));
 
     // Drag reorder via Sortable-like manual implementation
@@ -56,6 +54,7 @@ const app = {
     this.renderProductivity();
     this.initAutoSave();
     this.initBackup();
+    this.editor.addEventListener('scroll', () => this.renderActMarkers());
     this.update();
     this.renderBeats();
   },
@@ -66,10 +65,15 @@ const app = {
     localStorage.setItem('fw_draft', text);
     this.isModified = true;
     this.updateIndicator();
+    this.autoAssignScenes(text);
     this.updateScenes(text);
     this.updateStats(text);
     this.updatePreview(text);
-    this.syncBeatsFromScenes(text);
+    this.renderTimeline();
+    this.renderActMarkers();
+    // Debounced beat sync (only after user pauses typing)
+    clearTimeout(this._syncTimer);
+    this._syncTimer = setTimeout(() => this.syncBeatsFromScenes(text), 1500);
     const activeTab = document.querySelector('#right-tabs .tab.active');
     const tab = activeTab ? activeTab.dataset.tab : 'beats';
     if (tab === 'chars' || tab === 'locs') this.renderCharsLocs(text);
@@ -93,63 +97,37 @@ const app = {
     });
     document.getElementById('scene-count').textContent = scenes.length;
     this.renderSceneList(scenes);
-    this.renderSceneCards(scenes);
   },
 
   renderSceneList(scenes) {
     const list = document.getElementById('scene-list');
-    list.style.display = this.sceneView === 'list' ? '' : 'none';
-    if (this.sceneView !== 'list') return;
     list.innerHTML = '';
     if (scenes.length === 0) { list.innerHTML = '<li class="list-empty" style="cursor:default">' + _('empty_scenes') + '</li>'; return; }
 
     const acts = this.getActs();
-    const usedLines = new Set();
-    const plotColors = {'Principal':'#569cd6','B':'#4ec9b0','C':'#dcdcaa','D':'#c586c0'};
+    const plotColors = {'Principal':'#569cd6','A':'#ce9178','B':'#4ec9b0'};
+    const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
 
-    // Render scenes grouped by act
-    Object.entries(acts).forEach(([actName, lines]) => {
-      // Act header (draggable)
-      const hdr = document.createElement('li');
-      hdr.draggable = true;
-      hdr.style.cssText = 'padding:4px 8px;font-weight:bold;font-size:9pt;color:var(--accent);cursor:grab;background:var(--surface2);border-radius:4px;margin:4px 0 2px';
-      hdr.textContent = actName;
-      hdr.dataset.act = actName;
-      hdr.addEventListener('dragstart', e => {
-        e.dataTransfer.setData('text/plain', 'ACT:' + actName);
-        hdr.style.opacity = '0.4';
-      });
-      hdr.addEventListener('dragend', () => { hdr.style.opacity = '1'; });
-      hdr.addEventListener('dragover', e => e.preventDefault());
-      hdr.addEventListener('drop', e => {
-        e.preventDefault();
-        const data = e.dataTransfer.getData('text/plain');
-        if (data.startsWith('ACT:')) {
-          const fromAct = data.slice(4);
-          if (fromAct === actName) return;
-          // Swap act names in the acts object
-          const acts2 = this.getActs();
-          const temp = acts2[fromAct];
-          acts2[fromAct] = acts2[actName];
-          acts2[actName] = temp;
-          this.saveActs(acts2);
-          this.updateScenes(this.editor.value);
-        }
-      });
-      list.appendChild(hdr);
-
-      // Scenes in this act
-      scenes.forEach((s, i) => {
-        if (!lines.includes(s.line)) return;
-        usedLines.add(s.line);
-        const li = this._makeSceneLi(s, i, plotColors);
-        list.appendChild(li);
-      });
+    // Build scene→act mapping from BEATS
+    const beatActMap = {};
+    scenes.forEach(s => {
+      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label);
+      beatActMap[s.line] = beat ? (beat.act || 'Ato 1') : null;
     });
 
-    // Remaining scenes (not in any act)
+    // Render flat list in text order with visual act separators
+    let lastAct = null;
     scenes.forEach((s, i) => {
-      if (usedLines.has(s.line)) return;
+      const sceneAct = beatActMap[s.line];
+      if (sceneAct && sceneAct !== lastAct) {
+        // Act separator
+        const sep = document.createElement('li');
+        sep.style.cssText = 'padding:3px 6px;font-weight:bold;font-size:8pt;color:var(--fg-sec);background:var(--surface2);border-radius:3px;margin:4px 0 2px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid ' + (actColors[sceneAct] || '#888');
+        sep.innerHTML = '<span>' + esc(sceneAct) + '</span><span class="act-remove" style="cursor:pointer;color:var(--fg-sec);font-size:7pt" title="Remover ato">✕</span>';
+        sep.querySelector('.act-remove').addEventListener('click', e => { e.stopPropagation(); this.removeAct(sceneAct); });
+        list.appendChild(sep);
+        lastAct = sceneAct;
+      }
       const li = this._makeSceneLi(s, i, plotColors);
       list.appendChild(li);
     });
@@ -157,6 +135,7 @@ const app = {
 
   _makeSceneLi(s, i, plotColors) {
     const li = document.createElement('li');
+    li.style.cssText = 'user-select:none;-webkit-user-select:none';
     const color = this.sceneColors[s.line];
     if (color) li.style.borderLeftColor = color;
     const marks = this.getLineMarks();
@@ -165,69 +144,16 @@ const app = {
       li.style.backgroundColor = mc[marks[s.line]] || '';
     }
     const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label);
-    const plot = beat ? beat.plotline || 'Principal' : '';
+    let plot = beat ? beat.plotline || 'Principal' : '';
+    if (plot === 'C' || plot === 'D') plot = 'B';
     li.innerHTML = (i + 1) + '. ' + esc(s.label) +
       (plot ? ' <span style="font-size:7pt;color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '');
     li.dataset.line = s.line;
-    li.addEventListener('click', () => this.goToScene(s.line));
-    return li;
-  },
-
-  renderSceneCards(scenes) {
-    const cards = document.getElementById('scene-cards');
-    cards.style.display = this.sceneView === 'cards' ? 'flex' : 'none';
-    cards.style.flexDirection = 'column';
-    if (this.sceneView !== 'cards') return;
-    cards.innerHTML = '';
-    if (scenes.length === 0) { cards.innerHTML = '<div style="color:var(--fg-sec);padding:8px">' + _('empty_scenes') + '</div>'; return; }
-    scenes.forEach((s, i) => {
-      const color = this.sceneColors[s.line] || '#888';
-      const card = document.createElement('div');
-      card.draggable = true;
-      card.dataset.idx = i;
-      card.style.cssText = 'width:100%;padding:8px;border-radius:4px;border-left:4px solid ' + color + ';background:var(--surface2);cursor:grab;user-select:none';
-      card.innerHTML = '<div style="font-weight:bold;font-size:10pt">' + (i + 1) + '. ' + esc(s.label) + '</div>';
-      card.addEventListener('click', () => this.goToScene(s.line));
-      card.addEventListener('dragstart', e => {
-        e.dataTransfer.setData('text/plain', i);
-        card.style.opacity = '0.4';
-      });
-      card.addEventListener('dragend', () => { card.style.opacity = '1'; });
-      card.addEventListener('dragover', e => { e.preventDefault(); card.style.borderLeftColor = '#000'; });
-      card.addEventListener('dragleave', () => { card.style.borderLeftColor = color; });
-      card.addEventListener('drop', e => {
-        e.preventDefault();
-        card.style.borderLeftColor = color;
-        const from = parseInt(e.dataTransfer.getData('text/plain'));
-        const to = i;
-        if (from !== to) {
-          const lines2 = this.editor.value.split('\n');
-          // Find all scenes in order
-          const allScenes = [];
-          let p = 'ACTION';
-          lines2.forEach((line, idx) => {
-            const t = guessType(line, p);
-            if (t === 'SCENE') allScenes.push({ line: idx, end: lines2.length });
-            if (t !== 'BLANK') p = t;
-          });
-          for (let j = 0; j < allScenes.length - 1; j++) allScenes[j].end = allScenes[j + 1].line;
-          allScenes[allScenes.length - 1].end = lines2.length;
-
-          const blocks = allScenes.map(s2 => lines2.slice(s2.line, s2.end).join('\n'));
-          const [moved] = blocks.splice(from, 1);
-          blocks.splice(to, 0, moved);
-          this.editor.value = blocks.join('\n\n');
-          this.update();
-        }
-      });
-      cards.appendChild(card);
+    li.addEventListener('click', e => {
+      if (e.target.closest('.act-remove')) return;
+      this.goToScene(s.line);
     });
-  },
-
-  toggleSceneView() {
-    this.sceneView = this.sceneView === 'list' ? 'cards' : 'list';
-    document.getElementById('scene-view-btn').textContent = this.sceneView === 'list' ? '▦' : '☰';
-    this.updateScenes(this.editor.value);
+    return li;
   },
 
   goToScene(line) {
@@ -254,17 +180,173 @@ const app = {
   /* ── Acts ── */
   getActs() {
     let acts = JSON.parse(localStorage.getItem('fw_acts') || 'null');
-    if (!acts) { acts = {'Ato 1': []}; this.saveActs(acts); }
+    if (!acts) { acts = {'Ato 1': [], 'Ato 2': [], 'Ato 3': []}; this.saveActs(acts); }
     return acts;
   },
   saveActs(acts) { localStorage.setItem('fw_acts', JSON.stringify(acts)); },
 
+  getSceneBlocks(lines) {
+    const blocks = [];
+    let prev = 'ACTION';
+    lines.forEach((line, idx) => {
+      const t = guessType(line, prev);
+      if (t === 'SCENE') blocks.push({ line: idx, end: lines.length });
+      if (t !== 'BLANK') prev = t;
+    });
+    for (let j = 0; j < blocks.length - 1; j++) blocks[j].end = blocks[j + 1].line;
+    if (blocks.length) blocks[blocks.length - 1].end = lines.length;
+    return blocks;
+  },
+
   addAct() {
-    const name = prompt('Nome do ato (ex: Ato 2):');
+    const name = prompt('Nome do ato:');
     if (!name) return;
     const acts = this.getActs();
-    if (!acts[name]) acts[name] = [];
+    if (acts[name]) return;
+    acts[name] = [];
     this.saveActs(acts);
+    this.updateScenes(this.editor.value);
+  },
+
+  autoAssignScenes(text) {
+    const acts = this.getActs();
+    const lines = text.split('\n');
+    const allScenes = [];
+    let prev = 'ACTION';
+    lines.forEach((line, i) => {
+      const t = guessType(line, prev);
+      if (t === 'SCENE') allScenes.push(i);
+      if (t !== 'BLANK') prev = t;
+    });
+    const currentSceneSet = new Set(allScenes);
+    let changed = false;
+    // Clean stale line numbers from all acts
+    Object.keys(acts).forEach(actName => {
+      const valid = acts[actName].filter(l => currentSceneSet.has(l));
+      if (valid.length !== acts[actName].length) { acts[actName] = valid; changed = true; }
+    });
+    // Assign unassigned scenes to Ato 1
+    const assignedLines = new Set(Object.values(acts).flat());
+    if (!acts['Ato 1']) acts['Ato 1'] = [];
+    allScenes.forEach(line => {
+      if (!assignedLines.has(line)) { acts['Ato 1'].push(line); changed = true; }
+    });
+    if (changed) this.saveActs(acts);
+  },
+
+  removeAct(actName) {
+    const acts = this.getActs();
+    delete acts[actName];
+    this.saveActs(acts);
+    // Update beats that referenced the removed act
+    this.beats.forEach(b => { if (b.act === actName) b.act = 'Ato 1'; });
+    this.saveBeats();
+    this.updateScenes(this.editor.value);
+  },
+
+  moveActToScene(fromAct, targetLine) {
+    const acts = this.getActs();
+    const lines = this.editor.value.split('\n');
+    const blocks = this.getSceneBlocks(lines);
+    if (blocks.length === 0) return;
+
+    // Build block→act mapping from BEATS (always current, never stale)
+    const blockToAct = {};
+    blocks.forEach((b, i) => {
+      blockToAct[i] = null;
+      const label = lines[b.line].trim().replace(/^\./, '').slice(0, 60);
+      const beat = this.beats.find(bt => bt.title === label || bt.scene_ref === label);
+      if (beat && beat.act) blockToAct[i] = beat.act;
+    });
+
+    // Find blocks belonging to the dragged act
+    const draggedIdxs = [];
+    blocks.forEach((b, i) => {
+      if (blockToAct[i] === fromAct) draggedIdxs.push(i);
+    });
+    if (draggedIdxs.length === 0) return;
+
+    const otherIdxs = blocks.map((_, i) => i).filter(i => !draggedIdxs.includes(i));
+    if (draggedIdxs.some(i => blocks[i].line === targetLine)) targetLine = lines.length;
+    let insertIdx = otherIdxs.findIndex(i => blocks[i].line >= targetLine);
+    if (insertIdx === -1) insertIdx = otherIdxs.length;
+
+    const newOrderIdxs = [
+      ...otherIdxs.slice(0, insertIdx),
+      ...draggedIdxs,
+      ...otherIdxs.slice(insertIdx)
+    ];
+
+    const savedScroll = this.editor.scrollTop;
+    const savedStart = this.editor.selectionStart;
+    this.editor.value = newOrderIdxs.map(i =>
+      lines.slice(blocks[i].line, blocks[i].end).join('\n')
+    ).join('\n\n');
+    this.editor.selectionStart = savedStart;
+    this.editor.selectionEnd = savedStart;
+    this.editor.scrollTop = savedScroll;
+
+    // Rebuild acts from new block order
+    const newLines = this.editor.value.split('\n');
+    const newBlocks = this.getSceneBlocks(newLines);
+    const rebuilt = {};
+    newOrderIdxs.forEach((oldIdx, newIdx) => {
+      const act = blockToAct[oldIdx];
+      if (act) {
+        if (!rebuilt[act]) rebuilt[act] = [];
+        rebuilt[act].push(newBlocks[newIdx].line);
+      }
+    });
+    for (const aname of Object.keys(acts)) { if (!rebuilt[aname]) rebuilt[aname] = []; }
+    this.saveActs(rebuilt);
+    this.updateScenes(this.editor.value);
+  },
+
+  /* ── Single scene move ── */
+  moveScene(fromLine, toLine) {
+    const lines = this.editor.value.split('\n');
+    const blocks = this.getSceneBlocks(lines);
+    if (blocks.length <= 1) return;
+
+    // Build block→act mapping from BEATS (always current)
+    const blockToAct = {};
+    blocks.forEach((b, i) => {
+      blockToAct[i] = null;
+      const label = lines[b.line].trim().replace(/^\./, '').slice(0, 60);
+      const beat = this.beats.find(bt => bt.title === label || bt.scene_ref === label);
+      if (beat && beat.act) blockToAct[i] = beat.act;
+    });
+
+    const fromIdx = blocks.findIndex(b => b.line === fromLine);
+    if (fromIdx === -1) return;
+
+    let toIdx = blocks.findIndex(b => b.line === toLine);
+    if (toIdx === -1) toIdx = blocks.length;
+
+    const newOrder = [];
+    blocks.forEach((_, i) => { if (i !== fromIdx) newOrder.push(i); });
+    if (toIdx > fromIdx) toIdx--;
+    newOrder.splice(toIdx, 0, fromIdx);
+
+    const savedScroll = this.editor.scrollTop;
+    this.editor.value = newOrder.map(i =>
+      lines.slice(blocks[i].line, blocks[i].end).join('\n')
+    ).join('\n\n');
+    this.editor.scrollTop = savedScroll;
+
+    const newLines = this.editor.value.split('\n');
+    const newBlocks = this.getSceneBlocks(newLines);
+    const acts = this.getActs();
+    const rebuilt = {};
+    newOrder.forEach((oldIdx, newIdx) => {
+      const act = blockToAct[oldIdx];
+      if (act) {
+        if (!rebuilt[act]) rebuilt[act] = [];
+        rebuilt[act].push(newBlocks[newIdx].line);
+      }
+    });
+    for (const aname of Object.keys(acts)) { if (!rebuilt[aname]) rebuilt[aname] = []; }
+    this.saveActs(rebuilt);
     this.updateScenes(this.editor.value);
   },
 
@@ -480,7 +562,10 @@ const app = {
     } else {
       this.beats.push({ title, act, plotline: plot, order: this.beats.length });
     }
-    this.saveBeats(); this.renderBeats();
+    // Ensure act exists in fw_acts
+    const fwActs = this.getActs();
+    if (!fwActs[act]) { fwActs[act] = []; this.saveActs(fwActs); }
+    this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value);
     this.closeBeatModal();
   },
 
@@ -491,7 +576,7 @@ const app = {
 
   addBeat() { this.openBeatModal(-1); },
   editBeat(i) { this.openBeatModal(i); },
-  deleteBeat(i) { this.beats.splice(i, 1); this.saveBeats(); this.renderBeats(); },
+  deleteBeat(i) { this.beats.splice(i, 1); this.saveBeats(); this.renderBeats(); this.renderTimeline(); },
   insertBeat(i) {
     const b = this.beats[i];
     if (!b) return;
@@ -523,17 +608,12 @@ const app = {
         changed = true;
       }
     });
-    if (changed) { this.saveBeats(); this.renderBeats(); }
+    if (changed) { this.saveBeats(); this.renderBeats(); this.renderTimeline(); }
   },
 
-  /* ── Timeline (horizontal acima da status bar) ── */
+  /* ── Timeline grid (atos × tramas) ── */
   toggleTimeline() {
     this.timelineVisible = !this.timelineVisible;
-    this.renderTimeline();
-  },
-
-  toggleTimelineMode() {
-    this.timelineMode = this.timelineMode === 'act' ? 'plot' : 'act';
     this.renderTimeline();
   },
 
@@ -545,99 +625,137 @@ const app = {
     el.style.flexDirection = 'column';
     el.innerHTML = '';
 
-    const beats = this.beats;
-    if (beats.length === 0) {
+    const text = this.editor.value;
+    const lines = text.split('\n');
+    const scenes = [];
+    let prev = 'ACTION';
+    lines.forEach((line, i) => {
+      const t = guessType(line, prev);
+      if (t === 'SCENE') scenes.push({ line: i, label: line.trim().replace(/^\./, '').slice(0, 60) });
+      if (t !== 'BLANK') prev = t;
+    });
+
+    const acts = this.getActs();
+    const actNames = Object.keys(acts);
+    const plotlines = ['Principal', 'A', 'B'];
+    const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
+    const plotColors = {'Principal':'#569cd6','A':'#ce9178','B':'#4ec9b0'};
+
+    // Map scene → plotline (from matching beats)
+    const scenePlot = {};
+    scenes.forEach(s => {
+      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label);
+      let pl = beat ? beat.plotline || 'Principal' : 'Principal';
+      if (pl === 'C' || pl === 'D') pl = 'B';
+      scenePlot[s.line] = pl;
+    });
+
+    // Map scene → act (from beats)
+    const sceneAct = {};
+    scenes.forEach(s => {
+      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label);
+      sceneAct[s.line] = beat ? (beat.act || 'Ato 1') : null;
+    });
+
+    // Orphan beats: beats that don't match any scene
+    const matchedLabels = new Set(scenes.map(s => s.label));
+    const orphanBeats = this.beats.filter(b => !matchedLabels.has(b.title) && !matchedLabels.has(b.scene_ref));
+
+    const numCols = actNames.length;
+    if (numCols === 0 && orphanBeats.length === 0) {
       el.innerHTML = '<span style="padding:8px;color:var(--fg-sec);font-size:10pt">' + _('empty_timeline') + '</span>';
       return;
     }
-
-    // Toggle button
-    const toggleBtn = document.createElement('button');
-    toggleBtn.textContent = this.timelineMode === 'act' ? '📊 Por Trama' : '📊 Por Ato';
-    toggleBtn.style.cssText = 'align-self:flex-start;margin-bottom:4px;padding:2px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--fg);cursor:pointer;font:8pt monospace';
-    toggleBtn.onclick = () => this.toggleTimelineMode();
-    el.appendChild(toggleBtn);
-
-    // Content container
-    const content = document.createElement('div');
-    content.style.cssText = 'display:flex;gap:6px;align-items:stretch;flex:1';
-
-    if (this.timelineMode === 'plot') {
-      this._renderTimelineByPlot(content, beats);
-    } else {
-      this._renderTimelineByAct(content, beats);
+    if (numCols === 0) {
+      el.innerHTML = '<span style="padding:8px;color:var(--fg-sec);font-size:10pt">Sem atos para exibir</span>';
+      return;
     }
-    el.appendChild(content);
-  },
 
-  _renderTimelineByAct(content, beats) {
-    const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
-    const groups = {};
-    beats.forEach(b => {
-      const a = b.act || 'Ato 1';
-      if (!groups[a]) groups[a] = [];
-      groups[a].push(b);
+    // Header row
+    const headerRow = document.createElement('div');
+    headerRow.style.cssText = 'display:grid;grid-template-columns:70px repeat(' + numCols + ',1fr);gap:2px;padding:2px 4px';
+    const corner = document.createElement('div');
+    corner.style.cssText = 'padding:3px;font-size:8pt;color:var(--fg-sec);font-weight:bold';
+    corner.textContent = 'Trama\\Ato';
+    headerRow.appendChild(corner);
+    actNames.forEach(act => {
+      const h = document.createElement('div');
+      h.style.cssText = 'padding:3px;font-weight:bold;font-size:9pt;text-align:center;color:#fff;background:' + (actColors[act] || '#888') + ';border-radius:3px';
+      h.textContent = act;
+      headerRow.appendChild(h);
     });
-    const order = ['Ato 1','Ato 2','Ato 3','Ato 4','Ato 5'];
-    order.forEach(act => {
-      if (!groups[act]) return;
-      this._addTimelineCol(content, act, groups[act], actColors[act] || '#888');
-    });
-  },
+    el.appendChild(headerRow);
 
-  _renderTimelineByPlot(content, beats) {
-    const plotColors = {'Principal':'#569cd6','B':'#4ec9b0','C':'#dcdcaa','D':'#c586c0'};
-    const groups = {};
-    beats.forEach(b => {
-      const pl = b.plotline || 'Principal';
-      if (!groups[pl]) groups[pl] = [];
-      groups[pl].push(b);
+    // Data rows
+    plotlines.forEach(pl => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:grid;grid-template-columns:70px repeat(' + numCols + ',1fr);gap:2px;padding:2px 4px';
+      const lbl = document.createElement('div');
+      lbl.style.cssText = 'padding:3px;font-size:9pt;color:' + (plotColors[pl] || '#888') + ';font-weight:bold;display:flex;align-items:center';
+      lbl.textContent = pl;
+      row.appendChild(lbl);
+      actNames.forEach(act => {
+        const cell = document.createElement('div');
+        cell.style.cssText = 'min-height:28px;background:var(--surface2);border-radius:3px;padding:3px;display:flex;flex-direction:column;gap:2px';
+        // Scenes that match this act + plotline
+        const cellScenes = scenes.filter(s => sceneAct[s.line] === act && scenePlot[s.line] === pl);
+        cellScenes.forEach(s => {
+          const sc = document.createElement('div');
+          sc.style.cssText = 'padding:2px 4px;font-size:8pt;cursor:pointer;border-radius:2px;background:var(--surface);white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+          sc.textContent = s.label;
+          sc.title = s.label;
+          sc.addEventListener('click', () => this.goToScene(s.line));
+          cell.appendChild(sc);
+        });
+        // Orphan beats that match this act + plotline
+        const cellBeats = orphanBeats.filter(b => {
+          const ba = b.act || 'Ato 1';
+          let bp = b.plotline || 'Principal';
+          if (bp === 'C' || bp === 'D') bp = 'B';
+          return ba === act && bp === pl;
+        });
+        cellBeats.forEach(b => {
+          const sc = document.createElement('div');
+          sc.style.cssText = 'padding:2px 4px;font-size:8pt;cursor:pointer;border-radius:2px;background:var(--surface);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px dashed ' + (plotColors[pl] || '#888');
+          sc.textContent = (b.title || '?') + ' ⟡';
+          sc.title = (b.title || '?') + ' (beat sem cena)';
+          sc.addEventListener('click', () => document.querySelector('#right-tabs .tab[data-tab="beats"]').click());
+          cell.appendChild(sc);
+        });
+        row.appendChild(cell);
+      });
+      el.appendChild(row);
     });
-    const order = ['Principal','B','C','D'];
-    order.forEach(pl => {
-      if (!groups[pl]) return;
-      const label = pl === 'Principal' ? 'Trama Principal' : 'Trama ' + pl;
-      this._addTimelineCol(content, label, groups[pl], plotColors[pl] || '#888');
-    });
-  },
-
-  _addTimelineCol(content, title, beats, color) {
-    const col = document.createElement('div');
-    col.style.cssText = 'flex:1;display:flex;flex-direction:column;background:var(--surface2);border-radius:4px;min-width:0';
-    const header = document.createElement('div');
-    header.style.cssText = 'padding:4px 8px;font-weight:bold;font-size:9pt;color:#fff;background:' + color + ';border-radius:4px 4px 0 0';
-    header.textContent = title;
-    col.appendChild(header);
-    const list = document.createElement('div');
-    list.style.cssText = 'flex:1;overflow-y:auto;padding:4px;display:flex;flex-direction:column;gap:3px;max-height:320px';
-    beats.forEach(b => {
-      const card = document.createElement('div');
-      card.style.cssText = 'padding:3px 6px;background:var(--surface);border-radius:3px;font-size:8pt;cursor:pointer;border-left:3px solid ' + color;
-      card.textContent = b.title || '?';
-      card.addEventListener('click', () => document.querySelector('#right-tabs .tab[data-tab="beats"]').click());
-      list.appendChild(card);
-    });
-    col.appendChild(list);
-    content.appendChild(col);
   },
   renderBeats() {
     const list = document.getElementById('beat-list');
     list.innerHTML = '';
     if (this.beats.length === 0) { list.innerHTML = '<div class="list-empty">' + _('empty_beats') + '</div>'; return; }
-    const plotColors = {'Principal':'#569cd6','B':'#4ec9b0','C':'#dcdcaa','D':'#c586c0'};
+    const plotColors = {'Principal':'#569cd6','A':'#ce9178','B':'#4ec9b0'};
     this.beats.forEach((b, i) => {
       const div = document.createElement('div');
       div.className = 'beat-item';
+      div.style.cssText = 'flex-direction:column;padding:6px 8px';
       div.draggable = true;
       div.dataset.idx = i;
-      const pl = b.plotline || 'Principal';
+      const pl = (b.plotline === 'C' || b.plotline === 'D') ? 'B' : (b.plotline || 'Principal');
       const color = plotColors[pl] || '#888';
-      div.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';flex-shrink:0"></span>' +
-        '<span style="flex:1">' + (i + 1) + '. ' + esc(b.title || '?') + '</span>' +
-        '<span style="font-size:7pt;color:' + color + '">' + esc(pl) + '</span>' +
-        '<span class="beat-ins" style="cursor:pointer" onclick="app.editBeat(' + i + ')">✎</span>' +
-        '<span class="beat-ins" style="cursor:pointer" onclick="app.insertBeat(' + i + ')">↗</span>' +
-        '<span class="beat-ins" style="color:#c00;cursor:pointer" onclick="app.deleteBeat(' + i + ')">✕</span>';
+      // Line 1: title
+      const titleRow = document.createElement('div');
+      titleRow.style.cssText = 'display:flex;align-items:center;gap:6px';
+      titleRow.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';flex-shrink:0"></span>' +
+        '<span style="font-size:10pt">' + (i + 1) + '. ' + esc(b.title || '?') + '</span>';
+      div.appendChild(titleRow);
+      // Line 2: plotline + action buttons
+      const actionRow = document.createElement('div');
+      actionRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-top:3px;padding-left:14px';
+      actionRow.innerHTML =
+        '<span style="font-size:8pt;color:' + color + '">' + esc(pl) + '</span>' +
+        '<span style="flex:1"></span>' +
+        '<span style="cursor:pointer;font-size:11pt" onclick="app.editBeat(' + i + ')">✎</span>' +
+        '<span style="cursor:pointer;font-size:11pt" onclick="app.insertBeat(' + i + ')">↗</span>' +
+        '<span style="color:#c00;cursor:pointer;font-size:11pt" onclick="app.deleteBeat(' + i + ')">✕</span>';
+      div.appendChild(actionRow);
       list.appendChild(div);
     });
   },
@@ -731,14 +849,73 @@ const app = {
     this.findDo();
   },
 
+  /* ── Act markers overlay ── */
+  renderActMarkers() {
+    const wrap = document.getElementById('textarea-wrap');
+    const container = document.getElementById('act-markers');
+    if (!container) return;
+    container.innerHTML = '';
+    const text = this.editor.value;
+    if (!text.trim()) return;
+    const lines = text.split('\n');
+    const scenes = [];
+    let prev = 'ACTION';
+    lines.forEach((line, i) => {
+      const t = guessType(line, prev);
+      if (t === 'SCENE') scenes.push({ line: i, label: line.trim().replace(/^\./, '').slice(0, 60) });
+      if (t !== 'BLANK') prev = t;
+    });
+    if (!scenes.length) return;
+    const acts = this.getActs();
+    const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
+    const lineToAct = {};
+    scenes.forEach(s => {
+      const beat = this.beats.find(b => b.title === s.label || b.scene_ref === s.label);
+      lineToAct[s.line] = beat ? (beat.act || 'Ato 1') : null;
+    });
+    const actFirstLine = {};
+    Object.keys(acts).forEach(a => actFirstLine[a] = null);
+    scenes.forEach(s => {
+      const a = lineToAct[s.line];
+      if (a && actFirstLine[a] === null) actFirstLine[a] = s.line;
+    });
+    const sorted = Object.entries(actFirstLine).sort((a, b) => (a[1] ?? Infinity) - (b[1] ?? Infinity));
+    const fontSize = this.fontSize || 12;
+    const lh = fontSize * 1.2;
+    const sc = this.editor.scrollTop;
+    sorted.forEach(([act, line]) => {
+      if (line === null) return;
+      const y = line * lh - sc;
+      // Only render if visible
+      if (y < -10 || y > wrap.clientHeight + 10) return;
+      const bar = document.createElement('div');
+      bar.style.cssText = 'position:absolute;top:' + y + 'px;left:0;right:0;height:0;border-top:1px dashed ' + (actColors[act] || '#888') + ';opacity:0.5';
+      const lbl = document.createElement('span');
+      lbl.style.cssText = 'position:absolute;top:' + y + 'px;left:0;font-size:7pt;color:' + (actColors[act] || '#888') + ';font-weight:bold;white-space:nowrap;transform:translateY(-50%);background:var(--editor-bg);padding:0 4px';
+      lbl.textContent = act;
+      container.appendChild(bar);
+      container.appendChild(lbl);
+    });
+  },
+
   /* ── File I/O ── */
-  newFile() { if (confirm(_('save_confirm'))) { this.editor.value = ''; this.fileName = null; this.beats = []; this.titleData = null; this.projectName = ''; localStorage.setItem('fw_beats', '[]'); localStorage.removeItem('fw_title'); localStorage.removeItem('fw_char_data'); localStorage.removeItem('fw_project_name'); localStorage.removeItem('fw_scene_colors'); this.renderBeats(); this.update(); this.updateProjectNameDisplay();     }
+  newFile() {
+    if (this.editor.value.trim() && confirm(_('save_before_new'))) { this.saveProject(); }
+    if (confirm(_('save_confirm'))) {
+      this.editor.value = ''; this.fileName = null; this.beats = []; this.titleData = null;
+      this.projectName = ''; localStorage.setItem('fw_beats', '[]');
+      localStorage.removeItem('fw_title'); localStorage.removeItem('fw_char_data');
+      localStorage.removeItem('fw_project_name'); localStorage.removeItem('fw_scene_colors');
+      localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
+      this.renderBeats(); this.update(); this.updateProjectNameDisplay();
+    }
   },
   openFile() { document.getElementById('file-input').click(); },
   saveFile() {
     const blob = new Blob([this.editor.value], { type: 'text/plain;charset=utf-8' });
     const a = document.getElementById('download-link');
     a.href = URL.createObjectURL(blob); a.download = this.fileName || 'roteiro.fountain'; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 500);
     this.isModified = false;
     this.updateIndicator();
   },
@@ -751,7 +928,7 @@ const app = {
       titleData: this.titleData,
       charData: JSON.parse(localStorage.getItem('fw_char_data') || '{}'),
       sceneColors: this.sceneColors,
-      sceneView: this.sceneView,
+      acts: this.getActs(),
       darkMode: this.darkMode,
       wordGoal: this.wordGoal,
       fontSize: this.fontSize,
@@ -761,6 +938,7 @@ const app = {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.getElementById('download-link');
     a.href = URL.createObjectURL(blob); a.download = (this.projectName || 'roteiro') + '.fountain.json'; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 500);
   },
 
   openProject() {
@@ -779,12 +957,12 @@ const app = {
           this.titleData = data.titleData || null;
           this.projectName = data.name || '';
           this.sceneColors = data.sceneColors || {};
-          this.sceneView = data.sceneView || 'list';
           if (data.darkMode !== undefined) { this.darkMode = data.darkMode; document.body.classList.toggle('dark', this.darkMode); }
           if (data.charData) localStorage.setItem('fw_char_data', JSON.stringify(data.charData));
           if (data.wordGoal !== undefined) { this.wordGoal = data.wordGoal; localStorage.setItem('fw_goal', String(data.wordGoal)); }
           if (data.fontSize !== undefined) { this.fontSize = data.fontSize; this.applyFontSize(); }
           if (data.soundOn !== undefined) { this.soundOn = data.soundOn; localStorage.setItem('fw_sound', data.soundOn ? 'true' : 'false'); }
+          if (data.acts) localStorage.setItem('fw_acts', JSON.stringify(data.acts));
           localStorage.setItem('fw_title', JSON.stringify(this.titleData));
           localStorage.setItem('fw_beats', JSON.stringify(this.beats));
           localStorage.setItem('fw_project_name', this.projectName);
@@ -817,6 +995,7 @@ const app = {
     const blob = new Blob([full], { type: 'text/html;charset=utf-8' });
     const a = document.getElementById('download-link');
     a.href = URL.createObjectURL(blob); a.download = (this.fileName || 'roteiro').replace(/\.fountain$/, '') + '.html'; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 500);
   },
   printPDF() {
     const text = this.editor.value;
@@ -834,6 +1013,7 @@ const app = {
     const w = window.open('', '', 'width=800,height=600');
     w.document.write(html); w.document.close(); w.focus();
     w.onafterprint = () => { w.close(); };
+    setTimeout(() => { try { w.close(); } catch(e) {} }, 60000);
     w.print();
   },
 
@@ -937,9 +1117,6 @@ const app = {
 
   openHelp() { document.getElementById('help-modal').style.display = 'flex'; },
   closeHelp() { document.getElementById('help-modal').style.display = 'none'; },
-
-  /* ── More dropdown ── */
-  closeStats() { document.getElementById('stats-modal').style.display = 'none'; },
 
   /* ── Character editing ── */
   openChar(name) {
@@ -1052,7 +1229,7 @@ const app = {
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.dataset.i18n;
       let text = _(key);
-      const match = el.textContent.match(/^([\u{1F000}-\u{1FFFF}]|[\u2600-\u27BF]|[\u{2700}-\u{27BF}]|[🖍📊🎯💾📂📄👁🔍🎬⏱🔇])/u);
+      const match = el.textContent.match(/^([\u{1F000}-\u{1FFFF}]|[\u2600-\u27BF]|[\u{2700}-\u{27BF}]|[⬇📋🌗▶⏹🖨📑✓▶⏸🍅⏰🔊🔇🖍📊🎯💾📂📄👁🔍🎬⏱])/u);
       if (match) text = match[1] + ' ' + text;
       if (el.id !== 'menu-drawer') el.textContent = text;
     });
@@ -1164,8 +1341,8 @@ const app = {
 
   /* ── Keyboard ── */
   handleKey(e) {
-    if (e.ctrlKey && e.key === 's') { e.preventDefault(); this.saveFile(); }
-    if (e.ctrlKey && e.key === 'o') { e.preventDefault(); this.openFile(); }
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); this.saveProject(); }
+    if (e.ctrlKey && e.key === 'o') { e.preventDefault(); this.openProject(); }
     if (e.ctrlKey && e.key === 'n') { e.preventDefault(); this.newFile(); }
     if (e.ctrlKey && (e.key === 'h' || e.key === 'f')) { e.preventDefault(); this.openFind(); }
     if (e.key === 'F11') { e.preventDefault(); this.toggleFocus(); }
@@ -1178,6 +1355,11 @@ const app = {
     if (e.ctrlKey && e.key === '=') { e.preventDefault(); this.zoomIn(); }
     if (e.ctrlKey && e.key === '-') { e.preventDefault(); this.zoomOut(); }
     if (e.ctrlKey && e.key === '0') { e.preventDefault(); this.zoomReset(); }
+    // Enter → sync beats immediately (scene heading complete)
+    if (e.key === 'Enter') {
+      clearTimeout(this._syncTimer);
+      this.syncBeatsFromScenes(this.editor.value);
+    }
   },
 
   wrapSelection(before, after) {
