@@ -163,7 +163,8 @@ const app = {
     let plot = beat ? beat.plotline || 'Principal' : '';
     if (plot === 'C' || plot === 'D') plot = 'B';
     li.innerHTML = (i + 1) + '. ' + esc(s.label) +
-      (plot ? ' <span style="font-size:7pt;color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '');
+      (plot ? ' <span style="font-size:7pt;color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '') +
+      ' <span style="font-size:6pt;color:var(--fg-sec)">L' + s.line + '</span>';
     li.dataset.line = s.line;
     li.addEventListener('click', e => {
       if (e.target.closest('.act-remove')) return;
@@ -912,7 +913,7 @@ const app = {
       bar.style.cssText = 'position:absolute;top:' + y + 'px;left:0;right:0;height:0;border-top:1px dashed ' + (actColors[act] || '#888') + ';opacity:0.5';
       const lbl = document.createElement('span');
       lbl.style.cssText = 'position:absolute;top:' + y + 'px;left:0;font-size:7pt;color:' + (actColors[act] || '#888') + ';font-weight:bold;white-space:nowrap;transform:translateY(-50%);background:var(--editor-bg);padding:0 4px';
-      lbl.textContent = act;
+      lbl.textContent = act + ' L' + line;
       container.appendChild(bar);
       container.appendChild(lbl);
     });
