@@ -35,6 +35,7 @@
     <button onclick="app.toggleSound()" id="sound-btn" style="font-size:9pt" data-i18n="tb_sound">🔇 Som</button>
     <button onclick="app.toggleFocus()" data-i18n="tb_focus">🎯 Foco</button>
     <button onclick="app.toggleTheme()">🌗</button>
+    <button onclick="app.openHelp()">❓</button>
     <button onclick="app.toggleLang()" id="lang-btn" style="font-size:9pt">PT</button>
     <span class="spacer"></span>
     <span id="save-indicator" style="font-size:10pt;color:var(--fg-sec)">💾</span>
@@ -90,6 +91,36 @@
     <span id="stat-goal" style="display:none"></span>
     <span id="stat-selection" style="display:none"></span>
     <div id="productivity-chart" style="width:80px;height:20px;margin-left:auto;flex-shrink:0"></div>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div id="help-modal" class="modal-overlay" style="display:none">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header">Fountain Writer</div>
+    <div class="modal-body" style="font-size:10pt;line-height:1.6">
+      <p><b>Editor de roteiros no formato Fountain.</b></p>
+      <p>Grátis · Offline · Sem cadastro</p>
+      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0">
+      <p><b>Funcionalidades:</b></p>
+      <ul style="padding-left:16px;margin:4px 0">
+        <li>Preview ao vivo com formatação Fountain</li>
+        <li>Navegador de cenas com drag reorder</li>
+        <li>Beats, personagens e locais</li>
+        <li>Find/Replace · Folha de rosto</li>
+        <li>Timeline · Estatísticas · Pomodoro</li>
+        <li>Export HTML/PDF · Temas · i18n</li>
+      </ul>
+      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0">
+      <p style="text-align:center">
+        <b>Ricardo A. B. Graça</b><br>
+        <a href="https://www.ricolandia.com" target="_blank" style="color:var(--accent)">www.ricolandia.com</a>
+      </p>
+    </div>
+    <div class="modal-footer">
+      <span style="flex:1"></span>
+      <button onclick="app.closeHelp()">Fechar</button>
+    </div>
   </div>
 </div>
 

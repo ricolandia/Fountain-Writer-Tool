@@ -791,6 +791,9 @@ const app = {
 
   closeStats() { document.getElementById('stats-modal').style.display = 'none'; },
 
+  openHelp() { document.getElementById('help-modal').style.display = 'flex'; },
+  closeHelp() { document.getElementById('help-modal').style.display = 'none'; },
+
   /* ── Character editing ── */
   openChar(name) {
     const data = JSON.parse(localStorage.getItem('fw_char_data') || '{}');
