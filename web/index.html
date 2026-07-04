@@ -70,7 +70,8 @@
         <button class="tab" data-tab="locs" data-i18n="tb_locs">LOC</button>
       </div>
       <div class="tab-content active" id="tab-beats">
-        <p style="padding:4px;display:flex;gap:4px">
+        <p style="padding:4px;display:flex;gap:4px;align-items:center">
+          <span id="beat-count" style="color:var(--fg-sec);font-size:9pt">0</span>
           <button onclick="app.addBeat()" data-i18n="tb_add_beat">+ Beat</button>
         </p>
         <div id="beat-list"></div>

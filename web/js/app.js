@@ -746,6 +746,8 @@ const app = {
     });
   },
   renderBeats() {
+    const el2 = document.getElementById('beat-count');
+    if (el2) el2.textContent = this.beats.length;
     const list = document.getElementById('beat-list');
     list.innerHTML = '';
     if (this.beats.length === 0) { list.innerHTML = '<div class="list-empty">' + _('empty_beats') + '</div>'; return; }
