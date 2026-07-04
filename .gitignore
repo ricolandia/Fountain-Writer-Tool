@@ -5,6 +5,6 @@ SESSION.md
 archive/
 Layout/
 PACKS/
-imagens/
+imagens/*
 !/imagens/2-0/
 
