@@ -9,6 +9,7 @@ const app = {
   sceneColors: JSON.parse(localStorage.getItem('fw_scene_colors') || '{}'),
   sceneView: 'list', // 'list' or 'cards'
   timelineVisible: false,
+  timelineMode: 'act',
   projectName: localStorage.getItem('fw_project_name') || '',
   fontSize: parseInt(localStorage.getItem('fw_font_size') || '12'),
   soundOn: localStorage.getItem('fw_sound') === 'true',
@@ -391,8 +392,19 @@ const app = {
   addBeat() {
     const title = prompt('Título do beat:');
     if (!title) return;
-    const plot = prompt('Trama (Principal, B, C, D — Enter para Principal):') || 'Principal';
+    let plot = prompt('Trama (Enter = Principal, B, C, D):') || 'Principal';
+    if (!['Principal','B','C','D'].includes(plot)) plot = 'Principal';
     this.beats.push({ title, act: 'Ato 1', desc: '', plotline: plot, order: this.beats.length });
+    this.saveBeats(); this.renderBeats();
+  },
+  editBeat(i) {
+    if (i < 0 || i >= this.beats.length) return;
+    const b = this.beats[i];
+    const title = prompt('Título:', b.title);
+    if (title === null) return;
+    let plot = prompt('Trama (Principal, B, C, D):', b.plotline || 'Principal');
+    if (plot !== null && ['Principal','B','C','D'].includes(plot)) b.plotline = plot;
+    b.title = title;
     this.saveBeats(); this.renderBeats();
   },
   deleteBeat(i) { this.beats.splice(i, 1); this.saveBeats(); this.renderBeats(); },
@@ -436,11 +448,17 @@ const app = {
     this.renderTimeline();
   },
 
+  toggleTimelineMode() {
+    this.timelineMode = this.timelineMode === 'act' ? 'plot' : 'act';
+    this.renderTimeline();
+  },
+
   renderTimeline() {
     const el = document.getElementById('timeline-bar');
     if (!el) return;
     if (!this.timelineVisible) { el.style.display = 'none'; return; }
     el.style.display = 'flex';
+    el.style.flexDirection = 'column';
     el.innerHTML = '';
 
     const beats = this.beats;
@@ -449,6 +467,41 @@ const app = {
       return;
     }
 
+    // Toggle button
+    const toggleBtn = document.createElement('button');
+    toggleBtn.textContent = this.timelineMode === 'act' ? '📊 Por Trama' : '📊 Por Ato';
+    toggleBtn.style.cssText = 'align-self:flex-start;margin-bottom:4px;padding:2px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--fg);cursor:pointer;font:8pt monospace';
+    toggleBtn.onclick = () => this.toggleTimelineMode();
+    el.appendChild(toggleBtn);
+
+    // Content container
+    const content = document.createElement('div');
+    content.style.cssText = 'display:flex;gap:6px;align-items:stretch;flex:1';
+
+    if (this.timelineMode === 'plot') {
+      this._renderTimelineByPlot(content, beats);
+    } else {
+      this._renderTimelineByAct(content, beats);
+    }
+    el.appendChild(content);
+  },
+
+  _renderTimelineByAct(content, beats) {
+    const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
+    const groups = {};
+    beats.forEach(b => {
+      const a = b.act || 'Ato 1';
+      if (!groups[a]) groups[a] = [];
+      groups[a].push(b);
+    });
+    const order = ['Ato 1','Ato 2','Ato 3','Ato 4','Ato 5'];
+    order.forEach(act => {
+      if (!groups[act]) return;
+      this._addTimelineCol(content, act, groups[act], actColors[act] || '#888');
+    });
+  },
+
+  _renderTimelineByPlot(content, beats) {
     const plotColors = {'Principal':'#569cd6','B':'#4ec9b0','C':'#dcdcaa','D':'#c586c0'};
     const groups = {};
     beats.forEach(b => {
@@ -456,33 +509,32 @@ const app = {
       if (!groups[pl]) groups[pl] = [];
       groups[pl].push(b);
     });
-
-    const plotOrder = ['Principal','B','C','D'];
-    plotOrder.forEach(pl => {
+    const order = ['Principal','B','C','D'];
+    order.forEach(pl => {
       if (!groups[pl]) return;
-      const color = plotColors[pl] || '#888';
-      const col = document.createElement('div');
-      col.style.cssText = 'flex:1;display:flex;flex-direction:column;background:var(--surface2);border-radius:4px;min-width:0';
-      const header = document.createElement('div');
-      header.style.cssText = 'padding:4px 8px;font-weight:bold;font-size:9pt;color:#fff;background:' + color + ';border-radius:4px 4px 0 0';
-      header.textContent = pl === 'Principal' ? 'Trama Principal' : 'Trama ' + pl;
-      col.appendChild(header);
-
-      const list = document.createElement('div');
-      list.style.cssText = 'flex:1;overflow-y:auto;padding:4px;display:flex;flex-direction:column;gap:3px;max-height:320px';
-
-      groups[pl].forEach(b => {
-        const card = document.createElement('div');
-        card.style.cssText = 'padding:3px 6px;background:var(--surface);border-radius:3px;font-size:8pt;cursor:pointer;border-left:3px solid ' + color;
-        card.textContent = b.title || '?';
-        card.addEventListener('click', () => {
-          document.querySelector('#right-tabs .tab[data-tab="beats"]').click();
-        });
-        list.appendChild(card);
-      });
-      col.appendChild(list);
-      el.appendChild(col);
+      const label = pl === 'Principal' ? 'Trama Principal' : 'Trama ' + pl;
+      this._addTimelineCol(content, label, groups[pl], plotColors[pl] || '#888');
     });
+  },
+
+  _addTimelineCol(content, title, beats, color) {
+    const col = document.createElement('div');
+    col.style.cssText = 'flex:1;display:flex;flex-direction:column;background:var(--surface2);border-radius:4px;min-width:0';
+    const header = document.createElement('div');
+    header.style.cssText = 'padding:4px 8px;font-weight:bold;font-size:9pt;color:#fff;background:' + color + ';border-radius:4px 4px 0 0';
+    header.textContent = title;
+    col.appendChild(header);
+    const list = document.createElement('div');
+    list.style.cssText = 'flex:1;overflow-y:auto;padding:4px;display:flex;flex-direction:column;gap:3px;max-height:320px';
+    beats.forEach(b => {
+      const card = document.createElement('div');
+      card.style.cssText = 'padding:3px 6px;background:var(--surface);border-radius:3px;font-size:8pt;cursor:pointer;border-left:3px solid ' + color;
+      card.textContent = b.title || '?';
+      card.addEventListener('click', () => document.querySelector('#right-tabs .tab[data-tab="beats"]').click());
+      list.appendChild(card);
+    });
+    col.appendChild(list);
+    content.appendChild(col);
   },
   renderBeats() {
     const list = document.getElementById('beat-list');
@@ -499,6 +551,7 @@ const app = {
       div.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';flex-shrink:0"></span>' +
         '<span style="flex:1">' + (i + 1) + '. ' + esc(b.title || '?') + '</span>' +
         '<span style="font-size:7pt;color:' + color + '">' + esc(pl) + '</span>' +
+        '<span class="beat-ins" style="cursor:pointer" onclick="app.editBeat(' + i + ')">✎</span>' +
         '<span class="beat-ins" style="cursor:pointer" onclick="app.insertBeat(' + i + ')">↗</span>' +
         '<span class="beat-ins" style="color:#c00;cursor:pointer" onclick="app.deleteBeat(' + i + ')">✕</span>';
       list.appendChild(div);
