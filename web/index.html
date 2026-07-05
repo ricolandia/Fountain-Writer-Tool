@@ -63,8 +63,9 @@
 
   <div id="panes">
     <div id="pane-left" class="pane">
-      <div class="pane-header"><span data-i18n="tb_scenes">CENAS</span><span><span id="scene-count">0</span> <button onclick="app.addAct()" style="font-size:8pt;padding:1px 4px" title="Adicionar ato">🎬</button></span></div>
+      <div class="pane-header"><span data-i18n="tb_scenes">CENAS</span><span><span id="scene-count">0</span> <button onclick="app.toggleSceneView()" id="view-toggle" style="font-size:8pt;padding:1px 4px" title="Alternar visualização">⊞</button> <button onclick="app.addAct()" style="font-size:8pt;padding:1px 4px" title="Adicionar ato">🎬</button></span></div>
       <ul id="scene-list"></ul>
+      <div id="scene-corkboard" style="display:none"></div>
     </div>
 
     <div id="pane-center" class="pane">

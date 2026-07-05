@@ -12,6 +12,7 @@ const app = {
   fontSize: parseInt(localStorage.getItem('fw_font_size') || '12'),
   soundOn: localStorage.getItem('fw_sound') === 'true',
   viewMode: 'roteiro',
+  sceneView: 'list', // 'list' ou 'corkboard'
   projetoData: JSON.parse(localStorage.getItem('fw_projeto') || 'null'),
   _audioContext: null,
   _fileHandle: null,
@@ -52,6 +53,7 @@ const app = {
 
     // Drag reorder via Sortable-like manual implementation
     this.initBeatDragReorder();
+    this.initSceneDragReorder();
     this.initDarkMode();
     this.applyFontSize();
     this.displayTimer();
@@ -184,6 +186,18 @@ const app = {
       el.textContent = this.beats.length + ' beats' + (!saved ? ' | 💾 Salve seu projeto' : '');
     }
     this.renderSceneList(scenes);
+    this.renderSceneCards(scenes);
+    const listEl = document.getElementById('scene-list');
+    const boardEl = document.getElementById('scene-corkboard');
+    if (listEl) listEl.style.display = this.sceneView === 'list' ? '' : 'none';
+    if (boardEl) boardEl.style.display = this.sceneView === 'corkboard' ? '' : 'none';
+  },
+
+  toggleSceneView() {
+    this.sceneView = this.sceneView === 'list' ? 'corkboard' : 'list';
+    const btn = document.getElementById('view-toggle');
+    if (btn) btn.textContent = this.sceneView === 'list' ? '⊞' : '⊟';
+    this.updateScenes(this.editor.value);
   },
 
   renderSceneList(scenes) {
@@ -204,8 +218,9 @@ const app = {
         actGroups[a].push(i);
       }
     });
-    // Render acts sorted by first scene position
-    Object.entries(actFirstLine).sort((a, b) => a[1] - b[1]).forEach(([actName]) => {
+    // Render acts in fixed numeric order (Ato 1, Ato 2, ...), never by
+    // scene position — dragging a scene must not reshuffle act headers.
+    this._sortActs(Object.keys(actFirstLine)).forEach(actName => {
       this._renderActSeparator(list, actName, actColors);
       actGroups[actName].forEach(idx => {
         const li = this._makeSceneLi(scenes[idx], idx, plotColors);
@@ -236,6 +251,7 @@ const app = {
   _makeSceneLi(s, i, plotColors) {
     const li = document.createElement('li');
     li.style.cssText = 'user-select:none;-webkit-user-select:none';
+    li.draggable = true;
     const color = this.sceneColors[s.line];
     if (color) li.style.borderLeftColor = color;
     const marks = this.getLineMarks();
@@ -254,6 +270,86 @@ const app = {
       this.goToScene(s.line);
     });
     return li;
+  },
+
+  renderSceneCards(scenes) {
+    const board = document.getElementById('scene-corkboard');
+    if (!board) return;
+    board.innerHTML = '';
+    if (scenes.length === 0) { board.innerHTML = '<div style="padding:8px;font-size:9pt;color:var(--fg-sec)">' + _('empty_scenes') + '</div>'; return; }
+
+    const plotColors = {'Principal':'#569cd6','A':'#ce9178','B':'#4ec9b0'};
+    const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
+
+    // Same grouping as renderSceneList: preserve text order within each act
+    const actGroups = {};
+    const actFirstLine = {};
+    scenes.forEach((s, i) => {
+      const a = this._sceneActMap[s.line];
+      if (a) {
+        if (!actGroups[a]) { actGroups[a] = []; actFirstLine[a] = s.line; }
+        actGroups[a].push(i);
+      }
+    });
+
+    const addActHeader = (actName) => {
+      const header = document.createElement('div');
+      header.className = 'corkboard-act';
+      header.style.borderLeft = '3px solid ' + (actColors[actName] || '#888');
+      header.textContent = actName;
+      board.appendChild(header);
+    };
+    const addGrid = (idxs) => {
+      const grid = document.createElement('div');
+      grid.className = 'corkboard-grid';
+      idxs.forEach(idx => grid.appendChild(this._makeSceneCard(scenes[idx], idx, plotColors)));
+      board.appendChild(grid);
+    };
+
+    // Fixed numeric order (Ato 1, Ato 2, ...) — matches renderSceneList,
+    // so dragging a card never reshuffles which act appears first.
+    this._sortActs(Object.keys(actFirstLine)).forEach(actName => {
+      addActHeader(actName);
+      addGrid(actGroups[actName]);
+    });
+
+    // Unassigned scenes (no beat) at the end
+    const unassignedIdxs = [];
+    scenes.forEach((s, i) => { if (!this._sceneActMap[s.line]) unassignedIdxs.push(i); });
+    if (unassignedIdxs.length) addGrid(unassignedIdxs);
+
+    // Empty acts at the end (header only, no cards)
+    this._sortActs(Object.keys(this.getActs())).forEach(actName => {
+      if (actFirstLine[actName] === undefined) addActHeader(actName);
+    });
+  },
+
+  _makeSceneCard(s, i, plotColors) {
+    const card = document.createElement('div');
+    card.className = 'corkboard-card';
+    card.draggable = true;
+    card.dataset.line = s.line;
+    const color = this.sceneColors[s.line];
+    const marks = this.getLineMarks();
+    const beat = this._findBeatForScene(s.label, s.line);
+    let plot = beat ? beat.plotline || 'Principal' : '';
+    if (plot === 'C' || plot === 'D') plot = 'B';
+    const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
+    const act = beat ? beat.act : null;
+
+    card.style.borderTop = '3px solid ' + (color || actColors[act] || '#888');
+    if (marks[s.line]) {
+      const mc = {'!':'#fff3b0', '*':'#c8e6c9', '?':'#ffcdd2'};
+      card.style.backgroundColor = mc[marks[s.line]] || '';
+    }
+
+    card.innerHTML = '<div class="card-num">' + (i + 1) + '</div>' +
+      '<div class="card-title">' + esc(s.label) + '</div>' +
+      (plot ? '<span class="card-plot" style="color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '') +
+      (beat && beat.desc ? '<div class="card-desc">' + esc(beat.desc.slice(0, 80)) + '</div>' : '');
+
+    card.addEventListener('click', () => this.goToScene(s.line));
+    return card;
   },
 
   goToScene(line) {
@@ -326,9 +422,13 @@ const app = {
   },
 
   addAct() {
-    const name = prompt('Nome do ato:');
-    if (!name) return;
     const acts = this.getActs();
+    // Always the next sequential number after the highest existing act —
+    // acts start at 1-7, so this adds 8, 9, 10... in order, never a
+    // free-text name that could break the fixed numeric ordering.
+    const nums = Object.keys(acts).map(name => parseInt((name.match(/\d+/) || ['0'])[0], 10));
+    const next = (nums.length ? Math.max(...nums) : 0) + 1;
+    const name = 'Ato ' + next;
     if (acts[name]) return;
     acts[name] = [];
     this.saveActs(acts);
@@ -491,6 +591,49 @@ const app = {
     this.saveActs(rebuilt);
     this._prevText = this.editor.value;
     this.updateScenes(this.editor.value);
+  },
+
+  /* ── Scene drag reorder (list + corkboard) ──
+   * Delegated on the container, not the items, since renderSceneList()/
+   * renderSceneCards() rebuild innerHTML on every keystroke — attaching to
+   * items directly would lose listeners on each re-render. Both containers
+   * share one moveScene() call: it's the same underlying text, dragging in
+   * either view actually moves the scene's text block in the editor. */
+  initSceneDragReorder() {
+    [document.getElementById('scene-list'), document.getElementById('scene-corkboard')].forEach(container => {
+      if (!container) return;
+      container.addEventListener('dragstart', e => {
+        const item = e.target.closest('[data-line]');
+        if (!item) return;
+        e.dataTransfer.setData('text/plain', item.dataset.line);
+        item.classList.add('drag-source');
+      });
+      container.addEventListener('dragend', () => {
+        container.querySelectorAll('[data-line]').forEach(el => el.classList.remove('drag-source', 'drag-over'));
+      });
+      container.addEventListener('dragenter', e => {
+        const item = e.target.closest('[data-line]');
+        if (!item) return;
+        container.querySelectorAll('[data-line]').forEach(el => el.classList.remove('drag-over'));
+        item.classList.add('drag-over');
+      });
+      container.addEventListener('dragleave', e => {
+        const item = e.target.closest('[data-line]');
+        if (item) item.classList.remove('drag-over');
+      });
+      container.addEventListener('dragover', e => e.preventDefault());
+      container.addEventListener('drop', e => {
+        e.preventDefault();
+        container.querySelectorAll('[data-line]').forEach(el => el.classList.remove('drag-over', 'drag-source'));
+        const target = e.target.closest('[data-line]');
+        if (!target) return;
+        const fromLine = parseInt(e.dataTransfer.getData('text/plain'), 10);
+        const toLine = parseInt(target.dataset.line, 10);
+        if (!isNaN(fromLine) && !isNaN(toLine) && fromLine !== toLine) {
+          this.moveScene(fromLine, toLine);
+        }
+      });
+    });
   },
 
   /* ── Beat drag reorder ── */
@@ -1381,11 +1524,13 @@ const app = {
     try { const r = Fountain.parse(text); scriptHtml = r.html.script; } catch (e) { scriptHtml = this.simpleRender(text); }
     const title = this.fileName || 'Roteiro';
     const html = '<!DOCTYPE html><html><head><title>' + title + '</title>' +
-      '<style>@media print{@page{margin:0.75in}}body{font-family:"Courier New",monospace;font-size:12pt;line-height:1.2}' +
-      'h3{font-weight:bold;text-transform:uppercase;margin:2.5em 0 0.25em}' +
-      'h4{text-transform:uppercase;margin:0 0 0 37%}p{margin:1em 0}' +
-      'p.parenthetical{margin-left:31%;margin-right:33%}.dialogue p{margin-left:20%;margin-right:20%}' +
-      'h2{text-align:right;text-transform:uppercase;margin:2em 0}' +
+      '<style>@media print{@page{margin:0.75in;size:A4}}body{font-family:"Courier New",monospace;font-size:12pt;line-height:1.2}' +
+      'h3{font-weight:bold;text-transform:uppercase;margin:2.5em 0 0.25em;page-break-after:avoid;break-after:avoid}' +
+      'h4{text-transform:uppercase;margin:0 0 0 37%;page-break-after:avoid;break-after:avoid;page-break-inside:avoid}' +
+      'p{margin:1em 0;orphans:2;widows:2}' +
+      'p.parenthetical{margin-left:31%;margin-right:33%;page-break-after:avoid;break-after:avoid}' +
+      '.dialogue{page-break-before:avoid;break-before:avoid}.dialogue p{margin-left:20%;margin-right:20%}' +
+      'h2{text-align:right;text-transform:uppercase;margin:2em 0;page-break-before:avoid;break-before:avoid}' +
       '</style></head><body><div id="print-area">' +
       (this.titleData ? this.renderTitleHTML(this.titleData) + '<hr>' : '') + this.processHighlights(scriptHtml) + '</div></body></html>';
     const w = window.open('', '', 'width=800,height=600');

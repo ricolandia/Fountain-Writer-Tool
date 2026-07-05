@@ -52,7 +52,7 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
 #panes { display: flex; flex: 1; overflow: hidden; }
 .pane { overflow-y: auto; }
 #pane-left { width: 200px; min-width: 150px; background: var(--surface);
-  border-right: 1px solid var(--border); }
+  border-right: 1px solid var(--border); display: flex; flex-direction: column; }
 #pane-center { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 #pane-right { width: 220px; min-width: 160px; background: var(--surface);
   border-left: 1px solid var(--border); }
@@ -80,6 +80,57 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
   font-size: 9pt; border-left: 3px solid transparent; margin-bottom: 2px; }
 #scene-list li:hover { background: var(--surface2); }
 #scene-list li.active { border-left-color: var(--accent); background: var(--surface3); }
+#scene-list li.drag-source { opacity: 0.4; }
+#scene-list li.drag-over { border-top: 2px solid var(--accent); margin-top: 6px; }
+
+/* ── Corkboard ── */
+#scene-corkboard { padding: 8px; }
+
+.corkboard-act {
+  font-size: 8pt;
+  font-weight: bold;
+  color: var(--fg-sec);
+  padding: 4px 6px;
+  margin: 8px 0 4px;
+  border-radius: 3px;
+  background: var(--surface2);
+}
+.corkboard-act:first-child { margin-top: 0; }
+
+.corkboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.corkboard-card {
+  background: var(--editor-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  transition: box-shadow 0.15s, transform 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 60px;
+}
+.corkboard-card:hover {
+  box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+  transform: translateY(-1px);
+}
+.corkboard-card.drag-source { opacity: 0.4; }
+.corkboard-card.drag-over {
+  box-shadow: 0 0 0 2px var(--accent);
+  transform: translateY(-1px);
+}
+
+.card-num { font-size: 7pt; color: var(--fg-sec); }
+.card-title { font-size: 8pt; font-weight: bold; line-height: 1.3; word-break: break-word; }
+.card-plot { font-size: 7pt; font-weight: bold; align-self: flex-start; }
+.card-desc { font-size: 7pt; color: var(--fg-sec); line-height: 1.2; }
 
 /* ── Right tabs ── */
 .tabs { display: flex; border-bottom: 1px solid var(--border); }
@@ -202,14 +253,6 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
     background: rgba(0,0,0,0.3);
     cursor: pointer;
   }
-}
-
-/* ── Print ── */
-@media print {
-  body * { visibility: hidden; }
-  #print-area, #print-area * { visibility: visible; }
-  #print-area { position: fixed; left: 0; top: 0; width: 100%; }
-  @page { margin: 0.75in; }
 }
 
 /* ── Focus mode ── */
