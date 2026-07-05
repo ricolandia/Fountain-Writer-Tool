@@ -1527,6 +1527,7 @@ const app = {
       'p.parenthetical{margin-left:31%;margin-right:33%;page-break-after:avoid;break-after:avoid}' +
       '.dialogue{page-break-before:avoid;break-before:avoid}.dialogue p{margin-left:20%;margin-right:20%}' +
       'h2{text-align:right;text-transform:uppercase;margin:2em 0;page-break-before:avoid;break-before:avoid}' +
+      'p.section{text-align:center;font-weight:bold;text-transform:uppercase;margin:3em 0}' +
       '</style></head><body><div id="print-area">' +
       (this.titleData ? this.renderTitleHTML(this.titleData) + '<hr>' : '') + this.processHighlights(scriptHtml) + '</div></body></html>';
     const w = window.open('', '', 'width=800,height=600');
