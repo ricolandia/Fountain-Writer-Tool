@@ -264,13 +264,16 @@ const app = {
     if (plot === 'C' || plot === 'D') plot = 'B';
     li.innerHTML = (i + 1) + '. ' + esc(s.label) +
       (plot ? ' <span style="font-size:7pt;color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '');
-    const ref = s.label + '|L' + s.line;
-    const count = this.comments[ref] ? this.comments[ref].length : 0;
-    li.innerHTML += ' <span style="font-size:7pt;color:#888;cursor:pointer" class="comment-badge" data-line="' + s.line + '">💬' + (count || '') + '</span>';
     li.dataset.line = s.line;
+    const cnt = this.comments[s.label + '|L' + s.line] ? this.comments[s.label + '|L' + s.line].length : 0;
+    const badge = document.createElement('span');
+    badge.className = 'comment-badge';
+    badge.textContent = '💬' + (cnt || '');
+    badge.style.cssText = 'font-size:7pt;color:#888;cursor:pointer;margin-left:4px';
+    badge.addEventListener('click', e => { e.stopPropagation(); this.openSceneComments(s.line); });
+    li.appendChild(badge);
     li.addEventListener('click', e => {
       if (e.target.closest('.act-remove')) return;
-      if (e.target.closest('.comment-badge')) { this.openSceneComments(parseInt(e.target.closest('.comment-badge').dataset.line)); return; }
       this.goToScene(s.line);
     });
     return li;
@@ -350,12 +353,15 @@ const app = {
       '<div class="card-title">' + esc(s.label) + '</div>' +
       (plot ? '<span class="card-plot" style="color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '') +
       (beat && beat.desc ? '<div class="card-desc">' + esc(beat.desc.slice(0, 80)) + '</div>' : '');
-    const ref = s.label + '|L' + s.line;
-    const cnt = this.comments[ref] ? this.comments[ref].length : 0;
-    card.innerHTML += '<span class="comment-badge" style="font-size:7pt;color:#888" data-line="' + s.line + '">💬' + (cnt || '') + '</span>';
-
+    const cnt = this.comments[s.label + '|L' + s.line] ? this.comments[s.label + '|L' + s.line].length : 0;
+    const badge = document.createElement('span');
+    badge.className = 'comment-badge';
+    badge.textContent = '💬' + (cnt || '');
+    badge.style.cssText = 'font-size:7pt;color:#888;margin-top:auto;text-align:right;cursor:pointer';
+    badge.addEventListener('click', e => { e.stopPropagation(); this.openSceneComments(s.line); });
+    card.appendChild(badge);
     card.addEventListener('click', e => {
-      if (e.target.closest('.comment-badge')) { this.openSceneComments(s.line); return; }
+      if (e.target.closest('.comment-badge')) return;
       this.goToScene(s.line);
     });
     return card;
