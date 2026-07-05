@@ -266,14 +266,10 @@ const app = {
       (plot ? ' <span style="font-size:7pt;color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '');
     li.dataset.line = s.line;
     const cnt = this.comments[s.label + '|L' + s.line] ? this.comments[s.label + '|L' + s.line].length : 0;
-    const badge = document.createElement('span');
-    badge.className = 'comment-badge';
-    badge.textContent = '💬' + (cnt || '');
-    badge.style.cssText = 'font-size:7pt;color:#888;cursor:pointer;margin-left:4px';
-    badge.addEventListener('click', e => { e.stopPropagation(); this.openSceneComments(s.line); });
-    li.appendChild(badge);
+    li.innerHTML += ' <span onclick="app.openSceneComments(' + s.line + ')" style="font-size:7pt;color:#888;cursor:pointer">💬' + (cnt || '') + '</span>';
     li.addEventListener('click', e => {
       if (e.target.closest('.act-remove')) return;
+      if (e.target.closest('[onclick]')) return;
       this.goToScene(s.line);
     });
     return li;
@@ -354,14 +350,9 @@ const app = {
       (plot ? '<span class="card-plot" style="color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '') +
       (beat && beat.desc ? '<div class="card-desc">' + esc(beat.desc.slice(0, 80)) + '</div>' : '');
     const cnt = this.comments[s.label + '|L' + s.line] ? this.comments[s.label + '|L' + s.line].length : 0;
-    const badge = document.createElement('span');
-    badge.className = 'comment-badge';
-    badge.textContent = '💬' + (cnt || '');
-    badge.style.cssText = 'font-size:7pt;color:#888;margin-top:auto;text-align:right;cursor:pointer';
-    badge.addEventListener('click', e => { e.stopPropagation(); this.openSceneComments(s.line); });
-    card.appendChild(badge);
+    card.innerHTML += '<span onclick="app.openSceneComments(' + s.line + ')" style="font-size:7pt;color:#888;cursor:pointer;margin-top:auto;text-align:right;display:block">💬' + (cnt || '') + '</span>';
     card.addEventListener('click', e => {
-      if (e.target.closest('.comment-badge')) return;
+      if (e.target.closest('[onclick]')) return;
       this.goToScene(s.line);
     });
     return card;
