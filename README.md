@@ -1,4 +1,6 @@
-# Fountain Writer — Editor de Roteiros Fountain
+# Fonte — Editor de Roteiros Fountain
+
+![Fonte icon](imagens/fonte-icon.svg)
 
 **Editor Fountain em HTML/CSS/JS puro. Zero dependências. Funciona em qualquer navegador.**
 
