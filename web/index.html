@@ -177,13 +177,16 @@
 
     <div id="pane-right" class="pane">
       <div class="tabs" id="right-tabs">
-        <button class="tab active" data-tab="beats" data-i18n="tb_beats">BEATS</button>
+        <button class="tab active" data-tab="beats">
+          BEATS <span onclick="event.stopPropagation();app.openBeatGuide()" style="cursor:pointer;font-size:7pt;color:var(--fg-sec)">?</span>
+        </button>
         <button class="tab" data-tab="chars" data-i18n="tb_chars">PERS</button>
         <button class="tab" data-tab="locs" data-i18n="tb_locs">LOC</button>
       </div>
       <div class="tab-content active" id="tab-beats">
         <p style="padding:4px;display:flex;gap:4px;align-items:center">
           <span id="beat-count" style="color:var(--fg-sec);font-size:9pt">0</span>
+          <span style="color:var(--fg-sec);font-size:7pt">· rascunho</span>
           <button onclick="app.addBeat()" data-i18n="tb_add_beat">+ Beat</button>
         </p>
         <div id="beat-list"></div>
@@ -362,6 +365,27 @@
       <button onclick="app.clearGoal()" data-i18n="goal_remove">Remover meta</button>
       <span style="flex:1"></span>
       <button onclick="app.closeGoal()" data-i18n="goal_close">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Beat Guide Modal -->
+<div id="beat-guide-modal" class="modal-overlay" style="display:none">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">💡 Como usar Beats</div>
+    <div class="modal-body" style="font-size:9pt;line-height:1.5">
+      <p><b>O que são beats?</b> Cartões de planejamento para cada cena do roteiro.</p>
+      <p><b>● Bolinha sólida:</b> beat já vinculado a uma cena no editor</p>
+      <p><b>◯ Bolinha tracejada + 📝:</b> beat de rascunho (ainda sem cena)</p>
+      <p><b>Cores:</b> Principal (azul), Trama A (laranja), Trama B (verde)</p>
+      <p><b>✎</b> Editar (título, ato, trama, comentários)</p>
+      <p><b>↗</b> Inserir no texto do editor</p>
+      <p><b>✕</b> Remover beat</p>
+      <p>Arraste para reordenar. O ato define onde a cena aparece na timeline.</p>
+    </div>
+    <div class="modal-footer">
+      <span style="flex:1"></span>
+      <button onclick="app.closeBeatGuide()">Fechar</button>
     </div>
   </div>
 </div>

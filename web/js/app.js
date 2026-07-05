@@ -850,6 +850,8 @@ const app = {
   },
 
   addBeat() { this.openBeatModal(-1); },
+  openBeatGuide() { document.getElementById('beat-guide-modal').style.display = 'flex'; },
+  closeBeatGuide() { document.getElementById('beat-guide-modal').style.display = 'none'; },
   editBeat(i) { this.openBeatModal(i); },
   deleteBeat(i) { this.beats.splice(i, 1); this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value); },
   insertBeat(i) {
@@ -1083,6 +1085,8 @@ const app = {
     list.innerHTML = '';
     if (this.beats.length === 0) { list.innerHTML = '<div class="list-empty">' + _('empty_beats') + '</div>'; return; }
     const plotColors = {'Principal':'#569cd6','A':'#ce9178','B':'#4ec9b0'};
+    const scenes = this.parseScenes(this.editor.value);
+    const sceneRefs = new Set(scenes.map(s => s.label + '|L' + s.line));
     this.beats.forEach((b, i) => {
       const div = document.createElement('div');
       div.className = 'beat-item';
@@ -1091,11 +1095,16 @@ const app = {
       div.dataset.idx = i;
       const pl = (b.plotline === 'C' || b.plotline === 'D') ? 'B' : (b.plotline || 'Principal');
       const color = plotColors[pl] || '#888';
+      const hasScene = b.scene_ref && sceneRefs.has(b.scene_ref);
       // Line 1: title
       const titleRow = document.createElement('div');
       titleRow.style.cssText = 'display:flex;align-items:center;gap:6px';
-      titleRow.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';flex-shrink:0"></span>' +
-        '<span style="font-size:10pt">' + (i + 1) + '. ' + esc(b.title || '?') + '</span>';
+      const dotStyle = hasScene
+        ? 'display:inline-block;width:8px;height:8px;border-radius:50%;background:' + color + ';flex-shrink:0'
+        : 'display:inline-block;width:8px;height:8px;border-radius:50%;border:2px dashed ' + color + ';flex-shrink:0';
+      const prefix = hasScene ? (i + 1) + '. ' : '📝 ';
+      titleRow.innerHTML = '<span style="' + dotStyle + '"></span>' +
+        '<span style="font-size:10pt">' + prefix + esc(b.title || '?') + '</span>';
       div.appendChild(titleRow);
       // Line 2: plotline + action buttons
       const actionRow = document.createElement('div');
