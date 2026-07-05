@@ -20,6 +20,8 @@ const app = {
   _orcListenersAttached: false,
   _editingBeatIdx: -1,
   _prevText: null,
+  comments: JSON.parse(localStorage.getItem('fw_comments') || '{}'),
+  _commentRef: null,
 
   init() {
     this.translateUI();
@@ -262,9 +264,12 @@ const app = {
     if (plot === 'C' || plot === 'D') plot = 'B';
     li.innerHTML = (i + 1) + '. ' + esc(s.label) +
       (plot ? ' <span style="font-size:7pt;color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '');
+    const ref = s.label + '|L' + s.line;
+    const comments = this.comments[ref]; if (comments && comments.length) { li.innerHTML += ' <span style="font-size:7pt;color:#888;cursor:pointer" class="comment-badge" data-line="' + s.line + '">💬' + comments.length + '</span>'; }
     li.dataset.line = s.line;
     li.addEventListener('click', e => {
       if (e.target.closest('.act-remove')) return;
+      if (e.target.closest('.comment-badge')) { this.openSceneComments(parseInt(e.target.closest('.comment-badge').dataset.line)); return; }
       this.goToScene(s.line);
     });
     return li;
@@ -344,8 +349,13 @@ const app = {
       '<div class="card-title">' + esc(s.label) + '</div>' +
       (plot ? '<span class="card-plot" style="color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '') +
       (beat && beat.desc ? '<div class="card-desc">' + esc(beat.desc.slice(0, 80)) + '</div>' : '');
+    const ref = s.label + '|L' + s.line;
+    const cmts = this.comments[ref]; if (cmts && cmts.length) { card.innerHTML += '<span class="comment-badge" style="font-size:7pt;color:#888" data-line="' + s.line + '">💬' + cmts.length + '</span>'; }
 
-    card.addEventListener('click', () => this.goToScene(s.line));
+    card.addEventListener('click', e => {
+      if (e.target.closest('.comment-badge')) { this.openSceneComments(s.line); return; }
+      this.goToScene(s.line);
+    });
     return card;
   },
 
@@ -1416,6 +1426,7 @@ const app = {
       viewMode: this.viewMode,
       focusOn: this.focusOn,
       lang: lang,
+      comments: this.comments,
       updated: new Date().toISOString()
     };
     const name = (this.projectName || 'roteiro') + '.fountain.json';
@@ -1479,6 +1490,7 @@ const app = {
           if (data.previewMode !== undefined) this.previewMode = data.previewMode;
           if (data.viewMode !== undefined) this.viewMode = data.viewMode;
           if (data.projeto !== undefined) { this.projetoData = data.projeto; localStorage.setItem('fw_projeto', JSON.stringify(data.projeto)); }
+          if (data.comments) { this.comments = data.comments; localStorage.setItem('fw_comments', JSON.stringify(data.comments)); }
           localStorage.setItem('fw_title', JSON.stringify(this.titleData));
           localStorage.setItem('fw_beats', JSON.stringify(this.beats));
           localStorage.setItem('fw_project_name', this.projectName);
@@ -1637,6 +1649,57 @@ const app = {
 
   openHelp() { document.getElementById('help-modal').style.display = 'flex'; },
   closeHelp() { document.getElementById('help-modal').style.display = 'none'; },
+
+  openFountainGuide() { document.getElementById('fountain-guide-modal').style.display = 'flex'; },
+  closeFountainGuide() { document.getElementById('fountain-guide-modal').style.display = 'none'; },
+
+  /* ── Scene comments ── */
+  openSceneComments(line) {
+    const scenes = this.parseScenes(this.editor.value);
+    const scene = scenes.find(s => s.line === line);
+    if (!scene) return;
+    const ref = scene.label + '|L' + line;
+    this._commentRef = ref;
+    document.getElementById('comment-header').textContent = '💬 ' + scene.label;
+    this._renderCommentList(ref);
+    document.getElementById('comment-input').value = '';
+    document.getElementById('comment-modal').style.display = 'flex';
+  },
+
+  _renderCommentList(ref) {
+    const list = document.getElementById('comment-list');
+    list.innerHTML = '';
+    const items = this.comments[ref] || [];
+    if (items.length === 0) { list.innerHTML = '<p style="color:var(--fg-sec);font-size:9pt">Nenhum comentário.</p>'; return; }
+    items.forEach((c, idx) => {
+      const div = document.createElement('div');
+      div.className = 'comment-item';
+      div.innerHTML = '<span class="comment-author">' + esc(c.author || 'Autor') + '</span>' +
+        ' <span class="comment-time">' + esc(c.time || '') + '</span>' +
+        '<div class="comment-text">' + esc(c.text) + '</div>';
+      list.appendChild(div);
+    });
+  },
+
+  addComment() {
+    const text = document.getElementById('comment-input').value.trim();
+    if (!text || !this._commentRef) return;
+    if (!this.comments[this._commentRef]) this.comments[this._commentRef] = [];
+    this.comments[this._commentRef].push({
+      author: this.projectName || 'Autor',
+      text,
+      time: new Date().toLocaleString()
+    });
+    localStorage.setItem('fw_comments', JSON.stringify(this.comments));
+    document.getElementById('comment-input').value = '';
+    this._renderCommentList(this._commentRef);
+    this.updateScenes(this.editor.value);
+  },
+
+  closeCommentModal() {
+    document.getElementById('comment-modal').style.display = 'none';
+    this._commentRef = null;
+  },
 
   /* ── Character editing ── */
   openChar(name) {

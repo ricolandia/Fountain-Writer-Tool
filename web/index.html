@@ -16,7 +16,6 @@
   <label for="show-beats" class="backdrop" id="backdrop-beats"></label>
 
   <div id="toolbar">
-    <button id="menu-btn" onclick="app.toggleMenu()">☰</button>
     <span class="mobile-only"><label for="show-scenes" class="pane-btn">🎬 Cenas</label></span>
     <span class="mobile-only"><label for="show-beats" class="pane-btn">📋 Beats</label></span>
     <button onclick="app.newFile()" data-i18n="tb_new">📄 Novo</button>
@@ -39,7 +38,6 @@
     <button onclick="app.markHighlight('*')" class="hl-btn" style="background:#c8e6c9" data-i18n="tb_ok">🖍 OK</button>
     <button onclick="app.markHighlight('?')" class="hl-btn" style="background:#ffcdd2" data-i18n="tb_problem">🖍 Problema</button>
     <span class="sep"></span>
-    <button onclick="app.editProjectName()" id="project-name" data-i18n="tb_project_name">📁 Sem título</button>
     <button onclick="app.toggleTimeline()" data-i18n="tb_timeline">📊 Trama</button>
     <button onclick="app.toggleTimelineHeight()" title="Expandir timeline">⤢</button>
     <button onclick="app.toggleProjeto()" id="projeto-btn">📋 Roteiro</button>
@@ -47,11 +45,13 @@
     <button onclick="app.copyScript()" id="copy-btn" title="Copiar roteiro">📋</button>
     <button onclick="app.toggleFocus()" data-i18n="tb_focus">🎯 Foco</button>
     <button onclick="app.toggleTheme()">🌗</button>
-    <button onclick="app.openHelp()">❓</button>
     <button onclick="app.toggleLang()" id="lang-btn" style="font-size:9pt">PT</button>
     <button onclick="app.toggleTimerMode()" id="timer-mode-btn" data-i18n="tb_timer">⏱ Escrita</button>
     <button onclick="app.toggleTimer()" id="timer-start-btn" style="font-size:9pt;padding:2px 4px">▶</button>
     <button onclick="app.resetTimer()" id="timer-reset-btn" style="font-size:9pt;padding:2px 4px">⏹</button>
+    <button onclick="app.openHelp()">❓</button>
+    <button onclick="app.openFountainGuide()" title="Guia Fountain">?!</button>
+    <button onclick="app.editProjectName()" id="project-name" data-i18n="tb_project_name">📁 Sem título</button>
     <span id="save-indicator" style="font-size:10pt;color:var(--fg-sec)">💾</span>
     <span class="timer" id="timer-display">⏱ 00:00</span>
   </div>
@@ -243,6 +243,34 @@
   </div>
 </div>
 
+<!-- Fountain Guide Modal -->
+<div id="fountain-guide-modal" class="modal-overlay" style="display:none">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">Guia Fountain</div>
+    <div class="modal-body" style="font-size:9pt;line-height:1.5">
+      <p><b>Cabeçalho de cena:</b> <code>INT. CASA - DIA</code> ou <code>.CENA</code></p>
+      <p><b>Personagem:</b> <code>JOÃO</code> (maiúsculas, sozinho na linha)</p>
+      <p><b>Diálogo:</b> linha abaixo do personagem</p>
+      <p><b>Rubrica:</b> <code>(sorrindo)</code> entre parênteses</p>
+      <p><b>Transição:</b> <code>CUT TO:</code> ou <code>> FADE OUT</code></p>
+      <p><b>Centralizado:</b> <code>> texto &lt;</code></p>
+      <p><b>Atos:</b> <code># Ato 2</code> (marca mudança de ato)</p>
+      <p><b>Sinopse:</b> <code>= resumo da cena</code> (não aparece na impressão)</p>
+      <p><b>Nota de produção:</b> <code>[[ nota ]]</code> (não aparece na impressão)</p>
+      <p><b>Comentário descartável:</b> <code>/* texto */</code> (ignorado)</p>
+      <p><b>Forçar ação:</b> <code>! texto</code></p>
+      <p><b>Forçar personagem:</b> <code>@ nome</code></p>
+      <p><b>Quebra de página:</b> <code>===</code></p>
+      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0">
+      <p style="color:var(--fg-sec)">Formato Fountain completo em <a href="https://fountain.io" target="_blank" style="color:var(--accent)">fountain.io</a></p>
+    </div>
+    <div class="modal-footer">
+      <span style="flex:1"></span>
+      <button onclick="app.closeFountainGuide()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <div id="find-modal" class="modal-overlay" style="display:none">
   <div class="modal">
     <div class="modal-header" data-i18n="find_title">Buscar / Substituir</div>
@@ -371,6 +399,24 @@
       <span style="flex:1"></span>
       <button onclick="app.saveBeatModal()">Salvar</button>
       <button onclick="app.closeBeatModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Comment Modal -->
+<div id="comment-modal" class="modal-overlay" style="display:none">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header" id="comment-header">💬 Comentários</div>
+    <div class="modal-body">
+      <div id="comment-list" style="max-height:300px;overflow-y:auto;font-size:9pt"></div>
+      <div style="display:flex;gap:4px;margin-top:8px">
+        <input type="text" id="comment-input" style="flex:1" placeholder="Escreva um comentário..." onkeydown="if(event.key==='Enter')app.addComment()">
+        <button onclick="app.addComment()">Enviar</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span style="flex:1"></span>
+      <button onclick="app.closeCommentModal()">Fechar</button>
     </div>
   </div>
 </div>
