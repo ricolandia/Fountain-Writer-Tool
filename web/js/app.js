@@ -842,14 +842,14 @@ const app = {
     const sceneData = [];
     // "# Ato N" on its own line marks "from here on, this act" — the
     // writer's way of telling the app about an act change without
-    // leaving the page. It's transparent to guessType/prev: it doesn't
-    // count as dialogue context for the line after it, same as BLANK.
+    // leaving the page. It resets prev to ACTION so dialogue context
+    // from before the marker doesn't leak into the line after it.
     const markerActs = {}; // scene line -> act name governed by a marker
     let currentMarkerAct = null;
     let prev = 'ACTION';
     lines.forEach((line, i) => {
       const markerMatch = line.trim().match(/^#\s*(?:ato\s*)?(\d+)\s*$/i);
-      if (markerMatch) { currentMarkerAct = 'Ato ' + markerMatch[1]; return; }
+      if (markerMatch) { currentMarkerAct = 'Ato ' + markerMatch[1]; prev = 'ACTION'; return; }
       const t = guessType(line, prev);
       if (t === 'SCENE') {
         const clean = line.trim().replace(/^\./, '');
@@ -2053,13 +2053,8 @@ function guessType(text, prev) {
   // Parenthetical — lib nativa
   if (Fountain.regex.parenthetical.test(c)) return 'PARENTHETICAL';
 
-  // Character name (keep caseiro — lib version expects 2 lines)
-  if (/^[A-ZÀ-Ú][A-ZÀ-Ú0-9\s\(\)\.\-']+$/.test(c)) return 'CHARACTER';
-
-  // Dialogue follows character/parenthetical/dialogue
-  if (prev === 'CHARACTER' || prev === 'PARENTHETICAL' || prev === 'DIALOGUE') return 'DIALOGUE';
-
-  // Non-printing elements: treated as ACTION (don't affect structure)
+  // Non-printing elements: must be checked before dialogue to prevent
+  // context leak (synopsis after CHARACTER would become "DIALOGUE").
   // Synopses: = text — lib nativa
   if (Fountain.regex.synopsis.test(c)) return 'ACTION';
   // Notes: [[ text ]] — lib nativa
@@ -2068,6 +2063,12 @@ function guessType(text, prev) {
   if (Fountain.regex.page_break.test(c)) return 'ACTION';
   // Boneyard delimiters
   if (/^\/\*$|^\*\/$/.test(c)) return 'ACTION';
+
+  // Character name (keep caseiro — lib version expects 2 lines)
+  if (/^[A-ZÀ-Ú][A-ZÀ-Ú0-9\s\(\)\.\-']+$/.test(c)) return 'CHARACTER';
+
+  // Dialogue follows character/parenthetical/dialogue
+  if (prev === 'CHARACTER' || prev === 'PARENTHETICAL' || prev === 'DIALOGUE') return 'DIALOGUE';
 
   return 'ACTION';
 }
