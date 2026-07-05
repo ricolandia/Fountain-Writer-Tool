@@ -38,6 +38,7 @@
     <button onclick="app.markHighlight('*')" class="hl-btn" style="background:#c8e6c9" data-i18n="tb_ok">🖍 OK</button>
     <button onclick="app.markHighlight('?')" class="hl-btn" style="background:#ffcdd2" data-i18n="tb_problem">🖍 Problema</button>
     <span class="sep"></span>
+    <button onclick="app.editProjectName()" id="project-name" data-i18n="tb_project_name">📁 Sem título</button>
     <button onclick="app.toggleTimeline()" data-i18n="tb_timeline">📊 Trama</button>
     <button onclick="app.toggleTimelineHeight()" title="Expandir timeline">⤢</button>
     <button onclick="app.toggleProjeto()" id="projeto-btn">📋 Roteiro</button>
@@ -49,9 +50,9 @@
     <button onclick="app.toggleTimerMode()" id="timer-mode-btn" data-i18n="tb_timer">⏱ Escrita</button>
     <button onclick="app.toggleTimer()" id="timer-start-btn" style="font-size:9pt;padding:2px 4px">▶</button>
     <button onclick="app.resetTimer()" id="timer-reset-btn" style="font-size:9pt;padding:2px 4px">⏹</button>
+    <span class="sep"></span>
     <button onclick="app.openHelp()">❓</button>
     <button onclick="app.openFountainGuide()" title="Guia Fountain">?!</button>
-    <button onclick="app.editProjectName()" id="project-name" data-i18n="tb_project_name">📁 Sem título</button>
     <span id="save-indicator" style="font-size:10pt;color:var(--fg-sec)">💾</span>
     <span class="timer" id="timer-display">⏱ 00:00</span>
   </div>
