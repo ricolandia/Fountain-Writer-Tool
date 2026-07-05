@@ -1104,7 +1104,7 @@ const app = {
         : 'display:inline-block;width:8px;height:8px;border-radius:50%;border:2px dashed ' + color + ';flex-shrink:0';
       const prefix = hasScene ? (i + 1) + '. ' : '📝 ';
       titleRow.innerHTML = '<span style="' + dotStyle + '"></span>' +
-        '<span style="font-size:10pt">' + prefix + esc(b.title || '?') + '</span>';
+        '<span style="font-size:11pt">' + prefix + esc(b.title || '?') + '</span>';
       div.appendChild(titleRow);
       // Line 2: plotline + action buttons
       const actionRow = document.createElement('div');
