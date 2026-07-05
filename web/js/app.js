@@ -20,8 +20,6 @@ const app = {
   _orcListenersAttached: false,
   _editingBeatIdx: -1,
   _prevText: null,
-  comments: JSON.parse(localStorage.getItem('fw_comments') || '{}'),
-  _commentRef: null,
 
   init() {
     this.translateUI();
@@ -265,11 +263,8 @@ const app = {
     li.innerHTML = (i + 1) + '. ' + esc(s.label) +
       (plot ? ' <span style="font-size:7pt;color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '');
     li.dataset.line = s.line;
-    const cnt = this.comments[s.label + '|L' + s.line] ? this.comments[s.label + '|L' + s.line].length : 0;
-    li.innerHTML += ' <span onclick="app.openSceneComments(' + s.line + ')" style="font-size:7pt;color:#888;cursor:pointer">💬' + (cnt || '') + '</span>';
     li.addEventListener('click', e => {
       if (e.target.closest('.act-remove')) return;
-      if (e.target.closest('[onclick]')) return;
       this.goToScene(s.line);
     });
     return li;
@@ -349,12 +344,7 @@ const app = {
       '<div class="card-title">' + esc(s.label) + '</div>' +
       (plot ? '<span class="card-plot" style="color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '') +
       (beat && beat.desc ? '<div class="card-desc">' + esc(beat.desc.slice(0, 80)) + '</div>' : '');
-    const cnt = this.comments[s.label + '|L' + s.line] ? this.comments[s.label + '|L' + s.line].length : 0;
-    card.innerHTML += '<span onclick="app.openSceneComments(' + s.line + ')" style="font-size:7pt;color:#888;cursor:pointer;margin-top:auto;text-align:right;display:block">💬' + (cnt || '') + '</span>';
-    card.addEventListener('click', e => {
-      if (e.target.closest('[onclick]')) return;
-      this.goToScene(s.line);
-    });
+    card.addEventListener('click', () => this.goToScene(s.line));
     return card;
   },
 
@@ -794,8 +784,35 @@ const app = {
     document.getElementById('beat-title').value = b ? b.title : '';
     document.getElementById('beat-act').value = b ? (b.act || 'Ato 1') : 'Ato 1';
     document.getElementById('beat-plot').value = b && b.plotline ? b.plotline : 'Principal';
+    this._renderBeatComments(b ? (b.comments || []) : []);
     document.getElementById('beat-modal').style.display = 'flex';
     document.getElementById('beat-title').focus();
+  },
+
+  _renderBeatComments(comments) {
+    const el = document.getElementById('beat-comments');
+    el.innerHTML = '';
+    if (!comments || comments.length === 0) { el.innerHTML = '<p style="color:var(--fg-sec)">Sem comentários.</p>'; return; }
+    comments.slice().reverse().forEach(c => {
+      el.innerHTML += '<div style="padding:3px 0;border-bottom:1px solid var(--border)">' +
+        '<b>' + esc(c.author || 'Autor') + '</b> ' +
+        '<span style="color:var(--fg-sec)">' + esc(c.time || '') + '</span><br>' +
+        esc(c.text) + '</div>';
+    });
+  },
+
+  addBeatComment() {
+    const text = document.getElementById('beat-comment-input').value.trim();
+    const idx = this._editingBeatIdx;
+    if (!text || idx < 0) return;
+    if (!this.beats[idx].comments) this.beats[idx].comments = [];
+    this.beats[idx].comments.push({
+      author: this.projectName || 'Autor',
+      text,
+      time: new Date().toLocaleString()
+    });
+    document.getElementById('beat-comment-input').value = '';
+    this._renderBeatComments(this.beats[idx].comments);
   },
 
   saveBeatModal() {
@@ -1425,7 +1442,6 @@ const app = {
       viewMode: this.viewMode,
       focusOn: this.focusOn,
       lang: lang,
-      comments: this.comments,
       updated: new Date().toISOString()
     };
     const name = (this.projectName || 'roteiro') + '.fountain.json';
@@ -1489,7 +1505,6 @@ const app = {
           if (data.previewMode !== undefined) this.previewMode = data.previewMode;
           if (data.viewMode !== undefined) this.viewMode = data.viewMode;
           if (data.projeto !== undefined) { this.projetoData = data.projeto; localStorage.setItem('fw_projeto', JSON.stringify(data.projeto)); }
-          if (data.comments) { this.comments = data.comments; localStorage.setItem('fw_comments', JSON.stringify(data.comments)); }
           localStorage.setItem('fw_title', JSON.stringify(this.titleData));
           localStorage.setItem('fw_beats', JSON.stringify(this.beats));
           localStorage.setItem('fw_project_name', this.projectName);
@@ -1651,54 +1666,6 @@ const app = {
 
   openFountainGuide() { document.getElementById('fountain-guide-modal').style.display = 'flex'; },
   closeFountainGuide() { document.getElementById('fountain-guide-modal').style.display = 'none'; },
-
-  /* ── Scene comments ── */
-  openSceneComments(line) {
-    const scenes = this.parseScenes(this.editor.value);
-    const scene = scenes.find(s => s.line === line);
-    if (!scene) return;
-    const ref = scene.label + '|L' + line;
-    this._commentRef = ref;
-    document.getElementById('comment-header').textContent = '💬 ' + scene.label;
-    this._renderCommentList(ref);
-    document.getElementById('comment-input').value = '';
-    document.getElementById('comment-modal').style.display = 'flex';
-  },
-
-  _renderCommentList(ref) {
-    const list = document.getElementById('comment-list');
-    list.innerHTML = '';
-    const items = this.comments[ref] || [];
-    if (items.length === 0) { list.innerHTML = '<p style="color:var(--fg-sec);font-size:9pt">Nenhum comentário.</p>'; return; }
-    items.forEach((c, idx) => {
-      const div = document.createElement('div');
-      div.className = 'comment-item';
-      div.innerHTML = '<span class="comment-author">' + esc(c.author || 'Autor') + '</span>' +
-        ' <span class="comment-time">' + esc(c.time || '') + '</span>' +
-        '<div class="comment-text">' + esc(c.text) + '</div>';
-      list.appendChild(div);
-    });
-  },
-
-  addComment() {
-    const text = document.getElementById('comment-input').value.trim();
-    if (!text || !this._commentRef) return;
-    if (!this.comments[this._commentRef]) this.comments[this._commentRef] = [];
-    this.comments[this._commentRef].push({
-      author: this.projectName || 'Autor',
-      text,
-      time: new Date().toLocaleString()
-    });
-    localStorage.setItem('fw_comments', JSON.stringify(this.comments));
-    document.getElementById('comment-input').value = '';
-    this._renderCommentList(this._commentRef);
-    this.updateScenes(this.editor.value);
-  },
-
-  closeCommentModal() {
-    document.getElementById('comment-modal').style.display = 'none';
-    this._commentRef = null;
-  },
 
   /* ── Character editing ── */
   openChar(name) {

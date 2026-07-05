@@ -174,13 +174,6 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
 .proj-linha input, .proj-linha textarea { padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface3); color: var(--fg); font: 10pt 'Courier New', monospace; }
 .proj-linha input[type=checkbox] { width: 18px; height: 18px; cursor: pointer; }
 
-/* ── Comment list ── */
-.comment-item { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 9pt; }
-.comment-item:last-child { border-bottom: none; }
-.comment-author { font-weight: bold; font-size: 8pt; }
-.comment-time { font-size: 7pt; color: var(--fg-sec); }
-.comment-text { margin-top: 2px; }
-
 /* ── Mobile pane toggles (checkbox hack, hidden by default) ── */
 .pane-toggle, .backdrop { display: none; }
 .mobile-only { display: none; }

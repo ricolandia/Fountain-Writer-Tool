@@ -389,29 +389,18 @@
           <option value="B">B</option>
         </select>
       </div>
+      <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
+        <div id="beat-comments" style="font-size:8pt;max-height:120px;overflow-y:auto;margin-bottom:6px"></div>
+        <div style="display:flex;gap:4px">
+          <input type="text" id="beat-comment-input" style="flex:1;font-size:9pt" placeholder="Comentário...">
+          <button onclick="app.addBeatComment()" style="font-size:8pt">+</button>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <span style="flex:1"></span>
       <button onclick="app.saveBeatModal()">Salvar</button>
       <button onclick="app.closeBeatModal()">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Comment Modal -->
-<div id="comment-modal" class="modal-overlay" style="display:none">
-  <div class="modal" style="max-width:420px">
-    <div class="modal-header" id="comment-header">💬 Comentários</div>
-    <div class="modal-body">
-      <div id="comment-list" style="max-height:300px;overflow-y:auto;font-size:9pt"></div>
-      <div style="display:flex;gap:4px;margin-top:8px">
-        <input type="text" id="comment-input" style="flex:1" placeholder="Escreva um comentário..." onkeydown="if(event.key==='Enter')app.addComment()">
-        <button onclick="app.addComment()">Enviar</button>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <span style="flex:1"></span>
-      <button onclick="app.closeCommentModal()">Fechar</button>
     </div>
   </div>
 </div>
