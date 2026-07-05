@@ -1821,31 +1821,9 @@ const app = {
     });
     document.getElementById('lang-btn').textContent = lang === 'pt-BR' ? 'PT' : 'EN';
     document.title = 'Fountain Writer';
-    this.populateMenu();
   },
 
-  /* ── Mobile menu ── */
-  toggleMenu() {
-    const overlay = document.getElementById('menu-overlay');
-    overlay.classList.toggle('open');
-    document.body.classList.toggle('menu-open');
-  },
-
-  populateMenu() {
-    const drawer = document.getElementById('menu-drawer');
-    if (!drawer) return;
-    // Clone toolbar buttons (skip separators, spacers, timer)
-    const html = [];
-    document.querySelectorAll('#toolbar > button:not(#menu-btn)').forEach(btn => {
-      if (btn.style.display === 'none') return;
-      const onclick = btn.getAttribute('onclick');
-      const text = btn.textContent;
-      if (onclick && text) {
-        html.push(`<button onclick="${onclick};app.toggleMenu()">${text}</button>`);
-      }
-    });
-    drawer.innerHTML = html.join('');
-  },
+  /* ── Focus mode ── */
   toggleFocus() {
     this.focusOn = !this.focusOn;
     document.body.classList.toggle('focus-mode', this.focusOn);
