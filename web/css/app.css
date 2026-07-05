@@ -27,7 +27,7 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
 /* ── Panes ── */
 #panes { display: flex; flex: 1; overflow: hidden; }
 .pane { overflow-y: auto; }
-#pane-left { width: 200px; min-width: 150px; background: var(--surface);
+#pane-left { width: 260px; min-width: 200px; background: var(--surface);
   border-right: 1px solid var(--border); display: flex; flex-direction: column; }
 #pane-center { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 #pane-right { width: 280px; min-width: 220px; background: var(--surface);
@@ -54,7 +54,7 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
   display: flex; justify-content: space-between; align-items: center; }
 #scene-list { list-style: none; padding: 4px; }
 #scene-list li { padding: 4px 6px; cursor: pointer; border-radius: 4px;
-  font-size: 9pt; border-left: 3px solid transparent; margin-bottom: 2px; }
+  font-size: 10pt; border-left: 3px solid transparent; margin-bottom: 2px; }
 #scene-list li:hover { background: var(--surface2); }
 #scene-list li.active { border-left-color: var(--accent); background: var(--surface3); }
 
@@ -181,7 +181,7 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
 
 /* ── Responsive ── */
 @media (max-width: 1024px) {
-  #pane-left { width: 160px; min-width: 120px; }
+  #pane-left { width: 220px; min-width: 160px; }
   #pane-right { width: 240px; min-width: 180px; }
   #textarea-wrap { padding: 30px 40px; }
   .pane-header { font-size: 8pt; }
