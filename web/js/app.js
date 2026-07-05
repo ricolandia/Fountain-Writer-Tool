@@ -265,7 +265,8 @@ const app = {
     li.innerHTML = (i + 1) + '. ' + esc(s.label) +
       (plot ? ' <span style="font-size:7pt;color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '');
     const ref = s.label + '|L' + s.line;
-    const comments = this.comments[ref]; if (comments && comments.length) { li.innerHTML += ' <span style="font-size:7pt;color:#888;cursor:pointer" class="comment-badge" data-line="' + s.line + '">💬' + comments.length + '</span>'; }
+    const count = this.comments[ref] ? this.comments[ref].length : 0;
+    li.innerHTML += ' <span style="font-size:7pt;color:#888;cursor:pointer" class="comment-badge" data-line="' + s.line + '">💬' + (count || '') + '</span>';
     li.dataset.line = s.line;
     li.addEventListener('click', e => {
       if (e.target.closest('.act-remove')) return;
@@ -350,7 +351,8 @@ const app = {
       (plot ? '<span class="card-plot" style="color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '') +
       (beat && beat.desc ? '<div class="card-desc">' + esc(beat.desc.slice(0, 80)) + '</div>' : '');
     const ref = s.label + '|L' + s.line;
-    const cmts = this.comments[ref]; if (cmts && cmts.length) { card.innerHTML += '<span class="comment-badge" style="font-size:7pt;color:#888" data-line="' + s.line + '">💬' + cmts.length + '</span>'; }
+    const cnt = this.comments[ref] ? this.comments[ref].length : 0;
+    card.innerHTML += '<span class="comment-badge" style="font-size:7pt;color:#888" data-line="' + s.line + '">💬' + (cnt || '') + '</span>';
 
     card.addEventListener('click', e => {
       if (e.target.closest('.comment-badge')) { this.openSceneComments(s.line); return; }
