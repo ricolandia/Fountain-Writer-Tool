@@ -2031,16 +2031,44 @@ const app = {
 function guessType(text, prev) {
   const c = text.trim();
   if (!c) return 'BLANK';
+
+  // Fountain 1.1 force markers
   if (c.startsWith('!')) return 'ACTION';
   if (c.startsWith('@')) return 'CHARACTER';
-  if (c.startsWith('>') && !c.endsWith('<')) return 'TRANSITION';
-  if (c.startsWith('.')) return 'SCENE';
   if (c.startsWith('>') && c.endsWith('<')) return 'CENTER';
-  if (/^(INT|EXT|EST|I\/E)[.\s]/i.test(c)) return 'SCENE';
-  if (/^[A-ZÀ-Ú][A-ZÀ-Ú\s]{1,20}(TO|PARA):$/.test(c)) return 'TRANSITION';
-  if (/^[A-ZÀ-Ú][A-ZÀ-Ú0-9\s\(\)\.\-']+$/.test(c) && !/^(INT|EXT|EST|I\/E)[.\s]/i.test(c)) return 'CHARACTER';
-  if (/^\s*\(.*\)\s*$/.test(c)) return 'PARENTHETICAL';
+
+  // Force scene / transition (Fountain 1.1)
+  if (c.startsWith('.') && !/^\.{2,}/.test(c)) return 'SCENE';
+  if (c.startsWith('>') && !c.endsWith('<')) return 'TRANSITION';
+
+  // Sections: # Title, ## Subtitle, etc. — lib nativa
+  if (Fountain.regex.section.test(c)) return 'ACTION';
+
+  // Scene heading: INT/EXT/EST/I/E — lib nativa
+  if (Fountain.regex.scene_heading.test(c)) return 'SCENE';
+
+  // Transitions: CUT TO:, FADE OUT., etc. — lib nativa
+  if (Fountain.regex.transition.test(c)) return 'TRANSITION';
+
+  // Parenthetical — lib nativa
+  if (Fountain.regex.parenthetical.test(c)) return 'PARENTHETICAL';
+
+  // Character name (keep caseiro — lib version expects 2 lines)
+  if (/^[A-ZÀ-Ú][A-ZÀ-Ú0-9\s\(\)\.\-']+$/.test(c)) return 'CHARACTER';
+
+  // Dialogue follows character/parenthetical/dialogue
   if (prev === 'CHARACTER' || prev === 'PARENTHETICAL' || prev === 'DIALOGUE') return 'DIALOGUE';
+
+  // Non-printing elements: treated as ACTION (don't affect structure)
+  // Synopses: = text — lib nativa
+  if (Fountain.regex.synopsis.test(c)) return 'ACTION';
+  // Notes: [[ text ]] — lib nativa
+  if (Fountain.regex.note.test(c)) return 'ACTION';
+  // Page breaks: ===
+  if (Fountain.regex.page_break.test(c)) return 'ACTION';
+  // Boneyard delimiters
+  if (/^\/\*$|^\*\/$/.test(c)) return 'ACTION';
+
   return 'ACTION';
 }
 
