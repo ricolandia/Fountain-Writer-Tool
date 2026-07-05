@@ -22,3 +22,7 @@ SESSION.md
 LANDING.md
 *.session.*
 
+# Backend (planejado — não implementado)
+backend/
+backend.env
+
