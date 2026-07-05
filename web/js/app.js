@@ -53,7 +53,6 @@ const app = {
 
     // Drag reorder via Sortable-like manual implementation
     this.initBeatDragReorder();
-    this.initSceneDragReorder();
     this.initDarkMode();
     this.applyFontSize();
     this.displayTimer();
@@ -251,7 +250,6 @@ const app = {
   _makeSceneLi(s, i, plotColors) {
     const li = document.createElement('li');
     li.style.cssText = 'user-select:none;-webkit-user-select:none';
-    li.draggable = true;
     const color = this.sceneColors[s.line];
     if (color) li.style.borderLeftColor = color;
     const marks = this.getLineMarks();
@@ -327,7 +325,6 @@ const app = {
   _makeSceneCard(s, i, plotColors) {
     const card = document.createElement('div');
     card.className = 'corkboard-card';
-    card.draggable = true;
     card.dataset.line = s.line;
     const color = this.sceneColors[s.line];
     const marks = this.getLineMarks();
@@ -593,49 +590,6 @@ const app = {
     this.updateScenes(this.editor.value);
   },
 
-  /* ── Scene drag reorder (list + corkboard) ──
-   * Delegated on the container, not the items, since renderSceneList()/
-   * renderSceneCards() rebuild innerHTML on every keystroke — attaching to
-   * items directly would lose listeners on each re-render. Both containers
-   * share one moveScene() call: it's the same underlying text, dragging in
-   * either view actually moves the scene's text block in the editor. */
-  initSceneDragReorder() {
-    [document.getElementById('scene-list'), document.getElementById('scene-corkboard')].forEach(container => {
-      if (!container) return;
-      container.addEventListener('dragstart', e => {
-        const item = e.target.closest('[data-line]');
-        if (!item) return;
-        e.dataTransfer.setData('text/plain', item.dataset.line);
-        item.classList.add('drag-source');
-      });
-      container.addEventListener('dragend', () => {
-        container.querySelectorAll('[data-line]').forEach(el => el.classList.remove('drag-source', 'drag-over'));
-      });
-      container.addEventListener('dragenter', e => {
-        const item = e.target.closest('[data-line]');
-        if (!item) return;
-        container.querySelectorAll('[data-line]').forEach(el => el.classList.remove('drag-over'));
-        item.classList.add('drag-over');
-      });
-      container.addEventListener('dragleave', e => {
-        const item = e.target.closest('[data-line]');
-        if (item) item.classList.remove('drag-over');
-      });
-      container.addEventListener('dragover', e => e.preventDefault());
-      container.addEventListener('drop', e => {
-        e.preventDefault();
-        container.querySelectorAll('[data-line]').forEach(el => el.classList.remove('drag-over', 'drag-source'));
-        const target = e.target.closest('[data-line]');
-        if (!target) return;
-        const fromLine = parseInt(e.dataTransfer.getData('text/plain'), 10);
-        const toLine = parseInt(target.dataset.line, 10);
-        if (!isNaN(fromLine) && !isNaN(toLine) && fromLine !== toLine) {
-          this.moveScene(fromLine, toLine);
-        }
-      });
-    });
-  },
-
   /* ── Beat drag reorder ── */
   initBeatDragReorder() {
     const list = document.getElementById('beat-list');
@@ -886,12 +840,21 @@ const app = {
   syncBeatsFromScenes(text) {
     const lines = text.split('\n');
     const sceneData = [];
+    // "# Ato N" on its own line marks "from here on, this act" — the
+    // writer's way of telling the app about an act change without
+    // leaving the page. It's transparent to guessType/prev: it doesn't
+    // count as dialogue context for the line after it, same as BLANK.
+    const markerActs = {}; // scene line -> act name governed by a marker
+    let currentMarkerAct = null;
     let prev = 'ACTION';
     lines.forEach((line, i) => {
+      const markerMatch = line.trim().match(/^#\s*(?:ato\s*)?(\d+)\s*$/i);
+      if (markerMatch) { currentMarkerAct = 'Ato ' + markerMatch[1]; return; }
       const t = guessType(line, prev);
       if (t === 'SCENE') {
         const clean = line.trim().replace(/^\./, '');
         sceneData.push({ heading: clean, line: i });
+        if (currentMarkerAct) markerActs[i] = currentMarkerAct;
       }
       if (t !== 'BLANK') prev = t;
     });
@@ -908,36 +871,64 @@ const app = {
     // Count heading occurrences to only remap stale for unique headings
     const headingCount = {};
     sceneData.forEach(d => { headingCount[d.heading] = (headingCount[d.heading] || 0) + 1; });
+    // Tracks the act of the most recent scene seen so far as we walk the
+    // document top to bottom (sceneData is already in line order). A
+    // brand-new scene with no marker above it inherits this instead of
+    // always defaulting to Ato 1 — so typing straight through Act 2 keeps
+    // landing new scenes in Act 2. Only the very first scene in the whole
+    // script, with no marker and no previous scene, falls back to the
+    // first act.
+    let lastAct = null;
     sceneData.forEach(({ heading, line }) => {
       const uniqueRef = heading + '|L' + line;
       const existing = this.beats.find(b => b.scene_ref === uniqueRef);
-      if (!existing) {
-        // Only remap stale for unique headings (duplicates need their own beat)
-        const isUnique = headingCount[heading] === 1;
-        if (isUnique) {
-          // Candidates: a beat whose scene moved (has an old scene_ref that
-          // no longer matches any current scene) OR a manually-created
-          // "planning" beat that was never linked to a scene at all
-          // (scene_ref undefined) — both should adopt this scene instead of
-          // spawning a duplicate auto beat.
-          const stale = this.beats.find(b =>
-            b.title === heading && !remappedBeats.has(b) &&
-            (!b.scene_ref || b.scene_ref.includes('|L'))
-          );
-          if (stale) {
-            remappedBeats.add(stale);
-            stale.scene_ref = uniqueRef;
-            changed = true;
-            return;
-          }
+      if (existing) {
+        // A marker is authoritative: if one governs this scene and
+        // disagrees with the beat's current act, the marker wins — that's
+        // the whole point of writing it in the text.
+        if (markerActs[line] && existing.act !== markerActs[line]) {
+          existing.act = markerActs[line];
+          changed = true;
         }
-        this.beats.push({ title: heading, act: 'Ato 1', desc: '', scene_ref: uniqueRef, order: this.beats.length, auto: true, plotline: 'Principal' });
-        changed = true;
+        if (existing.act) lastAct = existing.act;
+        return;
       }
+      // Only remap stale for unique headings (duplicates need their own beat)
+      const isUnique = headingCount[heading] === 1;
+      if (isUnique) {
+        // Candidates: a beat whose scene moved (has an old scene_ref that
+        // no longer matches any current scene) OR a manually-created
+        // "planning" beat that was never linked to a scene at all
+        // (scene_ref undefined) — both should adopt this scene instead of
+        // spawning a duplicate auto beat.
+        const stale = this.beats.find(b =>
+          b.title === heading && !remappedBeats.has(b) &&
+          (!b.scene_ref || b.scene_ref.includes('|L'))
+        );
+        if (stale) {
+          remappedBeats.add(stale);
+          stale.scene_ref = uniqueRef;
+          changed = true;
+          if (markerActs[line]) stale.act = markerActs[line];
+          if (stale.act) lastAct = stale.act;
+          return;
+        }
+      }
+      const inferredAct = markerActs[line] || lastAct || this._sortActs(Object.keys(this.getActs()))[0] || 'Ato 1';
+      this.beats.push({ title: heading, act: inferredAct, desc: '', scene_ref: uniqueRef, order: this.beats.length, auto: true, plotline: 'Principal' });
+      changed = true;
+      lastAct = inferredAct;
     });
-    // Ensure default act exists in fw_acts for auto-created beats
+    // Ensure default act exists in fw_acts for auto-created beats, and
+    // that any act referenced by a "# Ato N" marker actually exists —
+    // typing "# Ato 9" should create Ato 9 on the fly, same as clicking
+    // the 🎬 button would.
     const fwActs = this.getActs();
-    if (!fwActs['Ato 1']) { fwActs['Ato 1'] = []; this.saveActs(fwActs); }
+    if (!fwActs['Ato 1']) { fwActs['Ato 1'] = []; changed = true; }
+    Object.values(markerActs).forEach(actName => {
+      if (!fwActs[actName]) { fwActs[actName] = []; changed = true; }
+    });
+    this.saveActs(fwActs);
     if (changed) { this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value); }
   },
 
@@ -945,6 +936,11 @@ const app = {
   toggleTimeline() {
     this.timelineVisible = !this.timelineVisible;
     this.renderTimeline();
+  },
+
+  toggleTimelineHeight() {
+    document.getElementById('timeline-bar').classList.toggle('expanded');
+    document.getElementById('app').classList.toggle('timeline-expanded');
   },
 
   renderTimeline() {

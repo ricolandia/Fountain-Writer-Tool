@@ -260,5 +260,5 @@ const Fountain = (function () {
         };
     }
 
-    return { parse };
+    return { parse, regex };
 })();
