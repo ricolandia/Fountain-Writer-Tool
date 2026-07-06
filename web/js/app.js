@@ -1779,12 +1779,6 @@ const app = {
 
   openExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'flex'; },
   closeExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'none'; },
-  toggleExcalidrawFullscreen() {
-    const modal = document.querySelector('.excalidraw-modal');
-    const btn = document.getElementById('excalidraw-fullscreen-btn');
-    modal.classList.toggle('excalidraw-fullscreen');
-    btn.textContent = modal.classList.contains('excalidraw-fullscreen') ? '✕' : '⛶';
-  },
 
   /* ── Character editing ── */
   openChar(name) {
