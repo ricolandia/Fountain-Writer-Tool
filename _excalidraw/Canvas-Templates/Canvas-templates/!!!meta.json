@@ -1,0 +1,694 @@
+{
+	"formatVersion": 2,
+	"appVersion": "0.103.0",
+	"files": [
+		{
+			"isClone": false,
+			"noteId": "QgXTZQn9ibdq",
+			"notePath": [
+				"QgXTZQn9ibdq"
+			],
+			"title": "Canvas - templates",
+			"notePosition": 40,
+			"prefix": null,
+			"isExpanded": false,
+			"type": "book",
+			"mime": "",
+			"attributes": [
+				{
+					"type": "label",
+					"name": "iconClass",
+					"value": "bx bx-pen",
+					"isInheritable": false,
+					"position": 10
+				},
+				{
+					"type": "relation",
+					"name": "template",
+					"value": "_template_list_view",
+					"isInheritable": false,
+					"position": 20
+				},
+				{
+					"type": "label",
+					"name": "color",
+					"value": "#994de6",
+					"isInheritable": false,
+					"position": 30
+				}
+			],
+			"attachments": [],
+			"dirFileName": "Canvas - templates",
+			"children": [
+				{
+					"isClone": false,
+					"noteId": "kUJvbNGdZLFK",
+					"notePath": [
+						"QgXTZQn9ibdq",
+						"kUJvbNGdZLFK"
+					],
+					"title": "Templates - Filme",
+					"notePosition": 20,
+					"prefix": null,
+					"isExpanded": false,
+					"type": "book",
+					"mime": "",
+					"attributes": [
+						{
+							"type": "relation",
+							"name": "template",
+							"value": "_template_list_view",
+							"isInheritable": false,
+							"position": 10
+						},
+						{
+							"type": "label",
+							"name": "color",
+							"value": "#f7bbe3",
+							"isInheritable": false,
+							"position": 20
+						},
+						{
+							"type": "label",
+							"name": "iconClass",
+							"value": "bx bxs-pen",
+							"isInheritable": false,
+							"position": 30
+						}
+					],
+					"attachments": [],
+					"dirFileName": "Templates - Filme",
+					"children": [
+						{
+							"isClone": false,
+							"noteId": "rR0wwcy3ZXf8",
+							"notePath": [
+								"QgXTZQn9ibdq",
+								"kUJvbNGdZLFK",
+								"rR0wwcy3ZXf8"
+							],
+							"title": "Template - Character Arc",
+							"notePosition": 10,
+							"prefix": null,
+							"isExpanded": false,
+							"type": "canvas",
+							"mime": "application/json",
+							"attributes": [
+								{
+									"type": "label",
+									"name": "template",
+									"value": "",
+									"isInheritable": false,
+									"position": 10
+								},
+								{
+									"type": "label",
+									"name": "canvasTemplate",
+									"value": "",
+									"isInheritable": false,
+									"position": 20
+								}
+							],
+							"dataFileName": "Template - Character Arc.json",
+							"attachments": [
+								{
+									"attachmentId": "oSuFyyeIvWJH",
+									"title": "canvas-export.svg",
+									"role": "image",
+									"mime": "image/svg+xml",
+									"position": 0,
+									"dataFileName": "Template - Character Arc_c.svg"
+								}
+							]
+						},
+						{
+							"isClone": false,
+							"noteId": "35IdsHQDJAoq",
+							"notePath": [
+								"QgXTZQn9ibdq",
+								"kUJvbNGdZLFK",
+								"35IdsHQDJAoq"
+							],
+							"title": "Template - Plot Timeline",
+							"notePosition": 30,
+							"prefix": null,
+							"isExpanded": false,
+							"type": "canvas",
+							"mime": "application/json",
+							"attributes": [
+								{
+									"type": "label",
+									"name": "template",
+									"value": "",
+									"isInheritable": false,
+									"position": 10
+								},
+								{
+									"type": "label",
+									"name": "canvasTemplate",
+									"value": "",
+									"isInheritable": false,
+									"position": 20
+								}
+							],
+							"dataFileName": "Template - Plot Timeline.json",
+							"attachments": [
+								{
+									"attachmentId": "iMydqXIUIHGj",
+									"title": "canvas-export.svg",
+									"role": "image",
+									"mime": "image/svg+xml",
+									"position": 0,
+									"dataFileName": "Template - Plot Timeline_c.svg"
+								}
+							]
+						},
+						{
+							"isClone": false,
+							"noteId": "JZdUCoZlcK61",
+							"notePath": [
+								"QgXTZQn9ibdq",
+								"kUJvbNGdZLFK",
+								"JZdUCoZlcK61"
+							],
+							"title": "Template - storyboard",
+							"notePosition": 40,
+							"prefix": null,
+							"isExpanded": false,
+							"type": "canvas",
+							"mime": "application/json",
+							"attributes": [
+								{
+									"type": "label",
+									"name": "template",
+									"value": "",
+									"isInheritable": false,
+									"position": 10
+								},
+								{
+									"type": "label",
+									"name": "template",
+									"value": "",
+									"isInheritable": false,
+									"position": 20
+								},
+								{
+									"type": "label",
+									"name": "canvasTemplate",
+									"value": "",
+									"isInheritable": false,
+									"position": 30
+								}
+							],
+							"dataFileName": "Template - storyboard.json",
+							"attachments": [
+								{
+									"attachmentId": "3lKsfOJUKLNF",
+									"title": "canvas-export.svg",
+									"role": "image",
+									"mime": "image/svg+xml",
+									"position": 0,
+									"dataFileName": "Template - storyboard_canv.svg"
+								}
+							]
+						}
+					]
+				},
+				{
+					"isClone": false,
+					"noteId": "fMT1msaGfIqP",
+					"notePath": [
+						"QgXTZQn9ibdq",
+						"fMT1msaGfIqP"
+					],
+					"title": "Templates - Produtividade",
+					"notePosition": 30,
+					"prefix": null,
+					"isExpanded": false,
+					"type": "book",
+					"mime": "",
+					"attributes": [
+						{
+							"type": "relation",
+							"name": "template",
+							"value": "_template_list_view",
+							"isInheritable": false,
+							"position": 10
+						},
+						{
+							"type": "label",
+							"name": "color",
+							"value": "#f5bce9",
+							"isInheritable": false,
+							"position": 20
+						},
+						{
+							"type": "label",
+							"name": "iconClass",
+							"value": "bx bxs-pen",
+							"isInheritable": false,
+							"position": 30
+						}
+					],
+					"attachments": [],
+					"dirFileName": "Templates - Produtividade",
+					"children": [
+						{
+							"isClone": false,
+							"noteId": "jBzDxrkiXqPC",
+							"notePath": [
+								"QgXTZQn9ibdq",
+								"fMT1msaGfIqP",
+								"jBzDxrkiXqPC"
+							],
+							"title": "Template - GTD",
+							"notePosition": 10,
+							"prefix": null,
+							"isExpanded": false,
+							"type": "canvas",
+							"mime": "application/json",
+							"attributes": [
+								{
+									"type": "label",
+									"name": "template",
+									"value": "",
+									"isInheritable": false,
+									"position": 10
+								},
+								{
+									"type": "label",
+									"name": "canvasTemplate",
+									"value": "",
+									"isInheritable": false,
+									"position": 20
+								}
+							],
+							"dataFileName": "Template - GTD.json",
+							"attachments": [
+								{
+									"attachmentId": "irpVPNdz1qVW",
+									"title": "canvas-export.svg",
+									"role": "image",
+									"mime": "image/svg+xml",
+									"position": 0,
+									"dataFileName": "Template - GTD_canvas-expo.svg"
+								}
+							]
+						},
+						{
+							"isClone": false,
+							"noteId": "YSYePRBoWBGe",
+							"notePath": [
+								"QgXTZQn9ibdq",
+								"fMT1msaGfIqP",
+								"YSYePRBoWBGe"
+							],
+							"title": "Template - GTD - Weekly review",
+							"notePosition": 20,
+							"prefix": null,
+							"isExpanded": false,
+							"type": "canvas",
+							"mime": "application/json",
+							"attributes": [
+								{
+									"type": "label",
+									"name": "template",
+									"value": "",
+									"isInheritable": false,
+									"position": 10
+								},
+								{
+									"type": "label",
+									"name": "canvasTemplate",
+									"value": "",
+									"isInheritable": false,
+									"position": 20
+								}
+							],
+							"dataFileName": "Template - GTD - Weekly review.json",
+							"attachments": [
+								{
+									"attachmentId": "KI0jofBnSZPB",
+									"title": "canvas-export.svg",
+									"role": "image",
+									"mime": "image/svg+xml",
+									"position": 0,
+									"dataFileName": "Template - GTD - Weekly re.svg"
+								}
+							]
+						}
+					]
+				},
+				{
+					"isClone": false,
+					"noteId": "6FWb1c6stl6D",
+					"notePath": [
+						"QgXTZQn9ibdq",
+						"6FWb1c6stl6D"
+					],
+					"title": "Templates - Estudo",
+					"notePosition": 40,
+					"prefix": null,
+					"isExpanded": false,
+					"type": "book",
+					"mime": "",
+					"attributes": [
+						{
+							"type": "relation",
+							"name": "template",
+							"value": "_template_list_view",
+							"isInheritable": false,
+							"position": 10
+						},
+						{
+							"type": "label",
+							"name": "color",
+							"value": "#eba8f0",
+							"isInheritable": false,
+							"position": 20
+						},
+						{
+							"type": "label",
+							"name": "iconClass",
+							"value": "bx bxs-pen",
+							"isInheritable": false,
+							"position": 30
+						}
+					],
+					"attachments": [],
+					"dirFileName": "Templates - Estudo",
+					"children": [
+						{
+							"isClone": false,
+							"noteId": "BoAhuTZF7r9X",
+							"notePath": [
+								"QgXTZQn9ibdq",
+								"6FWb1c6stl6D",
+								"BoAhuTZF7r9X"
+							],
+							"title": "Template - Fayman",
+							"notePosition": 10,
+							"prefix": null,
+							"isExpanded": false,
+							"type": "canvas",
+							"mime": "application/json",
+							"attributes": [
+								{
+									"type": "label",
+									"name": "template",
+									"value": "",
+									"isInheritable": false,
+									"position": 10
+								},
+								{
+									"type": "label",
+									"name": "canvasTemplate",
+									"value": "",
+									"isInheritable": false,
+									"position": 20
+								}
+							],
+							"dataFileName": "Template - Fayman.json",
+							"attachments": [
+								{
+									"attachmentId": "LII4xkkJjT4U",
+									"title": "canvas-export.svg",
+									"role": "image",
+									"mime": "image/svg+xml",
+									"position": 0,
+									"dataFileName": "Template - Fayman_canvas-e.svg"
+								}
+							]
+						},
+						{
+							"isClone": false,
+							"noteId": "5uYOhPWsfMBR",
+							"notePath": [
+								"QgXTZQn9ibdq",
+								"6FWb1c6stl6D",
+								"5uYOhPWsfMBR"
+							],
+							"title": "Template - Cornell",
+							"notePosition": 20,
+							"prefix": null,
+							"isExpanded": false,
+							"type": "canvas",
+							"mime": "application/json",
+							"attributes": [
+								{
+									"type": "label",
+									"name": "template",
+									"value": "",
+									"isInheritable": false,
+									"position": 10
+								},
+								{
+									"type": "label",
+									"name": "template",
+									"value": "",
+									"isInheritable": false,
+									"position": 20
+								},
+								{
+									"type": "label",
+									"name": "canvasTemplate",
+									"value": "",
+									"isInheritable": false,
+									"position": 30
+								}
+							],
+							"dataFileName": "Template - Cornell.json",
+							"attachments": [
+								{
+									"attachmentId": "TQ4PAEIpvZVL",
+									"title": "canvas-export.svg",
+									"role": "image",
+									"mime": "image/svg+xml",
+									"position": 0,
+									"dataFileName": "Template - Cornell_canvas-.svg"
+								}
+							]
+						}
+					]
+				},
+				{
+					"isClone": false,
+					"noteId": "9C3X1uhmdgoZ",
+					"notePath": [
+						"QgXTZQn9ibdq",
+						"9C3X1uhmdgoZ"
+					],
+					"title": "Template - OKR",
+					"notePosition": 60,
+					"prefix": null,
+					"isExpanded": false,
+					"type": "canvas",
+					"mime": "application/json",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "template",
+							"value": "",
+							"isInheritable": false,
+							"position": 10
+						},
+						{
+							"type": "label",
+							"name": "canvasTemplate",
+							"value": "",
+							"isInheritable": false,
+							"position": 20
+						}
+					],
+					"dataFileName": "Template - OKR.json",
+					"attachments": [
+						{
+							"attachmentId": "DBgM5yg6H3cb",
+							"title": "canvas-export.svg",
+							"role": "image",
+							"mime": "image/svg+xml",
+							"position": 0,
+							"dataFileName": "Template - OKR_canvas-expo.svg"
+						}
+					]
+				},
+				{
+					"isClone": false,
+					"noteId": "XD04bELT8xJi",
+					"notePath": [
+						"QgXTZQn9ibdq",
+						"XD04bELT8xJi"
+					],
+					"title": "Template - Manual pessoal do usuário",
+					"notePosition": 120,
+					"prefix": null,
+					"isExpanded": false,
+					"type": "canvas",
+					"mime": "application/json",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "template",
+							"value": "",
+							"isInheritable": false,
+							"position": 10
+						},
+						{
+							"type": "label",
+							"name": "template",
+							"value": "",
+							"isInheritable": false,
+							"position": 20
+						},
+						{
+							"type": "label",
+							"name": "canvasTemplate",
+							"value": "",
+							"isInheritable": false,
+							"position": 30
+						}
+					],
+					"dataFileName": "Template - Manual pessoal do u.json",
+					"attachments": [
+						{
+							"attachmentId": "zZAloF9gcn8L",
+							"title": "canvas-export.svg",
+							"role": "image",
+							"mime": "image/svg+xml",
+							"position": 0,
+							"dataFileName": "Template - Manual pessoal .svg"
+						}
+					]
+				},
+				{
+					"isClone": false,
+					"noteId": "4vCuEYWziyRP",
+					"notePath": [
+						"QgXTZQn9ibdq",
+						"4vCuEYWziyRP"
+					],
+					"title": "Template - AIDA",
+					"notePosition": 130,
+					"prefix": null,
+					"isExpanded": false,
+					"type": "canvas",
+					"mime": "application/json",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "template",
+							"value": "",
+							"isInheritable": false,
+							"position": 10
+						},
+						{
+							"type": "label",
+							"name": "canvasTemplate",
+							"value": "",
+							"isInheritable": false,
+							"position": 20
+						}
+					],
+					"dataFileName": "Template - AIDA.json",
+					"attachments": [
+						{
+							"attachmentId": "XBte7uDhzvRt",
+							"title": "canvas-export.svg",
+							"role": "image",
+							"mime": "image/svg+xml",
+							"position": 0,
+							"dataFileName": "Template - AIDA_canvas-exp.svg"
+						}
+					]
+				},
+				{
+					"isClone": false,
+					"noteId": "ZqTBPxBzS7Ym",
+					"notePath": [
+						"QgXTZQn9ibdq",
+						"ZqTBPxBzS7Ym"
+					],
+					"title": "Template - Design Thinking",
+					"notePosition": 140,
+					"prefix": null,
+					"isExpanded": false,
+					"type": "canvas",
+					"mime": "application/json",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "canvasTemplate",
+							"value": "",
+							"isInheritable": false,
+							"position": 10
+						}
+					],
+					"dataFileName": "Template - Design Thinking.json",
+					"attachments": [
+						{
+							"attachmentId": "UOur845Ao8xW",
+							"title": "canvas-export.svg",
+							"role": "image",
+							"mime": "image/svg+xml",
+							"position": 0,
+							"dataFileName": "Template - Design Thinking.svg"
+						}
+					]
+				},
+				{
+					"isClone": false,
+					"noteId": "NhbLhaY58WRX",
+					"notePath": [
+						"QgXTZQn9ibdq",
+						"NhbLhaY58WRX"
+					],
+					"title": "Template - SCAMPER",
+					"notePosition": 150,
+					"prefix": null,
+					"isExpanded": false,
+					"type": "canvas",
+					"mime": "application/json",
+					"attributes": [
+						{
+							"type": "label",
+							"name": "template",
+							"value": "",
+							"isInheritable": false,
+							"position": 10
+						},
+						{
+							"type": "label",
+							"name": "canvasTemplate",
+							"value": "",
+							"isInheritable": false,
+							"position": 20
+						}
+					],
+					"dataFileName": "Template - SCAMPER.json",
+					"attachments": [
+						{
+							"attachmentId": "Bw3kO3mcSmC6",
+							"title": "canvas-export.svg",
+							"role": "image",
+							"mime": "image/svg+xml",
+							"position": 0,
+							"dataFileName": "Template - SCAMPER_canvas-.svg"
+						}
+					]
+				}
+			]
+		},
+		{
+			"noImport": true,
+			"dataFileName": "navigation.html"
+		},
+		{
+			"noImport": true,
+			"dataFileName": "index.html"
+		},
+		{
+			"noImport": true,
+			"dataFileName": "style.css"
+		}
+	]
+}

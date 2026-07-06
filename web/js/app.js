@@ -1777,6 +1777,9 @@ const app = {
   openFountainGuide() { document.getElementById('fountain-guide-modal').style.display = 'flex'; },
   closeFountainGuide() { document.getElementById('fountain-guide-modal').style.display = 'none'; },
 
+  openExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'flex'; },
+  closeExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'none'; },
+
   /* ── Character editing ── */
   openChar(name) {
     const data = JSON.parse(localStorage.getItem('fw_char_data') || '{}');
