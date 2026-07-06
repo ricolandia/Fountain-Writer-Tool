@@ -26,3 +26,6 @@ LANDING.md
 backend/
 backend.env
 
+# Plugins Trilium (referência — não fazem parte do app)
+_excalidraw/
+
