@@ -61,6 +61,7 @@ const app = {
     this.renderProductivity();
     this.initAutoSave();
     this.initBackup();
+    this._setupExcalidrawListener();
     window.addEventListener('beforeunload', e => {
       if (this.isModified) { e.preventDefault(); e.returnValue = ''; }
     });
@@ -1773,6 +1774,30 @@ const app = {
 
   openHelp() { document.getElementById('help-modal').style.display = 'flex'; },
   closeHelp() { document.getElementById('help-modal').style.display = 'none'; },
+
+  openExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'flex'; },
+  closeExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'none'; },
+  toggleExcalidrawFullscreen() {
+    const modal = document.querySelector('.excalidraw-modal');
+    const btn = document.getElementById('excalidraw-fullscreen-btn');
+    modal.classList.toggle('excalidraw-fullscreen');
+    btn.textContent = modal.classList.contains('excalidraw-fullscreen') ? '✕' : '⛶';
+  },
+  _excalidrawScene: null,
+  _excalidrawReady: false,
+
+  _setupExcalidrawListener() {
+    window.addEventListener('message', (e) => {
+      if (e.data.type === 'EXCALIDRAW_READY') {
+        this._excalidrawReady = true;
+        const iframe = document.querySelector('#excalidraw-modal iframe');
+        iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene: this._excalidrawScene }, '*');
+      }
+      if (e.data.type === 'SCENE_DATA') {
+        this._excalidrawScene = e.data.scene;
+      }
+    });
+  },
 
   openFountainGuide() { document.getElementById('fountain-guide-modal').style.display = 'flex'; },
   closeFountainGuide() { document.getElementById('fountain-guide-modal').style.display = 'none'; },
