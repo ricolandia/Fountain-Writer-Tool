@@ -47,8 +47,8 @@ const app = {
       timer = setTimeout(() => { this.update(); this.trackProductivity(); }, 100);
       this.playTick();
     });
-    this.editor.addEventListener('mouseup', () => this.updateMarkButtonStates());
-    this.editor.addEventListener('keyup', () => this.updateMarkButtonStates());
+    this.editor.addEventListener('mouseup', () => { this.updateMarkButtonStates(); this.updateCurrentAct(); });
+    this.editor.addEventListener('keyup', () => { this.updateMarkButtonStates(); this.updateCurrentAct(); });
     this.editor.addEventListener('keydown', e => this.handleKey(e));
 
     // Drag reorder via Sortable-like manual implementation
@@ -82,6 +82,7 @@ const app = {
     this.updateStats(text);
     this.updatePreview(text);
     this.renderTimeline();
+    this.updateCurrentAct();
     const activeTab = document.querySelector('#right-tabs .tab.active');
     const tab = activeTab ? activeTab.dataset.tab : 'beats';
     if (tab === 'chars' || tab === 'locs') this.renderCharsLocs(text);
@@ -431,6 +432,36 @@ const app = {
     this.updateScenes(this.editor.value);
   },
 
+  /* Same "next act" as addAct(), but also writes the "# Ato N" marker
+   * into the script at the cursor — addAct() only creates an empty act
+   * in the sidebar, it was never a way to tell the text where that act
+   * actually begins. */
+  insertActMarker() {
+    const acts = this.getActs();
+    const nums = Object.keys(acts).map(name => parseInt((name.match(/\d+/) || ['0'])[0], 10));
+    const next = (nums.length ? Math.max(...nums) : 0) + 1;
+    const actName = 'Ato ' + next;
+    if (!acts[actName]) { acts[actName] = []; this.saveActs(acts); }
+
+    const marker = '# ' + actName;
+    const pos = this.editor.selectionStart;
+    const text = this.editor.value;
+    const before = text.slice(0, pos);
+    const after = text.slice(pos);
+    // Fountain treats blank-line-separated text as its own block, so pad
+    // with newlines only where the surrounding text doesn't already
+    // have them — avoids doubling up if the cursor is already on a
+    // blank line.
+    const gapBefore = before.length === 0 ? '' : before.endsWith('\n\n') ? '' : before.endsWith('\n') ? '\n' : '\n\n';
+    const gapAfter = after.length === 0 ? '' : after.startsWith('\n\n') ? '' : after.startsWith('\n') ? '\n' : '\n\n';
+    this.editor.value = before + gapBefore + marker + gapAfter + after;
+    const newPos = (before + gapBefore + marker).length;
+    this.editor.focus();
+    this.editor.selectionStart = this.editor.selectionEnd = newPos;
+    this.update();
+    this.syncBeatsFromScenes(this.editor.value);
+  },
+
   autoAssignScenes(text) {
     const acts = this.getActs();
     const lines = text.split('\n');
@@ -644,13 +675,41 @@ const app = {
     });
   },
 
+  /* Footer act indicator — the writer's own request: know which act the
+   * cursor is in without opening the scene list. Finds the nearest scene
+   * at or before the cursor and looks up its beat's act, same source of
+   * truth the scene list and corkboard already read from. */
+  updateCurrentAct() {
+    const el = document.getElementById('stat-act');
+    if (!el) return;
+    const text = this.editor.value;
+    const cursorLine = text.slice(0, this.editor.selectionStart).split('\n').length - 1;
+    const lines = text.split('\n').slice(0, cursorLine + 1);
+    let prevType = 'ACTION';
+    let current = null;
+    lines.forEach((line, i) => {
+      const t = guessType(line, prevType);
+      if (t === 'SCENE') current = { heading: line.trim().replace(/^\./, ''), line: i };
+      if (t !== 'BLANK') prevType = t;
+    });
+    if (!current) { el.textContent = ''; el.style.display = 'none'; return; }
+    const beat = this._findBeatForScene(current.heading, current.line);
+    if (beat && beat.act) { el.textContent = '📍 ' + beat.act; el.style.display = ''; }
+    else { el.textContent = ''; el.style.display = 'none'; }
+  },
+
   updateStats(text) {
     const w = text.split(/\s+/).filter(x => x).length;
     const c = text.length;
-    const s = (text.match(/^(INT|EXT|EST|I\/E)[.\s]/gmi) || []).length;
-    const p = Math.max(1, Math.round(c / 1500));
-    const lines = text.split('\n').length;
-    const pages = Math.max(1, Math.round(lines / 55));
+    const lines = text.split('\n');
+    let prevType = 'ACTION';
+    let s = 0;
+    lines.forEach(line => {
+      const t = guessType(line, prevType);
+      if (t === 'SCENE') s++;
+      if (t !== 'BLANK') prevType = t;
+    });
+    const pages = Math.max(1, Math.round(lines.length / 55));
     const dur = Math.max(1, Math.round(c / 1500));
     document.getElementById('stat-cenas').textContent = _('stat_cenas', s);
     document.getElementById('stat-palavras').textContent = _('stat_palavras', w);
@@ -712,8 +771,16 @@ const app = {
     fields.forEach(([k, label]) => {
       const v = data[k];
       if (!v) return;
-      label = label.replace(':', '');
-      v.split('\n').forEach(line => { h += '<p style="text-align:center;margin:0.1em 0">' + esc(line) + '</p>'; });
+      const cleanLabel = label.replace(':', '');
+      const isTitle = k === 'title';
+      v.split('\n').forEach((line, i) => {
+        if (isTitle) {
+          h += '<p style="text-align:center;margin:0.1em 0;font-size:1.4em;font-weight:bold">' + esc(line) + '</p>';
+        } else {
+          const prefix = i === 0 ? '<span style="color:#888;font-size:0.8em">' + esc(cleanLabel) + '</span><br>' : '';
+          h += '<p style="text-align:center;margin:0.1em 0">' + prefix + esc(line) + '</p>';
+        }
+      });
     });
     return h + '</div>';
   },
@@ -804,7 +871,7 @@ const app = {
   addBeatComment() {
     const text = document.getElementById('beat-comment-input').value.trim();
     const idx = this._editingBeatIdx;
-    if (!text || idx < 0) return;
+    if (!text || idx < 0 || idx >= this.beats.length) return;
     if (!this.beats[idx].comments) this.beats[idx].comments = [];
     this.beats[idx].comments.push({
       author: this.projectName || 'Autor',
@@ -1085,8 +1152,18 @@ const app = {
     list.innerHTML = '';
     if (this.beats.length === 0) { list.innerHTML = '<div class="list-empty">' + _('empty_beats') + '</div>'; return; }
     const plotColors = {'Principal':'#569cd6','A':'#ce9178','B':'#4ec9b0'};
-    const scenes = this.parseScenes(this.editor.value);
-    const sceneRefs = new Set(scenes.map(s => s.label + '|L' + s.line));
+    // Built the same way syncBeatsFromScenes builds scene_ref — full
+    // heading, not parseScenes()'s 60-char-truncated label — otherwise
+    // any scene heading over 60 chars never matches and its beat shows
+    // as "draft" even though it's genuinely linked.
+    const lines = this.editor.value.split('\n');
+    const sceneRefs = new Set();
+    let prevType = 'ACTION';
+    lines.forEach((line, i) => {
+      const t = guessType(line, prevType);
+      if (t === 'SCENE') sceneRefs.add(line.trim().replace(/^\./, '') + '|L' + i);
+      if (t !== 'BLANK') prevType = t;
+    });
     this.beats.forEach((b, i) => {
       const div = document.createElement('div');
       div.className = 'beat-item';
@@ -1563,6 +1640,12 @@ const app = {
       '.dialogue{page-break-before:avoid;break-before:avoid}.dialogue p{margin-left:20%;margin-right:20%}' +
       'h2{text-align:right;text-transform:uppercase;margin:2em 0;page-break-before:avoid;break-before:avoid}' +
       'p.section{text-align:center;font-weight:bold;text-transform:uppercase;margin:3em 0}' +
+      'p.synopsis{display:none}' +
+      'hr{border:none;page-break-after:always;break-after:page;margin:0}' +
+      '.dual-dialogue{display:flex;gap:4%}' +
+      '.dual-dialogue .dialogue{flex:1;page-break-inside:avoid}' +
+      '.dual-dialogue .dialogue p{margin-left:0;margin-right:0}' +
+      '.dual-dialogue h4{margin-left:0;text-align:center}' +
       '</style></head><body><div id="print-area">' +
       (this.titleData ? this.renderTitleHTML(this.titleData) + '<hr>' : '') + this.processHighlights(scriptHtml) + '</div></body></html>';
     const w = window.open('', '', 'width=800,height=600');
@@ -1789,7 +1872,7 @@ const app = {
       let text = _(key);
       const match = el.textContent.match(/^([\u{1F000}-\u{1FFFF}]|[\u2600-\u27BF]|[\u{2700}-\u{27BF}]|[⬇📋🌗▶⏹🖨📑✓▶⏸🍅⏰🔊🔇🖍📊🎯💾📂📄👁🔍🎬⏱])/u);
       if (match) text = match[1] + ' ' + text;
-      if (el.id !== 'menu-drawer') el.textContent = text;
+      el.textContent = text;
     });
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
       el.placeholder = _(el.dataset.i18nPlaceholder);
@@ -1917,6 +2000,7 @@ const app = {
     this.timerSec = 0;
     this.pomodoroSec = 25 * 60;
     this.timerOn = false;
+    clearTimeout(this._timerHandle);
     document.getElementById('timer-start-btn').textContent = '▶';
     this.displayTimer();
   },
@@ -1924,6 +2008,10 @@ const app = {
   toggleTimer() {
     this.timerOn = !this.timerOn;
     document.getElementById('timer-start-btn').textContent = this.timerOn ? '⏸' : '▶';
+    // Without this, pausing doesn't cancel the tick() already scheduled a
+    // second out — resuming before it fires starts a second parallel
+    // chain, and the counter starts incrementing twice as fast per cycle.
+    clearTimeout(this._timerHandle);
     if (this.timerOn) this.tick();
   },
 
@@ -1931,6 +2019,7 @@ const app = {
     this.timerOn = false;
     this.timerSec = 0;
     this.pomodoroSec = 25 * 60;
+    clearTimeout(this._timerHandle);
     document.getElementById('timer-start-btn').textContent = '▶';
     this.displayTimer();
   },
@@ -1957,7 +2046,7 @@ const app = {
       }
     }
     this.displayTimer();
-    if (this.timerOn) setTimeout(() => this.tick(), 1000);
+    if (this.timerOn) this._timerHandle = setTimeout(() => this.tick(), 1000);
   },
 
   displayTimer() {

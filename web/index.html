@@ -59,7 +59,7 @@
 
   <div id="panes">
     <div id="pane-left" class="pane">
-      <div class="pane-header"><span data-i18n="tb_scenes">CENAS</span><span><span id="scene-count">0</span> <button onclick="app.toggleSceneView()" id="view-toggle" style="font-size:8pt;padding:1px 4px" title="Alternar visualização">⊞</button> <button onclick="app.addAct()" style="font-size:8pt;padding:1px 4px" title="Adicionar ato">🎬</button></span></div>
+      <div class="pane-header"><span data-i18n="tb_scenes">CENAS</span><span><span id="scene-count">0</span> <button onclick="app.toggleSceneView()" id="view-toggle" style="font-size:8pt;padding:1px 4px" title="Alternar visualização">⊞</button> <button onclick="app.insertActMarker()" style="font-size:8pt;padding:1px 4px" title="Marcar novo ato aqui (insere # Ato N no texto)">📍</button> <button onclick="app.addAct()" style="font-size:8pt;padding:1px 4px" title="Adicionar ato">🎬</button></span></div>
       <ul id="scene-list"></ul>
       <div id="scene-corkboard" style="display:none"></div>
     </div>
@@ -178,7 +178,7 @@
     <div id="pane-right" class="pane">
       <div class="tabs" id="right-tabs">
         <button class="tab active" data-tab="beats">
-          BEATS <span onclick="event.stopPropagation();app.openBeatGuide()" style="cursor:pointer;font-size:7pt;color:var(--fg-sec)">?</span>
+          <span data-i18n="tb_beats">BEATS</span> <span onclick="event.stopPropagation();app.openBeatGuide()" style="cursor:pointer;font-size:7pt;color:var(--fg-sec)">?</span>
         </button>
         <button class="tab" data-tab="chars" data-i18n="tb_chars">PERS</button>
         <button class="tab" data-tab="locs" data-i18n="tb_locs">LOC</button>
@@ -200,6 +200,7 @@
 
   <div id="status">
     <span id="stat-cenas">Cen:0</span>
+    <span id="stat-act" style="display:none"></span>
     <span id="stat-palavras">Pal:0</span>
     <span id="stat-chars">Car:0</span>
     <span id="stat-pagina">Pg:1</span>

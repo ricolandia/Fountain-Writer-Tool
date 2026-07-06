@@ -45,6 +45,10 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
 #preview p { margin: 1em 0; }
 #preview .parenthetical { margin-left: 31%; margin-right: 33%; font-style: italic; }
 #preview .dialogue p { margin-left: 20%; margin-right: 20%; }
+#preview .dual-dialogue { display: flex; gap: 4%; }
+#preview .dual-dialogue .dialogue { flex: 1; }
+#preview .dual-dialogue .dialogue p { margin-left: 0; margin-right: 0; }
+#preview .dual-dialogue h4 { margin-left: 0; text-align: center; }
 #preview h2 { font-size: 12pt; font-weight: normal; text-transform: uppercase; text-align: right; margin: 2em 0; }
 #preview { max-width: 500px; margin: 0 auto; }
 

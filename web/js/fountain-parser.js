@@ -102,7 +102,7 @@ const Fountain = (function () {
                 tokens.push({ type: 'transition', text: line.slice(1).trim() });
                 continue;
             }
-            if (line.startsWith('.')) {
+            if (line.startsWith('.') && !line.startsWith('..')) {
                 tokens.push({ type: 'scene_heading', text: line.slice(1).trim() });
                 continue;
             }
