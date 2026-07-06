@@ -185,8 +185,13 @@ const app = {
       const saved = localStorage.getItem('fw_project_saved');
       el.textContent = this.beats.length + ' beats' + (!saved ? ' | 💾 Salve seu projeto' : '');
     }
-    this.renderSceneList(scenes);
-    this.renderSceneCards(scenes);
+    // Only the visible view needs rebuilding — the hidden one gets a
+    // fresh render the moment toggleSceneView() switches to it, so there's
+    // no point paying for both DOM trees on every keystroke (real cost on
+    // scripts with hundreds of scenes: this used to build 2x the <li>/card
+    // elements, one set of which was never shown).
+    if (this.sceneView === 'list') this.renderSceneList(scenes);
+    else this.renderSceneCards(scenes);
     const listEl = document.getElementById('scene-list');
     const boardEl = document.getElementById('scene-corkboard');
     if (listEl) listEl.style.display = this.sceneView === 'list' ? '' : 'none';
@@ -384,17 +389,6 @@ const app = {
       if (t !== 'BLANK') prev = t;
     });
     return scenes;
-  },
-
-  /* ── Scene colors ── */
-  setSceneColor(idx, color) {
-    const items = document.querySelectorAll('#scene-list li');
-    if (idx < 0 || idx >= items.length) return;
-    const line = parseInt(items[idx].dataset.line);
-    if (color) this.sceneColors[line] = color;
-    else delete this.sceneColors[line];
-    localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors));
-    this.updateScenes(this.editor.value);
   },
 
   /* ── Acts ── */
@@ -1607,18 +1601,57 @@ const app = {
     };
     input.click();
   },
+  /* Shared by exportHTML/printPDF (and updatePreview has its own inline
+   * copy, since it also needs result.html.title_page). Centralizing this
+   * is what the exportHTML/printPDF drift bug above was really about:
+   * two copies of the same fallback logic, one of which stops getting
+   * updates. */
+  _renderScriptHtml(text) {
+    try { return Fountain.parse(text).html.script; }
+    catch (e) { return this.simpleRender(text); }
+  },
+
+  /* Base rules shared by both standalone-HTML outputs; forPrint layers on
+   * the page-break/pagination rules that only make sense for a paginated
+   * document, not a scrolling HTML page. Same selectors can appear twice
+   * — CSS just adds the extra declarations, so this stays simple string
+   * concatenation instead of conditional interpolation inside each rule. */
+  _scriptStylesheet(forPrint) {
+    let css =
+      'body{font-family:"Courier New",monospace;font-size:12pt;line-height:1.2}' +
+      'h3{font-weight:bold;text-transform:uppercase;margin:2.5em 0 0.25em}' +
+      'h4{text-transform:uppercase;margin:0 0 0 37%}' +
+      'p{margin:1em 0}' +
+      'p.parenthetical{margin-left:31%;margin-right:33%}' +
+      '.dialogue p{margin-left:20%;margin-right:20%}' +
+      'h2{text-align:right;text-transform:uppercase;margin:2em 0}' +
+      'p.section{text-align:center;font-weight:bold;text-transform:uppercase;margin:3em 0}' +
+      'p.synopsis{display:none}' +
+      '.dual-dialogue{display:flex;gap:4%}' +
+      '.dual-dialogue .dialogue{flex:1}' +
+      '.dual-dialogue .dialogue p{margin-left:0;margin-right:0}' +
+      '.dual-dialogue h4{margin-left:0;text-align:center}';
+    if (forPrint) {
+      css +=
+        '@media print{@page{margin:0.75in;size:A4}}' +
+        'h3{page-break-after:avoid;break-after:avoid}' +
+        'h4{page-break-after:avoid;break-after:avoid;page-break-inside:avoid}' +
+        'p{orphans:2;widows:2}' +
+        'p.parenthetical{page-break-after:avoid;break-after:avoid}' +
+        '.dialogue{page-break-before:avoid;break-before:avoid}' +
+        'h2{page-break-before:avoid;break-before:avoid}' +
+        '.dual-dialogue .dialogue{page-break-inside:avoid}' +
+        'hr{border:none;page-break-after:always;break-after:page;margin:0}';
+    }
+    return css;
+  },
+
   exportHTML() {
-    const text = this.editor.value;
-    let html;
-    try { const r = Fountain.parse(text); html = r.html.script; } catch (e) { html = this.simpleRender(text); }
+    const html = this._renderScriptHtml(this.editor.value);
     const title = this.fileName || 'Roteiro';
     const full = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + title + '</title><style>' +
-      'body{font-family:"Courier New",monospace;font-size:12pt;line-height:1.2;max-width:800px;margin:40px auto;padding:60px 80px}' +
-      'h3{font-weight:bold;text-transform:uppercase;margin:2.5em 0 0.25em}' +
-      'h4{text-transform:uppercase;margin:0 0 0 37%}p{margin:1em 0}' +
-      'p.parenthetical{margin-left:31%;margin-right:33%}.dialogue p{margin-left:20%;margin-right:20%}' +
-      'h2{text-align:right;text-transform:uppercase;margin:2em 0}' +
-      'mark{padding:0 2px}' +
+      'body{max-width:800px;margin:40px auto;padding:60px 80px}' +
+      this._scriptStylesheet(false) +
       '</style></head><body>' +
       (this.titleData ? this.renderTitleHTML(this.titleData) + '<hr>' : '') + this.processHighlights(html) + '</body></html>';
     const blob = new Blob([full], { type: 'text/html;charset=utf-8' });
@@ -1627,25 +1660,10 @@ const app = {
     setTimeout(() => URL.revokeObjectURL(a.href), 500);
   },
   printPDF() {
-    const text = this.editor.value;
-    let scriptHtml;
-    try { const r = Fountain.parse(text); scriptHtml = r.html.script; } catch (e) { scriptHtml = this.simpleRender(text); }
+    const scriptHtml = this._renderScriptHtml(this.editor.value);
     const title = this.fileName || 'Roteiro';
-    const html = '<!DOCTYPE html><html><head><title>' + title + '</title>' +
-      '<style>@media print{@page{margin:0.75in;size:A4}}body{font-family:"Courier New",monospace;font-size:12pt;line-height:1.2}' +
-      'h3{font-weight:bold;text-transform:uppercase;margin:2.5em 0 0.25em;page-break-after:avoid;break-after:avoid}' +
-      'h4{text-transform:uppercase;margin:0 0 0 37%;page-break-after:avoid;break-after:avoid;page-break-inside:avoid}' +
-      'p{margin:1em 0;orphans:2;widows:2}' +
-      'p.parenthetical{margin-left:31%;margin-right:33%;page-break-after:avoid;break-after:avoid}' +
-      '.dialogue{page-break-before:avoid;break-before:avoid}.dialogue p{margin-left:20%;margin-right:20%}' +
-      'h2{text-align:right;text-transform:uppercase;margin:2em 0;page-break-before:avoid;break-before:avoid}' +
-      'p.section{text-align:center;font-weight:bold;text-transform:uppercase;margin:3em 0}' +
-      'p.synopsis{display:none}' +
-      'hr{border:none;page-break-after:always;break-after:page;margin:0}' +
-      '.dual-dialogue{display:flex;gap:4%}' +
-      '.dual-dialogue .dialogue{flex:1;page-break-inside:avoid}' +
-      '.dual-dialogue .dialogue p{margin-left:0;margin-right:0}' +
-      '.dual-dialogue h4{margin-left:0;text-align:center}' +
+    const html = '<!DOCTYPE html><html><head><title>' + title + '</title><style>' +
+      this._scriptStylesheet(true) +
       '</style></head><body><div id="print-area">' +
       (this.titleData ? this.renderTitleHTML(this.titleData) + '<hr>' : '') + this.processHighlights(scriptHtml) + '</div></body></html>';
     const w = window.open('', '', 'width=800,height=600');
@@ -2086,6 +2104,7 @@ const app = {
       const backups = JSON.parse(localStorage.getItem('fw_backups') || '[]');
       backups.push({
         text, beats: this.beats, acts: this.getActs(),
+        sceneColors: this.sceneColors, lineMarks: this.getLineMarks(),
         name: this.fileName || 'roteiro', time: Date.now()
       });
       if (backups.length > 10) backups.splice(0, backups.length - 10);
@@ -2126,7 +2145,15 @@ const app = {
     this.fileName = backups[idx].name;
     if (backups[idx].beats) { this.beats = backups[idx].beats; this.saveBeats(); }
     if (backups[idx].acts) { this.saveActs(backups[idx].acts); }
+    // Older backups (before this field existed) have no colors/marks
+    // saved at all — reset to empty rather than leave the CURRENT
+    // draft's colors/highlights keyed to line numbers that likely mean
+    // something completely different in the restored (older) text.
+    this.sceneColors = backups[idx].sceneColors || {};
+    localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors));
+    this.saveLineMarks(backups[idx].lineMarks || {});
     this.update();
+    this.renderBeats();
     this.closeBackups();
   },
 
