@@ -230,6 +230,15 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
   }
 }
 
+/* ── Excalidraw fullscreen toggle ── */
+.excalidraw-fullscreen {
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  border-radius: 0 !important;
+}
+
 /* ── Focus mode ── */
 .focus-mode #toolbar, .focus-mode #pane-left, .focus-mode #pane-right,
 .focus-mode #status, .focus-mode #timeline-bar { display: none !important; }
