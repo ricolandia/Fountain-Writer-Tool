@@ -14,19 +14,21 @@ Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 |---|---|
 | **Editor** | Textarea com auto-save a cada 10s (localStorage) |
 | **Preview** | Live rendering Fountain (CHARACTER 37%, DIALOGUE 20%) |
-| **Sidebar de cenas** | Lista com separadores visuais de ato (Ato 1–7 fixos, ✕ para remover) |
-| **Atribuição por beat** | Muda o ato da cena pelo modal do beat — sidebar atualiza |
+| **Corkboard** | Visualização em cards (toggle ⊞/⊟) |
+| **Sidebar de cenas** | Lista com separadores visuais de ato (Ato 1–7 fixos) |
+| **Atribuição por beat** | Muda o ato da cena pelo modal do beat |
 | **Beats** | CRUD com plotline (Principal/A/B), inserção no texto (↗), drag reorder |
-| **Timeline** | Grid atos × tramas, mostra cenas em cada célula |
+| **Comentários** | Comentários por beat (autor + timestamp) |
+| **Timeline** | Grid atos × tramas, com expandir tela cheia (⤢) |
 | **Personagens** | Extraídos automaticamente, com editor de perfil |
 | **Locais** | Extraídos automaticamente do texto |
 | **Find/Replace** | Case-sensitive, replace all |
-| **Folha de rosto** | Formulário salvo em localStorage |
+| **Folha de rosto** | Formulário que renderiza no PDF |
 | **Side-by-side** | Editor / Preview / Split (👁) |
-| **Temas** | Claro/escuro (detecção automática + manual) |
+| **Temas** | Claro (creme/papel) / escuro |
 | **Idiomas** | Português / English (recarrega) |
 | **Export HTML** | Download .html formatado |
-| **Export PDF** | Via impressão do navegador |
+| **Export PDF** | Via impressão do navegador (com page-breaks) |
 | **⬇ Fountain** | Download .fountain (texto puro) |
 | **📄 Importar** | Importa .fountain (texto puro) |
 | **📂 Abrir** | Abre projeto .fountain.json |
@@ -41,15 +43,37 @@ Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 | **Zoom** | Ctrl+=/-/0 para ajustar fonte |
 | **Foco** | F11: esconde painéis, só o editor |
 | **Atalhos** | Ctrl+B/I/U (bold/italic/underline) |
+| **Marcador 📍** | Insere `# Ato N` no texto com um clique |
+| **Indicador de ato** | Mostra o ato atual na barra de status |
+
+## 🧩 Quadro de Planejamento Visual (Excalidraw)
+
+Editor visual completo para planejar seu roteiro. Funciona offline, 100% local.
+
+**9 templates prontos:**
+
+| Template | Descrição |
+|----------|-----------|
+| **3 Atos** | Colunas para cada ato com cartões de cena |
+| **Jornada do Herói** | 12 estágios clássicos |
+| **Mapa de Personagens** | Relações entre personagens |
+| **Save the Cat** | 15 beats numerados por página |
+| **Story Circle (Harmon)** | 8 passos em círculo |
+| **Quadro de Cenas** | Corkboard estilo index cards |
+| **Estrutura de TV** | Teaser + Atos + Tag |
+| **Batman Chart** | Grid atos × tramas |
+| **Mood Board** | Paleta de cores, referências, inspiração |
+
+Para usar: abra o 🧩 Quadro → no Excalidraw, use **Open** → escolha um template `.excalidraw`.
 
 ## 💾 Sobre Salvar
 
-O Fountain Writer usa dois sistemas de persistência:
+O Fonte usa dois sistemas de persistência:
 
 | Método | O que salva | Quando |
 |---|---|---|
 | **localStorage** | Texto + beats + atos | Auto-save a cada 10s |
-| **Backup** | Texto + beats + atos | A cada 5min (10 versões) |
+| **Backup** | Texto + beats + atos + cores + marcações | A cada 5min (10 versões) |
 | **💾 Salvar** | Projeto completo .json | Manual |
 
 **💾 Salvar no Chrome/Edge/Opera:**
@@ -66,13 +90,20 @@ O Fountain Writer usa dois sistemas de persistência:
 
 ## Como usar
 
-Abra `web/index.html` em qualquer navegador moderno.
+### Opção 1 — Navegador (recomendado)
 
-### Deploy estático
+```bash
+python3 serve.py
+# Abrir http://localhost:8000/web/index.html
+```
 
-Copie a pasta `deploy/` para o servidor FTP.
+Ou abrir `web/index.html` direto no navegador (alguns recursos podem precisar de servidor HTTP).
 
-### Docker (API opcional para PDF/HTML)
+### Opção 2 — Deploy estático
+
+Copie a pasta `deploy/` para qualquer servidor HTTP estático (FTP, Nginx, Apache).
+
+### Opção 3 — Docker (API opcional para PDF/HTML)
 
 ```bash
 cd web
@@ -82,20 +113,20 @@ docker compose up -d
 
 ## Sincronização via nuvem (Dropbox, OneDrive, Google Drive)
 
-1. Coloque a pasta `Fountain-Writer-Tool/` dentro da sua pasta de nuvem
-2. Crie uma subpasta (ex: `roteiros/`, `projetos/` ou `scripts/`)
+1. Coloque a pasta `Fonte/` dentro da sua pasta de nuvem
+2. Crie uma subpasta (ex: `roteiros/`)
 3. Ao salvar (💾), escolha essa pasta como destino
-4. Pronto — o navegador lembra e salva sempre no mesmo lugar
+4. O navegador lembra e salva sempre no mesmo lugar
 5. Seus roteiros sincronizam em todos os dispositivos
 
 ## Tecnologias
 
-HTML5, CSS3, JavaScript (ES6+), localStorage, File System Access API.
+HTML5, CSS3, JavaScript (ES6+), Excalidraw (UMD bundle offline), localStorage, File System Access API.
 
 ## Imagens
 
-![Fountain Writer](imagens/2-0/Fountain_Writer_2-0_1.webp)
+![Fonte](imagens/2-0/Fountain_Writer_2-0_1.webp)
 *Editor com sidebar de cenas e timeline*
 
-![Fountain Writer preview](imagens/2-0/Fountain_Writer_2-0_2.webp)
+![Fonte preview](imagens/2-0/Fountain_Writer_2-0_2.webp)
 *Preview ao vivo com formatação Fountain*
