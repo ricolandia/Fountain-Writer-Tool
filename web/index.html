@@ -59,7 +59,7 @@
     <span id="save-indicator" style="font-size:10pt;color:var(--fg-sec)">💾</span>
     <span class="timer" id="timer-display">⏱ 00:00</span>
     <span class="sep"></span>
-    <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=ricolandia%40gmail.com&currency_code=BRL" target="_blank" style="font-size:9pt;color:var(--fg-sec);text-decoration:none;cursor:pointer;white-space:nowrap">☕ Apoie</a>
+    <button onclick="app.openApoio()" style="font-size:9pt;color:var(--fg-sec);cursor:pointer;background:transparent;border:none;padding:2px 6px">☕ Apoie</button>
   </div>
 
   <div id="panes">
@@ -396,6 +396,31 @@
     <div class="modal-footer">
       <span style="flex:1"></span>
       <button onclick="app.closeHelp()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Apoio Modal -->
+<div id="apoio-modal" class="modal-overlay" style="display:none">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">☕ Apoie o projeto</div>
+    <div class="modal-body" style="font-size:10pt;line-height:1.8">
+      <p>Se o <b>Fonte</b> te ajuda, considere contribuir.</p>
+      <hr style="border:none;border-top:1px solid var(--border);margin:10px 0">
+      <p><span style="color:var(--fg-sec)">🧡 Pix:</span><br>
+        <span onclick="app.copiarPix()" style="cursor:pointer;background:var(--surface2);padding:3px 8px;border-radius:4px;display:inline-block;margin-top:4px" title="Clique para copiar">ricardograca@ricolandia.com</span>
+      </p>
+      <p style="margin-top:10px"><span style="color:var(--fg-sec)">💳 PayPal:</span><br>
+        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=ricolandia%40gmail.com&currency_code=BRL" target="_blank" style="color:var(--accent)">Donate via PayPal</a>
+      </p>
+      <hr style="border:none;border-top:1px solid var(--border);margin:10px 0">
+      <p style="font-size:9pt;text-align:center">
+        🧡 Código aberto — <a href="https://github.com/ricolandia/Fountain-Writer-Tool" target="_blank" style="color:var(--accent)">veja no GitHub</a>
+      </p>
+    </div>
+    <div class="modal-footer">
+      <span style="flex:1"></span>
+      <button onclick="app.closeApoio()">Fechar</button>
     </div>
   </div>
 </div>

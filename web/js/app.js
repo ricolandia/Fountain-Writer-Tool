@@ -1911,6 +1911,19 @@ const app = {
 
   closeHelp() { document.getElementById('help-modal').style.display = 'none'; },
 
+  openApoio() { document.getElementById('apoio-modal').style.display = 'flex'; },
+  closeApoio() { document.getElementById('apoio-modal').style.display = 'none'; },
+
+  copiarPix() {
+    const chave = 'ricardograca@ricolandia.com';
+    navigator.clipboard.writeText(chave).then(() => {
+      const el = document.querySelector('[onclick*="copiarPix"]');
+      const orig = el.textContent;
+      el.textContent = '✓ Copiado!';
+      setTimeout(() => { el.textContent = orig; }, 2000);
+    }).catch(() => {});
+  },
+
   openExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'flex'; },
   closeExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'none'; },
   toggleExcalidrawFullscreen() {
