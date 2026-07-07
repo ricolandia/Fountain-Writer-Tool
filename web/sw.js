@@ -1,7 +1,7 @@
-/* Fountain Writer — service worker
+/* Fonte — service worker
  *
  * Estratégia em duas camadas:
- * 1) PRECACHE: lista pequena e conhecida (o "app shell" do Fountain Writer em si).
+ * 1) PRECACHE: lista pequena e conhecida (o "app shell" do Fonte em si).
  *    Baixada e guardada inteira já na instalação, então funciona offline mesmo
  *    no primeiro uso sem internet (exceto a primeiríssima visita, que precisa
  *    estar online pelo menos uma vez para instalar o service worker).

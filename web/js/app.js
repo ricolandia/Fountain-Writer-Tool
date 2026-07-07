@@ -1,4 +1,4 @@
-/* ── Fountain Writer v2 — app.js ── */
+/* ── Fonte v2 — app.js ── */
 const app = {
   beats: JSON.parse(localStorage.getItem('fw_beats') || '[]'),
   titleData: JSON.parse(localStorage.getItem('fw_title') || 'null'),
@@ -167,7 +167,7 @@ const app = {
 
   updateIndicator() {
     const name = this.projectName || this.fileName || _('tb_project_name');
-    document.title = 'Fountain Writer — ' + name + (this.isModified ? ' •' : '');
+    document.title = 'Fonte — ' + name + (this.isModified ? ' •' : '');
     const el = document.getElementById('save-indicator');
     if (el) el.textContent = this.isModified ? '💾' : '✓ Salvo';
   },
@@ -1606,7 +1606,7 @@ const app = {
       '<tr><td>Filipeta</td><td>' + e(d.midFlyerFormato) + '</td><td>' + e(d.midFlyerEsp) + '</td></tr>' +
       '<tr><td>Social Media</td><td>' + e(d.midSocialFormato) + '</td><td>' + e(d.midSocialEsp) + '</td></tr>' +
       '<tr><td>Press-kit</td><td>' + e(d.midPressFormato) + '</td><td>' + e(d.midPressEsp) + '</td></tr></table>' +
-      '<p style="text-align:center;margin-top:40px;color:#999;font-size:9pt">Gerado por Fountain Writer</p>' +
+      '<p style="text-align:center;margin-top:40px;color:#999;font-size:9pt">Gerado por Fonte</p>' +
       '</body></html>';
     const w = window.open('', '', 'width=800,height=600');
     w.document.write(html); w.document.close(); w.focus();
@@ -1911,16 +1911,6 @@ const app = {
 
   closeHelp() { document.getElementById('help-modal').style.display = 'none'; },
 
-  copiarPix() {
-    const chave = 'ricardograca@ricolandia.com';
-    navigator.clipboard.writeText(chave).then(() => {
-      const el = document.querySelector('[onclick="app.copiarPix()"]');
-      const orig = el.textContent;
-      el.textContent = '✓ Copiado!';
-      setTimeout(() => { el.textContent = orig; }, 2000);
-    }).catch(() => {});
-  },
-
   openExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'flex'; },
   closeExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'none'; },
   toggleExcalidrawFullscreen() {
@@ -2067,7 +2057,7 @@ const app = {
       el.placeholder = _(el.dataset.i18nPlaceholder);
     });
     document.getElementById('lang-btn').textContent = lang === 'pt-BR' ? 'PT' : 'EN';
-    document.title = 'Fountain Writer';
+    document.title = 'Fonte';
   },
 
   /* ── Focus mode ── */

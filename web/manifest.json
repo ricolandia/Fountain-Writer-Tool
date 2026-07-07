@@ -1,6 +1,6 @@
 {
-  "name": "Fountain Writer",
-  "short_name": "Fountain",
+  "name": "Fonte",
+  "short_name": "Fonte",
   "description": "Editor de roteiros no formato Fountain",
   "start_url": "index.html",
   "scope": "./",
