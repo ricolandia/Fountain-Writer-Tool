@@ -56,7 +56,6 @@ const app = {
     this.initDarkMode();
     this.applyFontSize();
     this.displayTimer();
-    this.updateProjectNameDisplay();
     this.setupSelectionCount();
     this.renderProductivity();
     this.initAutoSave();
@@ -65,6 +64,7 @@ const app = {
     window.addEventListener('beforeunload', e => {
       if (this.isModified) { e.preventDefault(); e.returnValue = ''; }
     });
+    this._initOutroToggles();
     this.update();
     this.syncBeatsFromScenes(this.editor.value);
     this.renderBeats();
@@ -761,23 +761,67 @@ const app = {
 
   renderTitleHTML(data) {
     if (!data) return '';
-    const fields = [['title','Title:'],['credit','Credit:'],['author','Author:'],['source','Source:'],['draft_date','Draft date:'],['contact','Contact:']];
-    let h = '<div style="text-align:center;margin-bottom:3em">';
-    fields.forEach(([k, label]) => {
-      const v = data[k];
-      if (!v) return;
-      const cleanLabel = label.replace(':', '');
-      const isTitle = k === 'title';
-      v.split('\n').forEach((line, i) => {
-        if (isTitle) {
-          h += '<p style="text-align:center;margin:0.1em 0;font-size:1.4em;font-weight:bold">' + esc(line) + '</p>';
+    const clean = (s) => esc(s.replace(/:$/, ''));
+    let r = '<div style="text-align:center;margin-bottom:3em">';
+
+    // Tab 1: Title page
+    const tpKeys = ['title','credit','author','source','draft_date','contact'];
+    const hasTp = tpKeys.some(k => data[k]);
+    if (hasTp) {
+      tpKeys.forEach(k => {
+        const v = data[k];
+        if (!v) return;
+        const isTitle = k === 'title';
+        v.split('\n').forEach((line, i) => {
+          if (isTitle) {
+            r += '<p style="text-align:center;margin:0.1em 0;font-size:1.4em;font-weight:bold">' + esc(line) + '</p>';
+          } else {
+            const prefix = i === 0 ? '<span style="color:#888;font-size:0.8em">' + clean(_('tp_' + k)) + '</span><br>' : '';
+            r += '<p style="text-align:center;margin:0.1em 0">' + prefix + esc(line) + '</p>';
+          }
+        });
+      });
+    }
+
+    // Tab 2: Film sheet
+    const fichaKeys = ['logline','sinopse','argumento','genero','duracao','publico'];
+    const hasFicha = fichaKeys.some(k => data[k]);
+    if (hasFicha) {
+      r += '<hr style="margin:1.5em 0"><h3 style="text-align:center;font-size:1em">' + esc(_('tab_ficha')) + '</h3>';
+      fichaKeys.forEach(k => {
+        const v = data[k];
+        if (!v) return;
+        const label = clean(_('tp_' + k));
+        if (k === 'logline' || k === 'sinopse' || k === 'argumento') {
+          r += '<p style="margin:0.5em 0"><span style="color:#888;font-size:0.8em">' + label + '</span><br>' + esc(v) + '</p>';
         } else {
-          const prefix = i === 0 ? '<span style="color:#888;font-size:0.8em">' + esc(cleanLabel) + '</span><br>' : '';
-          h += '<p style="text-align:center;margin:0.1em 0">' + prefix + esc(line) + '</p>';
+          r += '<p style="margin:0.3em 0"><span style="color:#888;font-size:0.8em">' + label + ': </span>' + esc(v) + '</p>';
         }
       });
-    });
-    return h + '</div>';
+    }
+
+    // Tab 3: Structure
+    const selKeys = ['tom','tema','ideia_governante','valor_central','premissa',
+      'forca_antagonica','tipo_conflito','tipo_trama','dilema','tipo_final'];
+    const qKeys = [['pergunta_1','q_mundo'],['pergunta_2','q_perturba'],['pergunta_3','q_decide'],['pergunta_4','q_obstaculos'],
+      ['pergunta_5','q_descoberta'],['pergunta_6','q_crise'],['pergunta_7','q_desafio'],['pergunta_8','q_resolucao']];
+    const hasEst = selKeys.some(k => data[k]) || qKeys.some(([k]) => data[k]);
+    if (hasEst) {
+      r += '<hr style="margin:1.5em 0"><h3 style="text-align:center;font-size:1em">' + esc(_('section_estrutura')) + '</h3>';
+      selKeys.forEach(k => {
+        let v = data[k];
+        if (!v) return;
+        if (v === 'Outro' && data['outro_' + k]) v = data['outro_' + k];
+        r += '<p style="margin:0.3em 0"><span style="color:#888;font-size:0.8em">' + clean(_('tp_' + k)) + ': </span>' + esc(v) + '</p>';
+      });
+      qKeys.forEach(([k, ik]) => {
+        const v = data[k];
+        if (!v) return;
+        r += '<p style="margin:0.5em 0"><span style="color:#888;font-size:0.8em">' + esc(_(ik)) + '</span><br>' + esc(v) + '</p>';
+      });
+    }
+
+    return r + '</div>';
   },
 
   togglePreview() {
@@ -1192,29 +1236,153 @@ const app = {
     });
   },
 
-  /* ── Title page ── */
-  openTitle() {
-    if (this.titleData) {
-      ['title', 'credit', 'author', 'source', 'draft_date'].forEach(k => {
-        document.getElementById('tp-' + k.replace('_', '-')).value = this.titleData[k] || '';
-      });
-      document.getElementById('tp-contact').value = this.titleData.contact || '';
+  /* ── Title page / Film sheet / Story structure ── */
+  /* ── Título / Ficha / Estrutura (página inteira) ── */
+  toggleTitulo() {
+    const editorWrap = document.getElementById('textarea-wrap');
+    const previewWrap = document.getElementById('preview-wrap');
+    const projetoForm = document.getElementById('projeto-form');
+    const tituloForm = document.getElementById('titulo-form');
+    const leftPane = document.getElementById('pane-left');
+    const rightPane = document.getElementById('pane-right');
+    const isTitulo = tituloForm.style.display === 'block';
+    if (isTitulo) {
+      tituloForm.style.display = 'none';
+      leftPane.style.display = '';
+      rightPane.style.display = '';
+      if (this.previewMode === 'editor') { editorWrap.style.display = 'block'; }
+      else if (this.previewMode === 'preview') { previewWrap.style.display = 'block'; }
+      else { editorWrap.style.display = 'block'; previewWrap.style.display = 'block'; }
+    } else {
+      editorWrap.style.display = 'none';
+      previewWrap.style.display = 'none';
+      projetoForm.style.display = 'none';
+      tituloForm.style.display = 'block';
+      leftPane.style.display = 'none';
+      rightPane.style.display = 'none';
+      this.carregarTitulo();
     }
-    document.getElementById('title-modal').style.display = 'flex';
   },
-  saveTitle() {
-    this.titleData = {};
-    ['title', 'credit', 'author', 'source', 'draft_date'].forEach(k => {
-      const el = document.getElementById('tp-' + k.replace('_', '-'));
-      if (el && el.value.trim()) this.titleData[k] = el.value.trim();
+
+  /* ── Projeto Cultural ── */
+  toggleProjeto() {
+    this.viewMode = this.viewMode === 'roteiro' ? 'projeto' : 'roteiro';
+    const btn = document.getElementById('projeto-btn');
+    btn.textContent = this.viewMode === 'projeto' ? '✏ Roteiro' : '📋 Projeto';
+    const editorWrap = document.getElementById('textarea-wrap');
+    const previewWrap = document.getElementById('preview-wrap');
+    const projetoForm = document.getElementById('projeto-form');
+    const tituloForm = document.getElementById('titulo-form');
+    const rightPane = document.getElementById('pane-right');
+    const leftPane = document.getElementById('pane-left');
+    if (this.viewMode === 'projeto') {
+      editorWrap.style.display = 'none';
+      previewWrap.style.display = 'none';
+      tituloForm.style.display = 'none';
+      projetoForm.style.display = 'block';
+      rightPane.style.display = 'none';
+      leftPane.style.display = 'none';
+      this.carregarProjeto();
+      if (!this._orcListenersAttached) {
+        document.querySelectorAll('#projeto-form input[id^="proj-orc-"][id$="valor"]').forEach(el => {
+          el.addEventListener('input', () => this._atualizarOrcTotal());
+        });
+        this._orcListenersAttached = true;
+      }
+    } else {
+      editorWrap.style.display = 'block';
+      previewWrap.style.display = (this.previewMode === 'preview' || this.previewMode === 'split') ? 'block' : 'none';
+      projetoForm.style.display = 'none';
+      rightPane.style.display = '';
+      leftPane.style.display = '';
+    }
+  },
+
+  selTitleTab(tab) {
+    document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page-tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.querySelector('.page-tab[data-tab="' + tab + '"]').classList.add('active');
+  },
+
+  carregarTitulo() {
+    const d = this.titleData || {};
+    const fields = ['title','credit','author','source','draft_date','contact',
+      'logline','sinopse','argumento','genero','duracao','publico',
+      'tom','tema','ideia_governante','valor_central','premissa',
+      'forca_antagonica','tipo_conflito','tipo_trama','dilema','tipo_final',
+      'pergunta_1','pergunta_2','pergunta_3','pergunta_4','pergunta_5','pergunta_6','pergunta_7','pergunta_8'];
+    fields.forEach(k => {
+      const el = document.getElementById('tp-' + k.replace(/_/g, '-'));
+      if (el) el.value = d[k] !== undefined ? d[k] : '';
     });
-    const contact = document.getElementById('tp-contact');
-    if (contact && contact.value.trim()) this.titleData.contact = contact.value.trim();
-    localStorage.setItem('fw_title', JSON.stringify(this.titleData));
-    this.closeTitle();
+    ['tema','ideia_governante','premissa'].forEach(k => {
+      const el = document.getElementById('tp-outro-' + k.replace(/_/g, '-'));
+      if (el) {
+        el.value = d['outro_' + k] || '';
+        el.style.display = d[k] === 'Outro' ? 'block' : 'none';
+      }
+    });
   },
-  clearTitle() { this.titleData = null; localStorage.removeItem('fw_title'); this.closeTitle(); },
-  closeTitle() { document.getElementById('title-modal').style.display = 'none'; },
+
+  salvarTitulo() {
+    this.titleData = {};
+    const fields = ['title','credit','author','source','draft_date','contact',
+      'logline','sinopse','argumento','genero','duracao','publico',
+      'tom','tema','ideia_governante','valor_central','premissa',
+      'forca_antagonica','tipo_conflito','tipo_trama','dilema','tipo_final',
+      'pergunta_1','pergunta_2','pergunta_3','pergunta_4','pergunta_5','pergunta_6','pergunta_7','pergunta_8'];
+    fields.forEach(k => {
+      const el = document.getElementById('tp-' + k.replace(/_/g, '-'));
+      if (el && el.value && el.value.toString().trim()) this.titleData[k] = el.value.toString().trim();
+    });
+    ['tema','ideia_governante','premissa'].forEach(k => {
+      if (this.titleData[k] === 'Outro') {
+        const el = document.getElementById('tp-outro-' + k.replace(/_/g, '-'));
+        if (el && el.value.trim()) this.titleData['outro_' + k] = el.value.trim();
+      }
+    });
+    localStorage.setItem('fw_title', JSON.stringify(this.titleData));
+  },
+
+  limparTitulo() {
+    this.titleData = null;
+    localStorage.removeItem('fw_title');
+    const tituloForm = document.getElementById('titulo-form');
+    if (tituloForm.style.display === 'block') this.toggleTitulo();
+  },
+
+  printTitleSheet() {
+    this.salvarTitulo();
+    const d = this.titleData || {};
+    const title = d.title || 'Ficha';
+    const body = this.renderTitleHTML(d);
+    const css = 'body{font-family:"Courier New",monospace;font-size:12pt;line-height:1.4;max-width:700px;margin:40px auto;padding:40px 60px;color:#1a1a18}' +
+      'h3{margin-top:1.5em;text-align:center;font-size:1.1em}' +
+      'p{margin:0.5em 0}' +
+      'hr{border:none;border-top:1px solid #ccc;margin:1.5em 0}' +
+      '@media print{@page{margin:0.6in;size:A4}}';
+    const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + esc(title) + '</title><style>' + css + '</style></head><body>' + body + '</body></html>';
+    const w = window.open('', '', 'width=800,height=600');
+    w.document.write(html); w.document.close(); w.focus();
+    w.onafterprint = () => { w.close(); };
+    setTimeout(() => { try { w.close(); } catch(e) {} }, 60000);
+    w.print();
+  },
+
+  /* ── "Outro" toggle for select+custom fields ── */
+  _initOutroToggles() {
+    document.querySelectorAll('[id^="tp-outro-"]').forEach(el => {
+      const baseId = el.id.replace('tp-outro-', '').replace(/-/g, '_');
+      const sel = document.getElementById('tp-' + el.id.slice(9));
+      if (sel) {
+        sel.addEventListener('change', () => {
+          el.style.display = sel.value === 'Outro' ? 'block' : 'none';
+          if (sel.value !== 'Outro') el.value = '';
+        });
+      }
+    });
+  },
 
   /* ── Find / Replace ── */
   openFind() {
@@ -1281,38 +1449,7 @@ const app = {
     this.findDo();
   },
 
-  /* ── Projeto Cultural ── */
-  toggleProjeto() {
-    this.viewMode = this.viewMode === 'roteiro' ? 'projeto' : 'roteiro';
-    const btn = document.getElementById('projeto-btn');
-    btn.textContent = this.viewMode === 'projeto' ? '✏ Roteiro' : '📋 Projeto';
-    const editorWrap = document.getElementById('textarea-wrap');
-    const previewWrap = document.getElementById('preview-wrap');
-    const projetoForm = document.getElementById('projeto-form');
-    const rightPane = document.getElementById('pane-right');
-    const leftPane = document.getElementById('pane-left');
-    if (this.viewMode === 'projeto') {
-      editorWrap.style.display = 'none';
-      previewWrap.style.display = 'none';
-      projetoForm.style.display = 'block';
-      rightPane.style.display = 'none';
-      leftPane.style.display = 'none';
-      this.carregarProjeto();
-      // Orçamento auto-calc (once)
-      if (!this._orcListenersAttached) {
-        document.querySelectorAll('#projeto-form input[id^="proj-orc-"][id$="valor"]').forEach(el => {
-          el.addEventListener('input', () => this._atualizarOrcTotal());
-        });
-        this._orcListenersAttached = true;
-      }
-    } else {
-      editorWrap.style.display = 'block';
-      previewWrap.style.display = (this.previewMode === 'preview' || this.previewMode === 'split') ? 'block' : 'none';
-      projetoForm.style.display = 'none';
-      rightPane.style.display = '';
-      leftPane.style.display = '';
-    }
-  },
+
 
   carregarProjeto() {
     const d = this.projetoData || {};
@@ -1491,7 +1628,7 @@ const app = {
     localStorage.removeItem('fw_project_name'); localStorage.removeItem('fw_scene_colors');
     localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
     this.projetoData = null; localStorage.removeItem('fw_projeto');
-    this.renderBeats(); this.update(); this.updateProjectNameDisplay();
+    this.renderBeats(); this.update();
   },
   openFile() { document.getElementById('file-input').click(); },
   saveFile() {
@@ -1592,7 +1729,6 @@ const app = {
           localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors));
           this.fileName = file.name.replace(/\.fountain\.json$/, '.fountain');
           this.saveBeats();
-          this.updateProjectNameDisplay();
           this.update();
           this.syncBeatsFromScenes(this.editor.value);
           this.renderBeats();
@@ -1931,23 +2067,6 @@ const app = {
     if (this.focusOn) { this.editor.focus(); }
   },
 
-  /* ── Project name ── */
-  updateProjectNameDisplay() {
-    const el = document.getElementById('project-name');
-    if (!el) return;
-    if (this.projectName) el.textContent = '📁 ' + this.projectName;
-    else el.textContent = '📁 Sem título';
-  },
-
-  editProjectName() {
-    const name = prompt('Nome do projeto:', this.projectName || '');
-    if (name === null) return;
-    this.projectName = name.trim();
-    localStorage.setItem('fw_project_name', this.projectName);
-    this.updateProjectNameDisplay();
-    this.updateIndicator();
-  },
-
   /* ── Selection word count ── */
   setupSelectionCount() {
     this.editor.addEventListener('mouseup', () => this.updateSelectionCount());
@@ -2245,3 +2364,8 @@ document.getElementById('file-input').addEventListener('change', function(e) {
 
 /* ── Boot ── */
 document.addEventListener('DOMContentLoaded', () => app.init());
+
+/* ── Service Worker (PWA) ── */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}

@@ -141,6 +141,25 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
 #timeline-bar.expanded { max-height: none; flex: 1; }
 #app.timeline-expanded #panes { display: none; }
 
+/* ── Page tabs (Título/Ficha/Estrutura) ── */
+.page-tab { flex: 1; padding: 8px 12px; border: 1px solid var(--border); background: var(--surface2);
+  color: var(--fg-sec); cursor: pointer; font: bold 9pt 'Courier New', monospace;
+  text-align: center; border-bottom: 2px solid transparent; transition: 0.15s; border-radius: 4px 4px 0 0; }
+.page-tab:hover { color: var(--fg); background: var(--surface3); }
+.page-tab.active { color: var(--fg); background: var(--surface); border-bottom-color: var(--accent); }
+.page-tab-content { display: none; }
+.page-tab-content.active { display: block; }
+
+/* ── Modal tabs ── */
+.modal-tabs { display: flex; border-bottom: 1px solid var(--border); gap: 0; }
+.modal-tab { flex: 1; padding: 8px 6px; border: none; background: transparent;
+  color: var(--fg-sec); cursor: pointer; font: bold 9pt 'Courier New', monospace;
+  text-align: center; border-bottom: 2px solid transparent; transition: 0.15s; }
+.modal-tab:hover { color: var(--fg); background: var(--surface2); }
+.modal-tab.active { color: var(--fg); border-bottom-color: var(--accent); }
+.modal-tab-content { display: none; }
+.modal-tab-content.active { display: block; }
+
 /* ── Modal ── */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.4); display: flex; align-items: center;
@@ -164,7 +183,7 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
   font: 11pt 'Courier New', monospace; }
 .form-row { display: flex; gap: 12px; margin-bottom: 12px; align-items: center; }
 .form-row label { min-width: 100px; font-size: 11pt; flex-shrink: 0; }
-.form-row input, .form-row textarea { flex: 1; }
+.form-row input, .form-row textarea, .form-row select { flex: 1; min-width: 0; }
 
 /* ── Projeto ── */
 .proj-secao { margin-bottom: 8px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
@@ -193,6 +212,9 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
 }
 
 @media (max-width: 768px) {
+  html, body { height: 100%; }
+  body { height: 100%; overflow: hidden; }
+  #app { height: 100%; }
   #pane-left { display: none; }
   #pane-right { display: none; }
   .mobile-only { display: inline; }
@@ -238,6 +260,22 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
   max-height: 100vh !important;
   border-radius: 0 !important;
 }
+
+/* ── Título/Ficha/Estrutura page ── */
+#titulo-form { max-width: 800px; margin: 0 auto; }
+#titulo-form .form-row { margin-bottom: 16px; }
+#titulo-form .form-row label { min-width: 160px; font-size: 10pt; }
+#titulo-form select { min-width: 200px; }
+#titulo-form input, #titulo-form textarea, #titulo-form select {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+  padding: 10px 14px; font: 11pt 'Courier New', monospace; color: var(--fg);
+  transition: border-color 0.15s; }
+#titulo-form input:focus, #titulo-form textarea:focus, #titulo-form select:focus {
+  border-color: var(--accent); outline: none; }
+#titulo-form button { padding: 10px 20px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--surface2); color: var(--fg);
+  cursor: pointer; font: 11pt 'Courier New', monospace; transition: 0.15s; }
+#titulo-form button:hover { background: var(--surface3); }
 
 /* ── Focus mode ── */
 .focus-mode #toolbar, .focus-mode #pane-left, .focus-mode #pane-right,

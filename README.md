@@ -23,7 +23,11 @@ Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 | **Personagens** | Extraídos automaticamente, com editor de perfil |
 | **Locais** | Extraídos automaticamente do texto |
 | **Find/Replace** | Case-sensitive, replace all |
-| **Folha de rosto** | Formulário que renderiza no PDF |
+| **Folha de rosto** | Título, crédito, autor, fonte, data, contato |
+| **Ficha do Filme** | Logline, sinopse, argumento, gênero, duração, público-alvo |
+| **Estrutura da História** | McKee: ideia governante, valor central, premissa, força antagônica, dilema, tipo de trama, perguntas guiadas |
+| **Imprimir ficha** | Gera PDF da ficha do filme + estrutura |
+| **PWA** | Instalável como app, service worker com cache offline |
 | **Side-by-side** | Editor / Preview / Split (👁) |
 | **Temas** | Claro (creme/papel) / escuro |
 | **Idiomas** | Português / English (recarrega) |
@@ -50,7 +54,7 @@ Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 
 Editor visual completo para planejar seu roteiro. Funciona offline, 100% local.
 
-**9 templates prontos:**
+**12 templates prontos:**
 
 | Template | Descrição |
 |----------|-----------|
@@ -63,6 +67,9 @@ Editor visual completo para planejar seu roteiro. Funciona offline, 100% local.
 | **Estrutura de TV** | Teaser + Atos + Tag |
 | **Batman Chart** | Grid atos × tramas |
 | **Mood Board** | Paleta de cores, referências, inspiração |
+| **Diagrama de Relações** | Mapa de conexões entre personagens com setas |
+| **Linha do Tempo** | Cenas posicionadas no eixo temporal com trilhas de subtrama |
+| **Arco de Personagem** | Curva emocional com pontos narrativos chave |
 
 Para usar: abra o 🧩 Quadro → no Excalidraw, use **Open** → escolha um template `.excalidraw`.
 

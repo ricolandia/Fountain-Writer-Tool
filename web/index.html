@@ -22,37 +22,38 @@
     <button onclick="app.openProject()" data-i18n="tb_open">📂 Abrir</button>
     <button onclick="app.saveProject()" data-i18n="tb_save">💾 Salvar</button>
     <button onclick="app.openFile()" data-i18n="tb_import">📄 Importar</button>
-    <button onclick="app.saveFile()" data-i18n="tb_fountain">⬇ Fountain</button>
     <span class="sep"></span>
+    <button onclick="app.saveFile()" data-i18n="tb_fountain">⬇ Fountain</button>
     <button onclick="app.exportHTML()" data-i18n="tb_html">📑 HTML</button>
     <button onclick="app.printPDF()" data-i18n="tb_pdf">🖨 PDF</button>
+    <span style="width:100%;height:0"></span>
     <button onclick="app.togglePreview()">👁</button>
     <button onclick="app.openFind()">🔍</button>
-    <button onclick="app.openTitle()" data-i18n="tb_title">📄 Título</button>
+    <span class="sep"></span>
+    <button onclick="app.toggleTitulo()" data-i18n="tb_title">📄 Ficha</button>
     <button onclick="app.openStats()" data-i18n="tb_stats">📊 Stats</button>
     <button onclick="app.openGoal()" data-i18n="tb_goal">🎯 Meta</button>
     <button onclick="app.openBackups()" data-i18n="tb_backup">💾 Backups</button>
-    <span style="width:100%;height:0"></span>
     <span class="sep"></span>
     <button onclick="app.markHighlight('!')" class="hl-btn" style="background:#fff3b0" data-i18n="tb_review">🖍 Revisar</button>
     <button onclick="app.markHighlight('*')" class="hl-btn" style="background:#c8e6c9" data-i18n="tb_ok">🖍 OK</button>
     <button onclick="app.markHighlight('?')" class="hl-btn" style="background:#ffcdd2" data-i18n="tb_problem">🖍 Problema</button>
-    <span class="sep"></span>
-    <button onclick="app.editProjectName()" id="project-name" data-i18n="tb_project_name">📁 Sem título</button>
+    <span style="width:100%;height:0"></span>
     <button onclick="app.toggleTimeline()" data-i18n="tb_timeline">📊 Trama</button>
     <button onclick="app.toggleTimelineHeight()" title="Expandir timeline">⤢</button>
-    <button onclick="app.toggleProjeto()" id="projeto-btn">📋 Roteiro</button>
+    <span class="sep"></span>
+    <button onclick="app.toggleProjeto()" id="projeto-btn">📋 Projeto</button>
+    <button onclick="app.openExcalidraw()" title="Quadro de planejamento visual">🧩 Quadro</button>
+    <span class="sep"></span>
+    <button onclick="app.toggleTimerMode()" id="timer-mode-btn" data-i18n="tb_timer">⏱ Escrita</button>
+    <button onclick="app.toggleTimer()" id="timer-start-btn" style="font-size:9pt;padding:2px 4px">▶</button>
+    <button onclick="app.resetTimer()" id="timer-reset-btn" style="font-size:9pt;padding:2px 4px">⏹</button>
+    <span class="sep"></span>
     <button onclick="app.toggleSound()" id="sound-btn" data-i18n="tb_sound">🔇 Som</button>
     <button onclick="app.copyScript()" id="copy-btn" title="Copiar roteiro">📋</button>
     <button onclick="app.toggleFocus()" data-i18n="tb_focus">🎯 Foco</button>
     <button onclick="app.toggleTheme()">🌗</button>
     <button onclick="app.toggleLang()" id="lang-btn" style="font-size:9pt">PT</button>
-    <button onclick="app.toggleTimerMode()" id="timer-mode-btn" data-i18n="tb_timer">⏱ Escrita</button>
-    <button onclick="app.toggleTimer()" id="timer-start-btn" style="font-size:9pt;padding:2px 4px">▶</button>
-    <button onclick="app.resetTimer()" id="timer-reset-btn" style="font-size:9pt;padding:2px 4px">⏹</button>
-    <span class="sep"></span>
-    <button onclick="app.openExcalidraw()" title="Quadro de planejamento visual">🧩 Quadro</button>
-    <span class="sep"></span>
     <button onclick="app.openHelp()">❓</button>
     <button onclick="app.openFountainGuide()" title="Guia Fountain">?!</button>
     <span id="save-indicator" style="font-size:10pt;color:var(--fg-sec)">💾</span>
@@ -173,6 +174,159 @@
         <div style="display:flex;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
           <button onclick="app.salvarProjeto()">💾 Salvar Dados</button>
           <button onclick="app.exportProjetoPDF()">🖨 Exportar PDF</button>
+        </div>
+      </div>
+      <!-- Título / Ficha / Estrutura (página inteira) -->
+      <div id="titulo-form" style="display:none;padding:20px 40px;overflow-y:auto;flex:1;background:var(--editor-bg)">
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <span class="page-tab active" data-tab="rosto" onclick="app.selTitleTab('rosto')" data-i18n="title_header">Folha de Rosto</span>
+          <span class="page-tab" data-tab="ficha" onclick="app.selTitleTab('ficha')" data-i18n="tab_ficha">Ficha do Filme</span>
+          <span class="page-tab" data-tab="estrutura" onclick="app.selTitleTab('estrutura')" data-i18n="tab_estrutura">Estrutura</span>
+        </div>
+        <!-- Tab Folha de Rosto -->
+        <div id="tab-rosto" class="page-tab-content active">
+          <div class="form-row"><label data-i18n="tp_title">Título:</label><input type="text" id="tp-title"></div>
+          <div class="form-row"><label data-i18n="tp_credit">Crédito:</label><input type="text" id="tp-credit"></div>
+          <div class="form-row"><label data-i18n="tp_author">Autor:</label><input type="text" id="tp-author"></div>
+          <div class="form-row"><label data-i18n="tp_source">Fonte:</label><input type="text" id="tp-source"></div>
+          <div class="form-row"><label data-i18n="tp_draft_date">Data:</label><input type="text" id="tp-draft-date"></div>
+          <div class="form-row"><label data-i18n="tp_contact">Contato:</label><textarea id="tp-contact" rows="3"></textarea></div>
+        </div>
+        <!-- Tab Ficha do Filme -->
+        <div id="tab-ficha" class="page-tab-content">
+          <div class="form-row"><label data-i18n="tp_logline">Logline:</label><textarea id="tp-logline" rows="2"></textarea></div>
+          <div class="form-row"><label data-i18n="tp_sinopse">Sinopse:</label><textarea id="tp-sinopse" rows="3"></textarea></div>
+          <div class="form-row"><label data-i18n="tp_argumento">Argumento:</label><textarea id="tp-argumento" rows="4"></textarea></div>
+          <div class="form-row"><label data-i18n="tp_genero">Gênero:</label>
+            <select id="tp-genero">
+              <option value="">—</option><option>Ação</option><option>Aventura</option>
+              <option>Comédia</option><option>Drama</option><option>Ficção Científica</option>
+              <option>Terror</option><option>Romance</option><option>Suspense</option>
+              <option>Fantasia</option><option>Animação</option><option>Documentário</option>
+              <option>Musical</option><option>Western</option>
+            </select>
+          </div>
+          <div class="form-row"><label data-i18n="tp_duracao">Duração (min):</label><input type="number" id="tp-duracao" min="1" max="999"></div>
+          <div class="form-row"><label data-i18n="tp_publico">Público-alvo:</label><input type="text" id="tp-publico" placeholder="ex: 14 anos, Livre"></div>
+        </div>
+        <!-- Tab Estrutura -->
+        <div id="tab-estrutura" class="page-tab-content">
+          <div class="form-row"><label data-i18n="tp_tom">Tom:</label>
+            <select id="tp-tom">
+              <option value="">—</option><option>Realista</option><option>Poético</option>
+              <option>Expressionista</option><option>Noir</option><option>Épico</option>
+              <option>Íntimo</option><option>Surrealista</option><option>Satírico</option>
+              <option>Melodramático</option><option>Experimental</option>
+            </select>
+          </div>
+          <div class="form-row"><label data-i18n="tp_tema">Tema:</label>
+            <select id="tp-tema">
+              <option value="">—</option><option>Amor</option><option>Vingança</option>
+              <option>Redenção</option><option>Amizade</option><option>Sobrevivência</option>
+              <option>Poder</option><option>Liberdade</option><option>Identidade</option>
+              <option>Justiça</option><option>Sacrifício</option><option>Outro</option>
+            </select>
+            <input type="text" id="tp-outro-tema" data-i18n-placeholder="other_specify" placeholder="Especifique..." style="display:none;flex:1">
+          </div>
+          <div class="form-row"><label data-i18n="tp_ideia_governante">Ideia Governante:</label>
+            <select id="tp-ideia-governante">
+              <option value="">—</option>
+              <option>A coragem leva à vitória.</option>
+              <option>A obsessão pelo poder leva à destruição.</option>
+              <option>O amor verdadeiro supera qualquer obstáculo.</option>
+              <option>A busca pela verdade pode levar à solidão.</option>
+              <option>A ambição desenfreada leva à ruína.</option>
+              <option>Outro</option>
+            </select>
+            <input type="text" id="tp-outro-ideia-governante" data-i18n-placeholder="other_specify" placeholder="Especifique..." style="display:none;flex:1">
+          </div>
+          <div class="form-row"><label data-i18n="tp_valor_central">Valor Central:</label>
+            <select id="tp-valor-central">
+              <option value="">—</option><option>Amor</option><option>Justiça</option>
+              <option>Liberdade</option><option>Sobrevivência</option><option>Honra</option>
+              <option>Vingança</option><option>Poder</option><option>Lealdade</option>
+              <option>Verdade</option><option>Perdão</option>
+            </select>
+          </div>
+          <div class="form-row"><label data-i18n="tp_premissa">Premissa Central:</label>
+            <select id="tp-premissa">
+              <option value="">—</option>
+              <option>Um jovem deve escolher entre a tradição familiar e seus próprios sonhos.</option>
+              <option>Um cientista enfrenta dilemas éticos ao descobrir uma tecnologia revolucionária.</option>
+              <option>Um criminoso busca redenção ao proteger uma pessoa inocente.</option>
+              <option>Um soldado precisa decidir entre seguir ordens ou salvar civis.</option>
+              <option>Um detetive precisa resolver um crime ligado ao seu passado.</option>
+              <option>Outro</option>
+            </select>
+            <input type="text" id="tp-outro-premissa" data-i18n-placeholder="other_specify" placeholder="Especifique..." style="display:none;flex:1">
+          </div>
+          <div class="form-row"><label data-i18n="tp_forca_antagonica">Força Antagônica:</label>
+            <select id="tp-forca-antagonica">
+              <option value="">—</option>
+              <option>Um vilão com objetivos claros</option>
+              <option>A sociedade ou sistema</option>
+              <option>O próprio protagonista (conflito interno)</option>
+              <option>Forças naturais ou sobrenaturais</option>
+              <option>Um rival ou competidor</option>
+              <option>Instituições corruptas</option>
+              <option>Traumas do passado</option>
+              <option>Preconceitos sociais</option>
+              <option>Tecnologia descontrolada</option>
+              <option>Destino ou fatalidade</option>
+            </select>
+          </div>
+          <div class="form-row"><label data-i18n="tp_tipo_conflito">Tipo de Conflito:</label>
+            <select id="tp-tipo-conflito">
+              <option value="">—</option>
+              <option>Conflito Externo (protagonista vs. mundo)</option>
+              <option>Conflito Interno (protagonista vs. si mesmo)</option>
+              <option>Conflito Interpessoal (protagonista vs. outro)</option>
+              <option>Conflito Social (protagonista vs. sociedade)</option>
+              <option>Conflito Existencial (protagonista vs. destino)</option>
+            </select>
+          </div>
+          <div class="form-row"><label data-i18n="tp_tipo_trama">Tipo de Trama:</label>
+            <select id="tp-tipo-trama">
+              <option value="">—</option>
+              <option>Arquitrama (Estrutura clássica)</option>
+              <option>Minitrama (Minimalista/introspectiva)</option>
+              <option>Antitrama (Não-linear/experimental)</option>
+            </select>
+          </div>
+          <div class="form-row"><label data-i18n="tp_dilema">Dilema Dramático:</label>
+            <select id="tp-dilema">
+              <option value="">—</option>
+              <option>Lealdade vs. Traição</option><option>Amor vs. Dever</option>
+              <option>Verdade vs. Mentira</option><option>Liberdade vs. Segurança</option>
+              <option>Justiça vs. Vingança</option><option>Razão vs. Emoção</option>
+              <option>Poder vs. Moralidade</option><option>Vida vs. Morte</option>
+            </select>
+          </div>
+          <div class="form-row"><label data-i18n="tp_tipo_final">Tipo de Final:</label>
+            <select id="tp-tipo-final">
+              <option value="">—</option>
+              <option>Fechado (resolução clara)</option>
+              <option>Aberto (interpretação do público)</option>
+              <option>Cíclico (história se repete)</option>
+              <option>Irônico (resultado oposto ao esperado)</option>
+              <option>Ambíguo (múltiplas possibilidades)</option>
+            </select>
+          </div>
+          <hr style="margin:12px 0;border-color:var(--border)">
+          <div class="form-row"><label data-i18n="q_mundo">1. Mundo do protagonista</label><textarea id="tp-pergunta-1" rows="2"></textarea></div>
+          <div class="form-row"><label data-i18n="q_perturba">2. O que perturba esse mundo?</label><textarea id="tp-pergunta-2" rows="2"></textarea></div>
+          <div class="form-row"><label data-i18n="q_decide">3. O que ele decide fazer?</label><textarea id="tp-pergunta-3" rows="2"></textarea></div>
+          <div class="form-row"><label data-i18n="q_obstaculos">4. Principais obstáculos</label><textarea id="tp-pergunta-4" rows="2"></textarea></div>
+          <div class="form-row"><label data-i18n="q_descoberta">5. Descoberta no meio da jornada</label><textarea id="tp-pergunta-5" rows="2"></textarea></div>
+          <div class="form-row"><label data-i18n="q_crise">6. Pior momento / Crise</label><textarea id="tp-pergunta-6" rows="2"></textarea></div>
+          <div class="form-row"><label data-i18n="q_desafio">7. Desafio final</label><textarea id="tp-pergunta-7" rows="2"></textarea></div>
+          <div class="form-row"><label data-i18n="q_resolucao">8. Resolução / Mudança</label><textarea id="tp-pergunta-8" rows="2"></textarea></div>
+        </div>
+        <!-- Ações -->
+        <div style="display:flex;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+          <button onclick="app.salvarTitulo()" data-i18n="title_save">💾 Salvar</button>
+          <button onclick="app.limparTitulo()" data-i18n="title_remove">🗑 Limpar</button>
+          <button onclick="app.printTitleSheet()">🖨 Gerar PDF</button>
         </div>
       </div>
     </div>
@@ -308,25 +462,7 @@
   </div>
 </div>
 
-<div id="title-modal" class="modal-overlay" style="display:none">
-  <div class="modal">
-    <div class="modal-header" data-i18n="title_header">Folha de Rosto</div>
-    <div class="modal-body">
-      <div class="form-row"><label>Título:</label><input type="text" id="tp-title"></div>
-      <div class="form-row"><label>Crédito:</label><input type="text" id="tp-credit"></div>
-      <div class="form-row"><label>Autor:</label><input type="text" id="tp-author"></div>
-      <div class="form-row"><label>Fonte:</label><input type="text" id="tp-source"></div>
-      <div class="form-row"><label>Data:</label><input type="text" id="tp-draft-date"></div>
-      <div class="form-row"><label>Contato:</label><textarea id="tp-contact" rows="3"></textarea></div>
-    </div>
-    <div class="modal-footer">
-      <button onclick="app.saveTitle()" data-i18n="title_save">Salvar</button>
-      <button onclick="app.clearTitle()" data-i18n="title_remove">Remover</button>
-      <span style="flex:1"></span>
-      <button onclick="app.closeTitle()" data-i18n="title_close">Fechar</button>
-    </div>
-  </div>
-</div>
+
 
 <div id="char-modal" class="modal-overlay" style="display:none">
   <div class="modal">
