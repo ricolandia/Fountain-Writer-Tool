@@ -1907,9 +1907,19 @@ const app = {
   },
 
   closeStats() { document.getElementById('stats-modal').style.display = 'none'; },
-
   openHelp() { document.getElementById('help-modal').style.display = 'flex'; },
+
   closeHelp() { document.getElementById('help-modal').style.display = 'none'; },
+
+  copiarPix() {
+    const chave = 'ricardograca@ricolandia.com';
+    navigator.clipboard.writeText(chave).then(() => {
+      const el = document.querySelector('[onclick="app.copiarPix()"]');
+      const orig = el.textContent;
+      el.textContent = '✓ Copiado!';
+      setTimeout(() => { el.textContent = orig; }, 2000);
+    }).catch(() => {});
+  },
 
   openExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'flex'; },
   closeExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'none'; },
