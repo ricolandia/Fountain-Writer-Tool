@@ -59,7 +59,7 @@
     <span id="save-indicator" style="font-size:10pt;color:var(--fg-sec)">💾</span>
     <span class="timer" id="timer-display">⏱ 00:00</span>
     <span class="sep"></span>
-    <button onclick="app.openApoio()" style="font-size:9pt;color:var(--fg-sec);cursor:pointer;background:transparent;border:none;padding:2px 6px">☕ Apoie</button>
+    <button onclick="app.openApoio()" data-i18n="tb_apoio" style="font-size:9pt;color:var(--fg-sec);cursor:pointer;background:transparent;border:none;padding:2px 6px">☕ Apoie</button>
   </div>
 
   <div id="panes">
@@ -403,7 +403,7 @@
 <!-- Apoio Modal -->
 <div id="apoio-modal" class="modal-overlay" style="display:none">
   <div class="modal" style="max-width:380px">
-    <div class="modal-header">☕ Apoie o projeto</div>
+    <div class="modal-header" data-i18n="apoio_header">☕ Apoie o projeto</div>
     <div class="modal-body" style="font-size:10pt;line-height:1.8">
       <p>Se o <b>Fonte</b> te ajuda, considere contribuir.</p>
       <hr style="border:none;border-top:1px solid var(--border);margin:10px 0">
