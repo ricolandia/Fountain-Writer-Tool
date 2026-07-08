@@ -15,7 +15,7 @@
  * Ao mudar o app de forma que precise invalidar cache antigo, suba o número
  * da versão abaixo — isso força os clientes a buscarem tudo de novo.
  */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE_NAME = 'fountain-writer-' + VERSION;
 
 const PRECACHE_URLS = [
