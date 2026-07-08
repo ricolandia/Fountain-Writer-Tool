@@ -26,6 +26,9 @@ fountain_writer_BR.py
 # Session / local
 SESSION.md
 LANDING.md
+ROADMAP.md
+AUDITORIA.md
+COMPARATIVO.md
 *.session.*
 
 # Backend (planejado — não implementado)
