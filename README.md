@@ -127,12 +127,7 @@ python3 serve.py
 
 Ou abrir `web/index.html` direto no navegador (alguns recursos podem precisar de servidor HTTP).
 
-### 📱 Opção 3 — PWA (mobile + desktop)
-
-Abra via servidor HTTP, depois clique em **⋮ → Instalar Fonte** (Chrome/Edge).
-Funciona offline como app instalado.
-
-### ☁️ Opção 4 — Deploy estático
+### ☁️ Opção 3 — Deploy estático
 
 Copie a pasta `deploy/` para qualquer servidor HTTP estático (FTP, Nginx, Apache).
 
