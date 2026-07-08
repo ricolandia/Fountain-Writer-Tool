@@ -43,22 +43,22 @@
     <button onclick="app.markHighlight('?')" class="hl-btn" style="background:#ffcdd2" data-i18n="tb_problem">🖍 Problema</button>
     <span style="width:100%;height:0"></span>
     <button onclick="app.toggleTimeline()" data-i18n="tb_timeline">📊 Trama</button>
-    <button onclick="app.toggleTimelineHeight()" title="Expandir timeline">⤢</button>
+    <button onclick="app.toggleTimelineHeight()" data-i18n-title="title_expand" title="Expandir timeline">⤢</button>
     <span class="sep"></span>
     <button onclick="app.toggleProjeto()" id="projeto-btn">📋 Projeto</button>
-    <button onclick="app.openExcalidraw()" title="Quadro de planejamento visual">🧩 Quadro</button>
+    <button onclick="app.openExcalidraw()" data-i18n-title="title_quadro" title="Quadro de planejamento visual">🧩 Quadro</button>
     <span class="sep"></span>
     <button onclick="app.toggleTimerMode()" id="timer-mode-btn" data-i18n="tb_timer">⏱ Escrita</button>
     <button onclick="app.toggleTimer()" id="timer-start-btn" style="font-size:9pt;padding:2px 4px">▶</button>
     <button onclick="app.resetTimer()" id="timer-reset-btn" style="font-size:9pt;padding:2px 4px">⏹</button>
     <span class="sep"></span>
     <button onclick="app.toggleSound()" id="sound-btn" data-i18n="tb_sound">🔇 Som</button>
-    <button onclick="app.copyScript()" id="copy-btn" title="Copiar roteiro">📋</button>
+    <button onclick="app.copyScript()" id="copy-btn" data-i18n-title="title_copiar" title="Copiar roteiro">📋</button>
     <button onclick="app.toggleFocus()" data-i18n="tb_focus">🎯 Foco</button>
     <button onclick="app.toggleTheme()">🌗</button>
     <button onclick="app.toggleLang()" id="lang-btn" style="font-size:9pt">PT</button>
     <button onclick="app.openHelp()">❓</button>
-    <button onclick="app.openFountainGuide()" title="Guia Fountain">?!</button>
+    <button onclick="app.openFountainGuide()" data-i18n-title="title_fguide" title="Guia Fountain">?!</button>
     <span id="save-indicator" style="font-size:10pt;color:var(--fg-sec)">💾</span>
     <span class="timer" id="timer-display">⏱ 00:00</span>
     <span class="sep"></span>
@@ -67,7 +67,7 @@
 
   <div id="panes">
     <div id="pane-left" class="pane">
-      <div class="pane-header"><span data-i18n="tb_scenes">CENAS</span><span><span id="scene-count">0</span> <button onclick="app.toggleSceneView()" id="view-toggle" style="font-size:8pt;padding:1px 4px" title="Alternar visualização">⊞</button> <button onclick="app.insertActMarker()" style="font-size:8pt;padding:1px 4px" title="Marcar novo ato aqui (insere # Ato N no texto)">📍</button> <button onclick="app.addAct()" style="font-size:8pt;padding:1px 4px" title="Adicionar ato">🎬</button></span></div>
+      <div class="pane-header"><span data-i18n="tb_scenes">CENAS</span><span><span id="scene-count">0</span> <button onclick="app.toggleSceneView()" id="view-toggle" style="font-size:8pt;padding:1px 4px" data-i18n-title="title_view" title="Alternar visualização">⊞</button> <button onclick="app.insertActMarker()" style="font-size:8pt;padding:1px 4px" data-i18n-title="title_actmark" title="Marcar novo ato aqui (insere # Ato N no texto)">📍</button> <button onclick="app.addAct()" style="font-size:8pt;padding:1px 4px" data-i18n-title="title_addact" title="Adicionar ato">🎬</button></span></div>
       <ul id="scene-list"></ul>
       <div id="scene-corkboard" style="display:none"></div>
     </div>
@@ -419,7 +419,7 @@
       <p>Se o <b>Fonte</b> te ajuda, considere contribuir.</p>
       <hr style="border:none;border-top:1px solid var(--border);margin:10px 0">
       <p><span style="color:var(--fg-sec)">🧡 Pix:</span><br>
-        <span onclick="app.copiarPix()" style="cursor:pointer;background:var(--surface2);padding:3px 8px;border-radius:4px;display:inline-block;margin-top:4px" title="Clique para copiar">ricardograca@ricolandia.com</span>
+        <span onclick="app.copiarPix()" style="cursor:pointer;background:var(--surface2);padding:3px 8px;border-radius:4px;display:inline-block;margin-top:4px" data-i18n-title="title_copiar_pix" title="Clique para copiar">ricardograca@ricolandia.com</span>
       </p>
       <p style="margin-top:10px"><span style="color:var(--fg-sec)">💳 PayPal:</span><br>
         <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=ricolandia%40gmail.com&currency_code=BRL" target="_blank" style="color:var(--accent)">Donate via PayPal</a>

@@ -150,16 +150,6 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
 .page-tab-content { display: none; }
 .page-tab-content.active { display: block; }
 
-/* ── Modal tabs ── */
-.modal-tabs { display: flex; border-bottom: 1px solid var(--border); gap: 0; }
-.modal-tab { flex: 1; padding: 8px 6px; border: none; background: transparent;
-  color: var(--fg-sec); cursor: pointer; font: bold 9pt 'Courier New', monospace;
-  text-align: center; border-bottom: 2px solid transparent; transition: 0.15s; }
-.modal-tab:hover { color: var(--fg); background: var(--surface2); }
-.modal-tab.active { color: var(--fg); border-bottom-color: var(--accent); }
-.modal-tab-content { display: none; }
-.modal-tab-content.active { display: block; }
-
 /* ── Modal ── */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.4); display: flex; align-items: center;
