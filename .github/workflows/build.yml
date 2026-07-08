@@ -39,10 +39,11 @@ jobs:
           python-version: '3.12'
       - run: pip install -r desktop/requirements.txt pyinstaller
       - run: pyinstaller --onefile --windowed --name Fonte desktop/desktop.py
+      - run: cp dist/Fonte dist/Fonte-linux
       - uses: actions/upload-artifact@v4
         with:
           name: Fonte-linux
-          path: dist/Fonte
+          path: dist/Fonte-linux
 
   build-macos:
     runs-on: macos-latest
@@ -78,14 +79,14 @@ jobs:
           ls -R
           FILES=""
           [ -f "Fonte-windows/Fonte.exe" ] && FILES="$FILES Fonte-windows/Fonte.exe"
-          [ -f "Fonte-linux/Fonte" ] && FILES="$FILES Fonte-linux/Fonte"
+          [ -f "Fonte-linux/Fonte-linux" ] && FILES="$FILES Fonte-linux/Fonte-linux"
           [ -f "Fonte-macos/Fonte" ] && FILES="$FILES Fonte-macos/Fonte"
           echo "FILES=$FILES" >> $GITHUB_ENV
       - uses: softprops/action-gh-release@v2
         with:
           files: |
             Fonte-windows/Fonte.exe
-            Fonte-linux/Fonte
+            Fonte-linux/Fonte-linux
             Fonte-macos/Fonte
           generate_release_notes: true
           make_latest: true
