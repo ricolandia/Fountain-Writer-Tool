@@ -1,4 +1,4 @@
-name: Build Desktop
+name: Build Web
 
 on:
   push:
@@ -9,88 +9,24 @@ permissions:
   contents: write
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
-    strategy:
-      fail-fast: false
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: pip install -r desktop/requirements.txt pyinstaller
-      - run: pyinstaller --onefile --windowed --name Fonte --add-data "web;web" desktop/desktop.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Fonte-windows
-          path: dist/Fonte.exe
-
-  build-linux:
+  build:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev 2>/dev/null || sudo apt-get install -y libgtk-3-dev libwebkitgtk-6.0-dev
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: pip install -r desktop/requirements.txt pyinstaller
-      - run: pyinstaller --onefile --windowed --name Fonte --add-data "web:web" desktop/desktop.py
-      - run: cp dist/Fonte dist/Fonte-linux
+      - run: cd web && zip -r ../Fonte-web.zip . && cd ..
       - uses: actions/upload-artifact@v4
         with:
-          name: Fonte-linux
-          path: dist/Fonte-linux
-
-  build-macos:
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: pip install -r desktop/requirements.txt pyinstaller
-      - run: pyinstaller --onefile --windowed --name Fonte --add-data "web:web" desktop/desktop.py
-      - run: |
-          # Check output
-          if [ -f "dist/Fonte" ]; then
-            echo "Found single binary dist/Fonte"
-            mkdir -p dist/Fonte.app/Contents/MacOS
-            cp dist/Fonte dist/Fonte.app/Contents/MacOS/Fonte
-          fi
-          if [ -d "dist/Fonte.app" ]; then
-            echo "Found .app bundle"
-            mkdir -p dmg
-            cp -R dist/Fonte.app dmg/
-            hdiutil create -volname "Fonte" -srcfolder dmg -ov -format UDZO Fonte.dmg
-            ls -lh Fonte.dmg
-          else
-            echo "ERROR: No .app bundle found"
-            ls dist/ || true
-            exit 1
-          fi
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Fonte-macos
-          path: Fonte.dmg
+          name: Fonte-web
+          path: Fonte-web.zip
 
   release:
-    needs: [build-windows, build-linux, build-macos]
-    if: always()
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
       - run: |
           mkdir -p _release
-          [ -f "Fonte-windows/Fonte.exe" ] && cp "Fonte-windows/Fonte.exe" _release/
-          [ -f "Fonte-linux/Fonte-linux" ] && cp "Fonte-linux/Fonte-linux" _release/
-          [ -f "Fonte-macos/Fonte.dmg" ] && cp "Fonte-macos/Fonte.dmg" _release/
-          ls -lh _release/
+          cp Fonte-web/Fonte-web.zip _release/
       - uses: softprops/action-gh-release@v2
         with:
           files: _release/*

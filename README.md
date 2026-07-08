@@ -6,7 +6,7 @@
 
 **Editor Fountain em HTML/CSS/JS puro. Zero dependências. Funciona em qualquer navegador.**
 
-Disponível em 4 formatos: **Web** (abrir direto), **Server** (rede local), **PWA** (instalável, offline) e **Desktop** (executável nativo).
+Disponível em 3 formatos: **📦 Web** (zip universal — baixe, extraia, abra index.html), **🖥 Server** (rede local) e **📱 PWA** (instalável, offline).
 
 Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 
@@ -101,7 +101,11 @@ O Fonte usa dois sistemas de persistência:
 
 ## Como usar
 
-### Opção 1 — Navegador (recomendado)
+### 📦 Opção 1 — Zip universal (recomendado)
+
+Baixe o `Fonte-web.zip` na [página de Releases](https://github.com/ricolandia/Fountain-Writer-Tool/releases), extraia e abra `index.html`.
+
+### 🖥 Opção 2 — Servidor local
 
 ```bash
 python3 serve.py
@@ -110,22 +114,12 @@ python3 serve.py
 
 Ou abrir `web/index.html` direto no navegador (alguns recursos podem precisar de servidor HTTP).
 
-### Opção 2 — PWA (mobile + desktop)
+### 📱 Opção 3 — PWA (mobile + desktop)
 
 Abra via servidor HTTP, depois clique em **⋮ → Instalar Fonte** (Chrome/Edge).
 Funciona offline como app instalado.
 
-### Opção 3 — Desktop (Windows / Linux / macOS)
-
-Baixe o executável na [página de Releases](https://github.com/ricolandia/Fountain-Writer-Tool/releases).
-
-```bash
-# Ou execute com Python diretamente:
-pip install -r desktop/requirements.txt
-python3 desktop/desktop.py
-```
-
-### Opção 4 — Deploy estático
+### ☁️ Opção 4 — Deploy estático
 
 Copie a pasta `deploy/` para qualquer servidor HTTP estático (FTP, Nginx, Apache).
 
@@ -171,8 +165,8 @@ python3 serve.py
 Or open `web/index.html` directly (some features need HTTP server).
 
 ### Downloads
-- **PWA:** Chrome/Edge → ⋮ → Install Fonte
-- **Desktop:** [GitHub Releases](https://github.com/ricolandia/Fountain-Writer-Tool/releases)
+- **📦 Web:** [Download Fonte-web.zip](https://github.com/ricolandia/Fountain-Writer-Tool/releases) — extract and open `index.html`
+- **📱 PWA:** Chrome/Edge → ⋮ → Install
 - **Source:** `git clone https://github.com/ricolandia/Fountain-Writer-Tool`
 
 ### Features
