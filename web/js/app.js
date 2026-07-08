@@ -1547,6 +1547,7 @@ const app = {
       if (el.type === 'checkbox') return el.checked;
       return el.value;
     };
+    const cronoSalvo = this.projetoData ? this.projetoData.cronograma : null;
     this.projetoData = {
       nome: getVal('proj-nome'), proponente: getVal('proj-proponente'), cpf: getVal('proj-cpf'),
       segmento: getVal('proj-segmento'), produto: getVal('proj-produto'), valor: getVal('proj-valor'), periodo: getVal('proj-periodo'),
@@ -1567,6 +1568,7 @@ const app = {
       midSocialFormato: getVal('proj-mid-social-formato'), midSocialEsp: getVal('proj-mid-social-esp'),
       midPressFormato: getVal('proj-mid-press-formato'), midPressEsp: getVal('proj-mid-press-esp')
     };
+    if (cronoSalvo) this.projetoData.cronograma = cronoSalvo;
     localStorage.setItem('fw_projeto', JSON.stringify(this.projetoData));
     this.isModified = true;
     this.updateIndicator();
