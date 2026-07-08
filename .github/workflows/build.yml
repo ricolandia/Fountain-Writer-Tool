@@ -48,3 +48,17 @@ jobs:
         with:
           name: Fonte-macos
           path: dist/Fonte
+
+  release:
+    needs: [build-windows, build-linux, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Fonte-windows/Fonte.exe
+            Fonte-linux/Fonte
+            Fonte-macos/Fonte
+          generate_release_notes: true
+          make_latest: true
