@@ -1,5 +1,16 @@
 # Fonte — Roadmap
 
+## Estratégia de distribuição
+
+| Formato | Público | Quando usar |
+|---|---|---|
+| **Web** (`index.html`) | Qualquer dispositivo | Abrir direto no navegador — funciona offline |
+| **Server** (`python3 serve.py`) | Rede local / Docker | Servir para outros dispositivos na rede |
+| **PWA** (instalável) | Mobile (Android/iOS) + Desktop (Chrome/Edge) | Adicionar à tela inicial — offline, atualiza automático |
+| **Desktop** (PyWebView) | Windows / Linux / macOS | Quem prefere executável nativo sem navegador |
+
+---
+
 ## v2.3 — Desktop (PyWebView + GitHub Actions)
 
 **Objetivo:** Gerar executáveis para Windows, Linux e macOS automaticamente via CI.
@@ -18,15 +29,16 @@
 
 ---
 
-## v2.4 — PWA + Mobile
+## v2.4 — PWA Mobile + Instruções
 
-**Objetivo:** Garantir experiência PWA completa e documentar instalação.
+**Objetivo:** Garantir que usuários de celular saibam instalar o app.
 
 | Item | Descrição |
 |---|---|
-| **Android** | PWA via navegador — adicionar à tela inicial |
-| **iOS** | PWA via Safari — adicionar à tela inicial |
-| **Documentação** | Instruções claras no modal ❓ Ajuda e no README |
+| **Android** | Chrome → ⋮ → "Adicionar à tela inicial" |
+| **iOS** | Safari → Compartilhar → "Adicionar à tela de início" |
+| **Desktop** | Chrome/Edge → ⋮ → "Instalar Fonte" |
+| **Instruções** | Texto claro no modal ❓ Ajuda com os passos para cada plataforma |
 
 *(Zero código novo — o PWA já está implementado com service worker + manifest)*
 
@@ -44,5 +56,5 @@ Baseado na auditoria (`AUDITORIA.md`):
 ## Status
 
 - [ ] **v2.3** — Desktop (PyWebView + GitHub Actions)
-- [ ] **v2.4** — PWA + Mobile docs
+- [ ] **v2.4** — PWA Mobile + Instruções
 - [ ] **v2.5** — Polimento pós-auditoria
