@@ -2,6 +2,8 @@
 
 ![Fonte icon](imagens/fonte-icon.svg)
 
+**🇧🇷 Português · 🇺🇸 English** — O app tem suporte a ambos os idiomas. A documentação abaixo está em português. [English version →](#english)
+
 **Editor Fountain em HTML/CSS/JS puro. Zero dependências. Funciona em qualquer navegador.**
 
 Disponível em 4 formatos: **Web** (abrir direto), **Server** (rede local), **PWA** (instalável, offline) e **Desktop** (executável nativo).
@@ -145,7 +147,51 @@ docker compose up -d
 
 ## Tecnologias
 
-HTML5, CSS3, JavaScript (ES6+), Excalidraw (UMD bundle offline), localStorage, File System Access API.
+HTML5, CSS3, JavaScript (ES6+), Excalidraw (UMD bundle offline), localStorage, File System Access API, Service Worker (PWA).
+
+---
+
+<span id="english"></span>
+
+## 🇺🇸 English — Fonte Screenplay Editor
+
+**Pure HTML/CSS/JS. Zero dependencies. Works in any browser.**
+
+Available in 4 formats: **Web** (open directly), **Server** (local network), **PWA** (installable, offline) and **Desktop** (native executable).
+
+Author: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
+
+### Quick start
+
+```bash
+python3 serve.py
+# Open http://localhost:8000/web/index.html
+```
+
+Or open `web/index.html` directly (some features need HTTP server).
+
+### Downloads
+- **PWA:** Chrome/Edge → ⋮ → Install Fonte
+- **Desktop:** [GitHub Releases](https://github.com/ricolandia/Fountain-Writer-Tool/releases)
+- **Source:** `git clone https://github.com/ricolandia/Fountain-Writer-Tool`
+
+### Features
+
+- Fountain screenplay editor with live preview
+- Scene navigator, beats, timeline, characters, locations
+- **Film Sheet:** logline, synopsis, treatment, genre
+- **Story Structure:** McKee's governing idea, central value, antagonistic force, guided questions
+- **Excalidraw Planning Board** with 12 templates
+- **Cultural Project** module (10 sections for Brazilian incentive laws)
+- PWA: installable, works offline
+- i18n: PT-BR / English
+- Dark/light themes, daily goals, pomodoro timer, auto-backup
+
+### License
+
+MIT — free to use, modify, and distribute.
+
+---
 
 ## Imagens
 
