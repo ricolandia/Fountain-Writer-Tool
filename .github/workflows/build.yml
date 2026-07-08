@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: cd web && zip -r ../Fonte-web.zip . && cd ..
+      - run: cd web && zip -r ../Fonte-web.zip . -x "docker-compose.yml" -x "Dockerfile" -x "test-excalidraw.html" && cd ..
       - uses: actions/upload-artifact@v4
         with:
           name: Fonte-web
