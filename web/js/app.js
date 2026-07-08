@@ -2069,6 +2069,9 @@ const app = {
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
       el.placeholder = _(el.dataset.i18nPlaceholder);
     });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+      el.title = _(el.dataset.i18nTitle);
+    });
     document.getElementById('lang-btn').textContent = lang === 'pt-BR' ? 'PT' : 'EN';
     document.title = 'Fonte';
   },

@@ -395,7 +395,7 @@
     </div>
     <div class="modal-footer">
       <span style="flex:1"></span>
-      <button onclick="app.closeHelp()">Fechar</button>
+      <button onclick="app.closeHelp()" data-i18n="close">Fechar</button>
     </div>
   </div>
 </div>
@@ -423,7 +423,7 @@
     </div>
     <div class="modal-footer">
       <span style="flex:1"></span>
-      <button onclick="app.closeApoio()">Fechar</button>
+      <button onclick="app.closeApoio()" data-i18n="close">Fechar</button>
     </div>
   </div>
 </div>
@@ -432,9 +432,9 @@
 <div id="excalidraw-modal" class="modal-overlay" style="display:none">
   <div class="modal excalidraw-modal" style="max-width:90vw;width:1200px;height:85vh">
     <div class="modal-header">
-      <span>🧩 Quadro de Planejamento</span>
+      <span data-i18n="excalidraw_header">🧩 Quadro de Planejamento</span>
       <span style="display:flex;gap:8px;align-items:center">
-        <span onclick="app.toggleExcalidrawFullscreen()" id="excalidraw-fullscreen-btn" style="cursor:pointer;font-size:12pt" title="Tela cheia">⛶</span>
+        <span onclick="app.toggleExcalidrawFullscreen()" id="excalidraw-fullscreen-btn" style="cursor:pointer;font-size:12pt" data-i18n-title="excalidraw_fullscreen" title="Tela cheia">⛶</span>
         <span onclick="app.closeExcalidraw()" style="cursor:pointer;font-weight:bold;font-size:14pt">✕</span>
       </span>
     </div>
@@ -447,7 +447,7 @@
 <!-- Fountain Guide Modal -->
 <div id="fountain-guide-modal" class="modal-overlay" style="display:none">
   <div class="modal" style="max-width:520px">
-    <div class="modal-header">Guia Fountain</div>
+    <div class="modal-header" data-i18n="fguide_header">Guia Fountain</div>
     <div class="modal-body" style="font-size:9pt;line-height:1.5">
       <p><b>Cabeçalho de cena:</b> <code>INT. CASA - DIA</code> ou <code>.CENA</code></p>
       <p><b>Personagem:</b> <code>JOÃO</code> (maiúsculas, sozinho na linha)</p>
@@ -467,7 +467,7 @@
     </div>
     <div class="modal-footer">
       <span style="flex:1"></span>
-      <button onclick="app.closeFountainGuide()">Fechar</button>
+      <button onclick="app.closeFountainGuide()" data-i18n="close">Fechar</button>
     </div>
   </div>
 </div>
@@ -498,14 +498,14 @@
   <div class="modal">
     <div class="modal-header" data-i18n="char_header">Editar Personagem</div>
     <div class="modal-body">
-      <div class="form-row"><label>Nome:</label><input type="text" id="ce-name" readonly style="background:var(--surface2)"></div>
-      <div class="form-row"><label>Idade:</label><input type="text" id="ce-age"></div>
-      <div class="form-row"><label>Arquétipo:</label><input type="text" id="ce-archetype"></div>
-      <div class="form-row"><label>Física:</label><input type="text" id="ce-physical"></div>
-      <div class="form-row"><label>Personalidade:</label><input type="text" id="ce-personality"></div>
-      <div class="form-row"><label>Biografia:</label><textarea id="ce-biography" rows="2"></textarea></div>
-      <div class="form-row"><label>Objetivo:</label><input type="text" id="ce-goal"></div>
-      <div class="form-row"><label>Medo:</label><input type="text" id="ce-fear"></div>
+      <div class="form-row"><label data-i18n="ce_name">Nome:</label><input type="text" id="ce-name" readonly style="background:var(--surface2)"></div>
+      <div class="form-row"><label data-i18n="ce_age">Idade:</label><input type="text" id="ce-age"></div>
+      <div class="form-row"><label data-i18n="ce_archetype">Arquétipo:</label><input type="text" id="ce-archetype"></div>
+      <div class="form-row"><label data-i18n="ce_physical">Física:</label><input type="text" id="ce-physical"></div>
+      <div class="form-row"><label data-i18n="ce_personality">Personalidade:</label><input type="text" id="ce-personality"></div>
+      <div class="form-row"><label data-i18n="ce_biography">Biografia:</label><textarea id="ce-biography" rows="2"></textarea></div>
+      <div class="form-row"><label data-i18n="ce_goal">Objetivo:</label><input type="text" id="ce-goal"></div>
+      <div class="form-row"><label data-i18n="ce_fear">Medo:</label><input type="text" id="ce-fear"></div>
     </div>
     <div class="modal-footer">
       <button onclick="app.saveChar()" data-i18n="char_save">Salvar</button>
@@ -570,7 +570,7 @@
     </div>
     <div class="modal-footer">
       <span style="flex:1"></span>
-      <button onclick="app.closeBeatGuide()">Fechar</button>
+      <button onclick="app.closeBeatGuide()" data-i18n="close">Fechar</button>
     </div>
   </div>
 </div>
@@ -578,10 +578,10 @@
 <!-- Beat Edit Modal -->
 <div id="beat-modal" class="modal-overlay" style="display:none">
   <div class="modal">
-    <div class="modal-header">Editar Beat</div>
+    <div class="modal-header" data-i18n="beat_header">Editar Beat</div>
     <div class="modal-body" style="overflow-x:hidden">
-      <div class="form-row"><label>Título:</label><input type="text" id="beat-title" style="flex:1"></div>
-      <div class="form-row"><label>Ato:</label>
+      <div class="form-row"><label data-i18n="beat_title">Título:</label><input type="text" id="beat-title" style="flex:1"></div>
+      <div class="form-row"><label data-i18n="beat_act">Ato:</label>
         <select id="beat-act" style="flex:1;padding:4px;border:1px solid var(--border);border-radius:4px;background:var(--surface3);color:var(--fg);font:10pt monospace">
           <option value="Ato 1">Ato 1</option>
           <option value="Ato 2">Ato 2</option>
@@ -592,7 +592,7 @@
           <option value="Ato 7">Ato 7</option>
         </select>
       </div>
-      <div class="form-row"><label>Trama:</label>
+      <div class="form-row"><label data-i18n="beat_plot">Trama:</label>
         <select id="beat-plot" style="flex:1;padding:4px;border:1px solid var(--border);border-radius:4px;background:var(--surface3);color:var(--fg);font:10pt monospace">
           <option value="Principal">Principal</option>
           <option value="A">A</option>
@@ -602,15 +602,15 @@
       <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
         <div id="beat-comments" style="font-size:8pt;max-height:120px;overflow-y:auto;margin-bottom:6px"></div>
         <div style="display:flex;gap:4px">
-          <input type="text" id="beat-comment-input" style="flex:1;font-size:9pt" placeholder="Comentário...">
+          <input type="text" id="beat-comment-input" style="flex:1;font-size:9pt" data-i18n-placeholder="beat_comment" placeholder="Comentário...">
           <button onclick="app.addBeatComment()" style="font-size:8pt">+</button>
         </div>
       </div>
     </div>
     <div class="modal-footer">
       <span style="flex:1"></span>
-      <button onclick="app.saveBeatModal()">Salvar</button>
-      <button onclick="app.closeBeatModal()">Cancelar</button>
+      <button onclick="app.saveBeatModal()" data-i18n="beat_save">Salvar</button>
+      <button onclick="app.closeBeatModal()" data-i18n="beat_cancel">Cancelar</button>
     </div>
   </div>
 </div>
