@@ -132,8 +132,17 @@ HTML5, CSS3, JavaScript (ES6+), Excalidraw (UMD bundle offline), localStorage, F
 
 ## Imagens
 
-![Fonte](imagens/2-0/Fountain_Writer_2-0_1.webp)
-*Editor com sidebar de cenas e timeline*
+![Fonte](imagens/2-2/Fonte_01_.webp)
+*Editor principal com preview ao vivo e timeline*
 
-![Fonte preview](imagens/2-0/Fountain_Writer_2-0_2.webp)
-*Preview ao vivo com formatação Fountain*
+![Fonte](imagens/2-2/Fonte_04_.webp)
+*Estrutura da História — McKee: ideia governante, valor central, força antagônica*
+
+![Fonte](imagens/2-2/Fonte_08_.webp)
+*Timeline — atos × tramas com subtramas*
+
+![Fonte](imagens/2-2/Fonte_09_.webp)
+*Projeto Cultural — 10 seções para leis de incentivo*
+
+![Fonte](imagens/2-2/Fonte_10_.webp)
+*Quadro de Planejamento Visual — Excalidraw com 12 templates*

@@ -8,7 +8,8 @@ archive/
 Layout/
 PACKS/
 imagens/*
-!/imagens/2-0/
+!/imagens/fonte-icon.svg
+!/imagens/2-2/
 *.bak.*
 
 # Desktop app (PySide6 - abandoned)

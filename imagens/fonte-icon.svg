@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2a2a26"/>
+      <stop offset="100%" stop-color="#1a1a18"/>
+    </linearGradient>
+  </defs>
+  <rect x="32" y="32" width="448" height="448" rx="72" ry="72" fill="url(#bg)"/>
+  <g fill="none" stroke="#fafaf8" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Haste vertical do F -->
+    <line x1="200" y1="140" x2="200" y2="370" stroke-width="18"/>
+    <!-- Barra superior do F -->
+    <line x1="200" y1="140" x2="330" y2="140" stroke-width="18"/>
+    <!-- Barra media do F (mais curta) -->
+    <line x1="200" y1="230" x2="300" y2="230" stroke-width="16"/>
+    <!-- Pena/curva sutil na ponta da haste -->
+    <path d="M200 370 Q170 375 155 390" stroke-width="8" fill="none"/>
+  </g>
+</svg>
