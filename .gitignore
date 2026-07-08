@@ -13,6 +13,8 @@ imagens/*
 *.bak.*
 
 # Desktop app
+desktop/app/
+desktop/main.py
 desktop/dist/
 desktop/build/
 desktop/__pycache__/
