@@ -11,6 +11,8 @@ permissions:
 jobs:
   build-windows:
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,14 +27,18 @@ jobs:
 
   build-linux:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev 2>/dev/null || sudo apt-get install -y libgtk-3-dev libwebkitgtk-6.0-dev
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: pip install -r desktop/requirements.txt pyinstaller
-      - run: pyinstaller --onefile --windowed --name Fonte  desktop/desktop.py
+      - run: pyinstaller --onefile --windowed --name Fonte desktop/desktop.py
       - uses: actions/upload-artifact@v4
         with:
           name: Fonte-linux
@@ -40,23 +46,41 @@ jobs:
 
   build-macos:
     runs-on: macos-latest
+    strategy:
+      fail-fast: false
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: pip install -r desktop/requirements.txt pyinstaller
-      - run: pyinstaller --onefile --windowed --name Fonte  desktop/desktop.py
+      - run: pyinstaller --onefile --windowed --name Fonte desktop/desktop.py
+      - run: |
+          # macOS pode gerar dist/Fonte ou dist/Fonte.app
+          if [ -f "dist/Fonte" ]; then
+            echo "BINARY=dist/Fonte" >> $GITHUB_ENV
+          elif [ -d "dist/Fonte.app" ]; then
+            ditto -c -k --keepParent dist/Fonte.app dist/Fonte-macos.zip
+            echo "BINARY=dist/Fonte-macos.zip" >> $GITHUB_ENV
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: Fonte-macos
-          path: dist/Fonte
+          path: ${{ env.BINARY }}
 
   release:
     needs: [build-windows, build-linux, build-macos]
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
+      - run: |
+          ls -R
+          FILES=""
+          [ -f "Fonte-windows/Fonte.exe" ] && FILES="$FILES Fonte-windows/Fonte.exe"
+          [ -f "Fonte-linux/Fonte" ] && FILES="$FILES Fonte-linux/Fonte"
+          [ -f "Fonte-macos/Fonte" ] && FILES="$FILES Fonte-macos/Fonte"
+          echo "FILES=$FILES" >> $GITHUB_ENV
       - uses: softprops/action-gh-release@v2
         with:
           files: |
