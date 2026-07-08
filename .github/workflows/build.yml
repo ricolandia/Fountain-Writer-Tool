@@ -40,15 +40,21 @@ jobs:
       - run: pip install -r desktop/requirements.txt pyinstaller
       - run: pyinstaller --onefile --windowed --name Fonte desktop/desktop.py
       - run: |
+          # Build AppDir structure
           mkdir -p AppDir/usr/bin
-          cp dist/Fonte AppDir/usr/bin/
+          cp dist/Fonte AppDir/usr/bin/Fonte
           chmod +x AppDir/usr/bin/Fonte
-          cat > AppDir/AppRun << 'RUNEOF'
+
+          # AppRun
+          cat > AppDir/AppRun << 'EOF'
 #!/bin/bash
-exec /usr/bin/Fonte
-RUNEOF
+HERE="$(dirname "$(readlink -f "$0")")"
+exec "$HERE/usr/bin/Fonte"
+EOF
           chmod +x AppDir/AppRun
-          cat > AppDir/fonte.desktop << 'DESKTOP'
+
+          # .desktop file
+          cat > AppDir/fonte.desktop << 'EOF'
 [Desktop Entry]
 Name=Fonte
 Comment=Screenplay Editor
@@ -56,12 +62,17 @@ Exec=Fonte
 Icon=fonte
 Type=Application
 Categories=Office;
-DESKTOP
+EOF
+
+          # Icon
           cp deploy/icons/icon-512.png AppDir/fonte.png
-      - uses: AppImageCrafters/appimage-action@v1
-        with:
-          appdir: AppDir
-          output: Fonte.AppImage
+
+          # Download appimagetool (standalone, no deps needed)
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /tmp/appimagetool
+          chmod +x /tmp/appimagetool
+
+          # Extract and run (FUSE not available in Actions)
+          /tmp/appimagetool --appimage-extract-and-run AppDir Fonte.AppImage
       - uses: actions/upload-artifact@v4
         with:
           name: Fonte-linux
@@ -79,9 +90,23 @@ DESKTOP
       - run: pip install -r desktop/requirements.txt pyinstaller
       - run: pyinstaller --onefile --windowed --name Fonte desktop/desktop.py
       - run: |
-          mkdir -p dmg
-          cp -R dist/Fonte.app dmg/
-          hdiutil create -volname "Fonte" -srcfolder dmg -ov -format UDZO Fonte.dmg
+          # Check output
+          if [ -f "dist/Fonte" ]; then
+            echo "Found single binary dist/Fonte"
+            mkdir -p dist/Fonte.app/Contents/MacOS
+            cp dist/Fonte dist/Fonte.app/Contents/MacOS/Fonte
+          fi
+          if [ -d "dist/Fonte.app" ]; then
+            echo "Found .app bundle"
+            mkdir -p dmg
+            cp -R dist/Fonte.app dmg/
+            hdiutil create -volname "Fonte" -srcfolder dmg -ov -format UDZO Fonte.dmg
+            ls -lh Fonte.dmg
+          else
+            echo "ERROR: No .app bundle found"
+            ls dist/ || true
+            exit 1
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: Fonte-macos
@@ -98,6 +123,7 @@ DESKTOP
           [ -f "Fonte-windows/Fonte.exe" ] && cp "Fonte-windows/Fonte.exe" _release/
           [ -f "Fonte-linux/Fonte.AppImage" ] && cp "Fonte-linux/Fonte.AppImage" _release/
           [ -f "Fonte-macos/Fonte.dmg" ] && cp "Fonte-macos/Fonte.dmg" _release/
+          ls -lh _release/
       - uses: softprops/action-gh-release@v2
         with:
           files: _release/*
