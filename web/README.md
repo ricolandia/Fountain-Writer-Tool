@@ -1,4 +1,4 @@
-# Fountain Writer — Editor de Roteiros
+# Fonte — Editor de Roteiros
 
 **Editor Fountain em HTML/CSS/JS puro. Zero dependências. Funciona em qualquer navegador.**
 
@@ -35,7 +35,7 @@ Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 
 ### 💾 Salvar projeto
 
-O Fountain Writer usa dois sistemas de persistência:
+O Fonte usa dois sistemas de persistência:
 
 | Método | O que salva | Quando |
 |---|---|---|
@@ -105,7 +105,7 @@ HTML5, CSS3, JavaScript (ES6+), localStorage, File System Access API.
 
 ### 💾 Save project
 
-Fountain Writer uses two persistence systems:
+Fonte uses two persistence systems:
 
 | Method | What it saves | When |
 |---|---|---|

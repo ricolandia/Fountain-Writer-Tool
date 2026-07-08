@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fountain Writer — API Server (PDF, export)"""
+"""Fonte — API Server (PDF, export)"""
 
 import sys
 import os
@@ -11,7 +11,7 @@ from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-app = FastAPI(title="Fountain Writer API")
+app = FastAPI(title="Fonte API")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
