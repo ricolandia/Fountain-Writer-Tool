@@ -1130,7 +1130,7 @@ const app = {
 
     // Header row
     const headerRow = document.createElement('div');
-    headerRow.style.cssText = 'display:grid;grid-template-columns:70px repeat(' + numCols + ',1fr);gap:2px;padding:2px 4px';
+    headerRow.style.cssText = 'display:grid;grid-template-columns:70px repeat(' + numCols + ',minmax(110px,1fr));gap:2px;padding:2px 4px';
     const corner = document.createElement('div');
     corner.style.cssText = 'padding:3px;font-size:8pt;color:var(--fg-sec);font-weight:bold';
     corner.textContent = 'Trama\\Ato';
@@ -1146,7 +1146,7 @@ const app = {
     // Data rows
     plotlines.forEach(pl => {
       const row = document.createElement('div');
-      row.style.cssText = 'display:grid;grid-template-columns:70px repeat(' + numCols + ',1fr);gap:2px;padding:2px 4px';
+      row.style.cssText = 'display:grid;grid-template-columns:70px repeat(' + numCols + ',minmax(110px,1fr));gap:2px;padding:2px 4px';
       const lbl = document.createElement('div');
       lbl.style.cssText = 'padding:3px;font-size:9pt;color:' + (plotColors[pl] || '#888') + ';font-weight:bold;display:flex;align-items:center';
       lbl.textContent = pl;
