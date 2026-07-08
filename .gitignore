@@ -12,8 +12,11 @@ imagens/*
 !/imagens/2-2/
 *.bak.*
 
-# Desktop app (PySide6 - abandoned)
-desktop/
+# Desktop app
+desktop/dist/
+desktop/build/
+desktop/__pycache__/
+*.spec
 resources/
 fountain_writer.py
 fountain_writer_BR.py

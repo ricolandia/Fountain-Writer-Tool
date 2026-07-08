@@ -1,0 +1,50 @@
+name: Build Desktop
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r desktop/requirements.txt pyinstaller
+      - run: pyinstaller --onefile --windowed --name Fonte --icon deploy/icons/icon-192.png desktop/desktop.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Fonte-windows
+          path: dist/Fonte.exe
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r desktop/requirements.txt pyinstaller
+      - run: pyinstaller --onefile --windowed --name Fonte --icon deploy/icons/icon-192.png desktop/desktop.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Fonte-linux
+          path: dist/Fonte
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r desktop/requirements.txt pyinstaller
+      - run: pyinstaller --onefile --windowed --name Fonte --icon deploy/icons/icon-192.png desktop/desktop.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Fonte-macos
+          path: dist/Fonte
