@@ -5,16 +5,21 @@ Abre web/index.html em janela nativa usando o WebView do sistema.
 Windows: Edge WebView2, Linux: WebKit GTK, macOS: WebKit nativo.
 
 Uso:
-    python3 desktop.py
+    python3 desktop/desktop.py   (modo dev)
+    ./Fonte.exe                  (modo compilado)
 """
 import webview, os, sys
 
-DIR = os.path.dirname(os.path.abspath(__file__))
-INDEX = os.path.join(DIR, '..', 'web', 'index.html')
+if getattr(sys, 'frozen', False):
+    BASE = sys._MEIPASS
+else:
+    BASE = os.path.dirname(os.path.abspath(__file__))
+
+INDEX = os.path.join(BASE, 'web', 'index.html')
 
 if not os.path.exists(INDEX):
-    print("Erro: web/index.html não encontrado.")
-    print("Execute este script da raiz do projeto ou de desktop/")
+    print("Erro: web/index.html não encontrado em", INDEX)
+    print("Execute de desktop/ ou da raiz do projeto")
     sys.exit(1)
 
 webview.create_window(

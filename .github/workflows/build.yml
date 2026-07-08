@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r desktop/requirements.txt pyinstaller
-      - run: pyinstaller --onefile --windowed --name Fonte desktop/desktop.py
+      - run: pyinstaller --onefile --windowed --name Fonte --add-data "web;web" desktop/desktop.py
       - uses: actions/upload-artifact@v4
         with:
           name: Fonte-windows
@@ -38,7 +38,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r desktop/requirements.txt pyinstaller
-      - run: pyinstaller --onefile --windowed --name Fonte desktop/desktop.py
+      - run: pyinstaller --onefile --windowed --name Fonte --add-data "web:web" desktop/desktop.py
       - run: cp dist/Fonte dist/Fonte-linux
       - uses: actions/upload-artifact@v4
         with:
@@ -55,7 +55,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r desktop/requirements.txt pyinstaller
-      - run: pyinstaller --onefile --windowed --name Fonte desktop/desktop.py
+      - run: pyinstaller --onefile --windowed --name Fonte --add-data "web:web" desktop/desktop.py
       - run: |
           # Check output
           if [ -f "dist/Fonte" ]; then
