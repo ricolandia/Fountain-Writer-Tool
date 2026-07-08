@@ -99,6 +99,14 @@ O Fonte usa dois sistemas de persistência:
 - Lembrete "💾 Salve seu projeto" na barra de status até o primeiro save
 - Backups restauráveis via botão 💾 Backups
 
+### ☕ Apoie o projeto
+
+**🇧🇷 Pix:** `ricardograca@ricolandia.com`  
+**💳 PayPal:** [Donate](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=ricolandia%40gmail.com&currency_code=BRL)  
+**🧡 GitHub Sponsors:** [github.com/sponsors/ricolandia](https://github.com/sponsors/ricolandia)
+
+---
+
 ## Como usar
 
 ### 📦 Opção 1 — Zip universal (recomendado)
@@ -205,6 +213,12 @@ on your phone browser and follow the same steps. No download needed.
 ### License
 
 MIT — free to use, modify, and distribute.
+
+### ☕ Support
+
+**🇧🇷 Pix:** `ricardograca@ricolandia.com`  
+**💳 PayPal:** [Donate](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=ricolandia%40gmail.com&currency_code=BRL)  
+**🧡 GitHub Sponsors:** [github.com/sponsors/ricolandia](https://github.com/sponsors/ricolandia)
 
 ---
 
