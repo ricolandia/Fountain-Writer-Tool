@@ -4,6 +4,8 @@
 
 **Editor Fountain em HTML/CSS/JS puro. Zero dependências. Funciona em qualquer navegador.**
 
+Disponível em 4 formatos: **Web** (abrir direto), **Server** (rede local), **PWA** (instalável, offline) e **Desktop** (executável nativo).
+
 Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 
 ---
@@ -106,7 +108,22 @@ python3 serve.py
 
 Ou abrir `web/index.html` direto no navegador (alguns recursos podem precisar de servidor HTTP).
 
-### Opção 2 — Deploy estático
+### Opção 2 — PWA (mobile + desktop)
+
+Abra via servidor HTTP, depois clique em **⋮ → Instalar Fonte** (Chrome/Edge).
+Funciona offline como app instalado.
+
+### Opção 3 — Desktop (Windows / Linux / macOS)
+
+Baixe o executável na [página de Releases](https://github.com/ricolandia/Fountain-Writer-Tool/releases).
+
+```bash
+# Ou execute com Python diretamente:
+pip install -r desktop/requirements.txt
+python3 desktop/desktop.py
+```
+
+### Opção 4 — Deploy estático
 
 Copie a pasta `deploy/` para qualquer servidor HTTP estático (FTP, Nginx, Apache).
 
