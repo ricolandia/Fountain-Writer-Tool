@@ -1,19 +1,23 @@
 /* ── Fonte v2 — app.js ── */
+function safeJSON(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : JSON.parse(fallback); }
+  catch(e) { console.warn('Fonte: erro ao ler', key, e); return JSON.parse(fallback); }
+}
 const app = {
-  beats: JSON.parse(localStorage.getItem('fw_beats') || '[]'),
-  titleData: JSON.parse(localStorage.getItem('fw_title') || 'null'),
+  beats: safeJSON('fw_beats', '[]'),
+  titleData: safeJSON('fw_title', 'null'),
   fileName: null, previewMode: 'editor', darkMode: false, focusOn: false,
   findTerm: '', findMatches: [], findIdx: -1, timerSec: 0, timerOn: false,
   isModified: false, timerMode: 'writing', pomodoroSec: 25 * 60,
   wordGoal: parseInt(localStorage.getItem('fw_goal') || '0'),
-  sceneColors: JSON.parse(localStorage.getItem('fw_scene_colors') || '{}'),
+  sceneColors: safeJSON('fw_scene_colors', '{}'),
   timelineVisible: false,
   projectName: localStorage.getItem('fw_project_name') || '',
   fontSize: parseInt(localStorage.getItem('fw_font_size') || '12'),
   soundOn: localStorage.getItem('fw_sound') === 'true',
   viewMode: 'roteiro',
-  sceneView: 'list', // 'list' ou 'corkboard'
-  projetoData: JSON.parse(localStorage.getItem('fw_projeto') || 'null'),
+  sceneView: 'list',
+  projetoData: safeJSON('fw_projeto', 'null'),
   _audioContext: null,
   _fileHandle: null,
   _sceneActMap: {},
@@ -362,7 +366,7 @@ const app = {
     this.editor.selectionStart = n;
     this.editor.selectionEnd = n;
     this.editor.focus();
-    this.editor.scrollTop = Math.max(0, line * 18 - 200);
+    this.editor.scrollTop = Math.max(0, Math.floor(line * (parseFloat(getComputedStyle(this.editor).lineHeight) || 18)) - 200);
   },
 
   _findBeatForScene(label, line) {
@@ -394,7 +398,7 @@ const app = {
 
   /* ── Acts ── */
   getActs() {
-    let acts = JSON.parse(localStorage.getItem('fw_acts') || 'null');
+    let acts = safeJSON('fw_acts', 'null');
     if (!acts) { acts = {'Ato 1': [], 'Ato 2': [], 'Ato 3': [], 'Ato 4': [], 'Ato 5': [], 'Ato 6': [], 'Ato 7': []}; this.saveActs(acts); }
     return acts;
   },
@@ -1373,7 +1377,6 @@ const app = {
   /* ── "Outro" toggle for select+custom fields ── */
   _initOutroToggles() {
     document.querySelectorAll('[id^="tp-outro-"]').forEach(el => {
-      const baseId = el.id.replace('tp-outro-', '').replace(/-/g, '_');
       const sel = document.getElementById('tp-' + el.id.slice(9));
       if (sel) {
         sel.addEventListener('change', () => {
@@ -1412,7 +1415,7 @@ const app = {
     ta.focus(); ta.selectionStart = pos;
     const termLen = document.getElementById('find-input').value.length;
     ta.selectionEnd = pos + termLen;
-    ta.scrollTop = Math.max(0, (ta.value.slice(0, pos).split('\n').length) * 18 - 200);
+    ta.scrollTop = Math.max(0, (ta.value.slice(0, pos).split('\n').length) * (parseFloat(getComputedStyle(ta).lineHeight) || 18) - 200);
     this.findIdx = idx;
     document.getElementById('find-count').textContent = (idx + 1) + ' / ' + this.findMatches.length;
   },
@@ -1648,7 +1651,7 @@ const app = {
       draft: this.editor.value,
       beats: this.beats,
       titleData: this.titleData,
-      charData: JSON.parse(localStorage.getItem('fw_char_data') || '{}'),
+      charData: safeJSON('fw_char_data', '{}'),
       sceneColors: this.sceneColors,
       acts: this.getActs(),
       lineMarks: this.getLineMarks(),
@@ -1819,7 +1822,7 @@ const app = {
   },
 
   getLineMarks() {
-    return JSON.parse(localStorage.getItem('fw_line_marks') || '{}');
+    return safeJSON('fw_line_marks', '{}');
   },
 
   saveLineMarks(marks) {
@@ -1897,11 +1900,11 @@ const app = {
     html += '<p><b>Ação:</b> ' + aPct + '% das linhas</p>';
     html += '<p><b>Personagens:</b> ' + Object.keys(charSpeech).length + '</p>';
     html += '<hr style="border:none;border-top:1px solid var(--border);margin:8px 0">';
-    html += '<p><b>Top Personagens (por falas):</b></p>';
+    html += '<p><b>' + _('stats_top_chars') + '</b></p>';
     const top = Object.entries(charSpeech).sort((a, b) => b[1] - a[1]).slice(0, 8);
-    if (top.length === 0) html += '<p style="color:var(--fg-sec)">Nenhum personagem</p>';
+    if (top.length === 0) html += '<p style="color:var(--fg-sec)">' + _('empty_chars') + '</p>';
     else top.forEach(([name, count]) => {
-      html += '<div style="display:flex;gap:8px"><span style="flex:1;font-weight:bold">' + name + '</span><span>' + count + ' falas</span></div>';
+      html += '<div style="display:flex;gap:8px"><span style="flex:1;font-weight:bold">' + esc(name) + '</span><span>' + count + _('stats_lines') + '</span></div>';
     });
     html += '</div>';
     document.getElementById('stats-body').innerHTML = html;
@@ -1935,17 +1938,18 @@ const app = {
     btn.textContent = modal.classList.contains('excalidraw-fullscreen') ? '✕' : '⛶';
   },
   _excalidrawScene: null,
-  _excalidrawReady: false,
 
   _setupExcalidrawListener() {
     window.addEventListener('message', (e) => {
+      if (!e.data || typeof e.data !== 'object') return;
       if (e.data.type === 'EXCALIDRAW_READY') {
-        this._excalidrawReady = true;
         const iframe = document.querySelector('#excalidraw-modal iframe');
-        iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene: this._excalidrawScene }, '*');
+        if (iframe) {
+          iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene: this._excalidrawScene }, '*');
+        }
       }
       if (e.data.type === 'SCENE_DATA') {
-        this._excalidrawScene = e.data.scene;
+        this._excalidrawScene = e.data.scene || null;
       }
     });
   },
@@ -1955,7 +1959,7 @@ const app = {
 
   /* ── Character editing ── */
   openChar(name) {
-    const data = JSON.parse(localStorage.getItem('fw_char_data') || '{}');
+    const data = safeJSON('fw_char_data', '{}');
     const c = data[name] || {};
     document.getElementById('ce-name').value = name;
     document.getElementById('ce-age').value = c.age || '';
@@ -1971,7 +1975,7 @@ const app = {
   saveChar() {
     const name = document.getElementById('ce-name').value;
     if (!name) return;
-    const data = JSON.parse(localStorage.getItem('fw_char_data') || '{}');
+    const data = safeJSON('fw_char_data', '{}');
     data[name] = {
       age: document.getElementById('ce-age').value,
       archetype: document.getElementById('ce-archetype').value,
@@ -1988,7 +1992,7 @@ const app = {
   deleteChar() {
     const name = document.getElementById('ce-name').value;
     if (!name) return;
-    const data = JSON.parse(localStorage.getItem('fw_char_data') || '{}');
+    const data = safeJSON('fw_char_data', '{}');
     delete data[name];
     localStorage.setItem('fw_char_data', JSON.stringify(data));
     this.closeChar();
@@ -2023,7 +2027,7 @@ const app = {
   trackProductivity() {
     const today = new Date().toISOString().slice(0, 10);
     const words = this.editor.value.split(/\s+/).filter(w => w).length;
-    const data = JSON.parse(localStorage.getItem('fw_productivity') || '{}');
+    const data = safeJSON('fw_productivity', '{}');
     data[today] = words;
     // Keep last 30 days
     const keys = Object.keys(data).sort();
@@ -2034,7 +2038,7 @@ const app = {
   renderProductivity() {
     const el = document.getElementById('productivity-chart');
     if (!el) return;
-    const data = JSON.parse(localStorage.getItem('fw_productivity') || '{}');
+    const data = safeJSON('fw_productivity', '{}');
     const keys = Object.keys(data).sort().slice(-7);
     if (keys.length === 0) { el.innerHTML = 'Sem dados'; return; }
     const max = Math.max(1, ...keys.map(k => data[k]));
@@ -2145,9 +2149,6 @@ const app = {
     if (e.ctrlKey && e.key === 'n') { e.preventDefault(); this.newFile(); }
     if (e.ctrlKey && (e.key === 'h' || e.key === 'f')) { e.preventDefault(); this.openFind(); }
     if (e.key === 'F11') { e.preventDefault(); this.toggleFocus(); }
-    if (e.ctrlKey && e.key === 'b') { e.preventDefault(); this.wrapSelection('**', '**'); }
-    if (e.ctrlKey && e.key === 'i') { e.preventDefault(); this.wrapSelection('*', '*'); }
-    if (e.ctrlKey && e.key === 'u') { e.preventDefault(); this.wrapSelection('_', '_'); }
     if (e.ctrlKey && e.key === '1') { e.preventDefault(); this.markHighlight('!'); }
     if (e.ctrlKey && e.key === '2') { e.preventDefault(); this.markHighlight('*'); }
     if (e.ctrlKey && e.key === '3') { e.preventDefault(); this.markHighlight('?'); }
@@ -2263,7 +2264,7 @@ const app = {
     setInterval(() => {
       const text = this.editor.value;
       if (!text.trim()) return;
-      const backups = JSON.parse(localStorage.getItem('fw_backups') || '[]');
+      const backups = safeJSON('fw_backups', '[]');
       backups.push({
         text, beats: this.beats, acts: this.getActs(),
         sceneColors: this.sceneColors, lineMarks: this.getLineMarks(),
@@ -2275,7 +2276,7 @@ const app = {
   },
 
   openBackups() {
-    const backups = JSON.parse(localStorage.getItem('fw_backups') || '[]');
+    const backups = safeJSON('fw_backups', '[]');
     let html = '';
     if (backups.length === 0) {
       html = '<p style="color:var(--fg-sec)">' + _('backup_none') + '</p>';
@@ -2299,7 +2300,7 @@ const app = {
   },
 
   restoreBackup(idx) {
-    const backups = JSON.parse(localStorage.getItem('fw_backups') || '[]');
+    const backups = safeJSON('fw_backups', '[]');
     if (idx < 0 || idx >= backups.length) return;
     if (!confirm(_('backup_restore_confirm'))) return;
     this.editor.value = backups[idx].text;
