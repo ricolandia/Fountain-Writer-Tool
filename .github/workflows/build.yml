@@ -39,34 +39,11 @@ jobs:
           python-version: '3.12'
       - run: pip install -r desktop/requirements.txt pyinstaller
       - run: pyinstaller --onefile --windowed --name Fonte desktop/desktop.py
-      - run: mkdir -p AppDir/usr/bin && cp dist/Fonte AppDir/usr/bin/Fonte && chmod +x AppDir/usr/bin/Fonte
-      - run: |
-          cat > AppDir/AppRun << RUNEOF
-          #!/bin/bash
-          HERE="\$(dirname "\$(readlink -f "\$0")")"
-          exec "\$HERE/usr/bin/Fonte"
-          RUNEOF
-          chmod +x AppDir/AppRun
-      - run: |
-          cat > AppDir/fonte.desktop << DESKEOF
-          [Desktop Entry]
-          Name=Fonte
-          Comment=Screenplay Editor
-          Exec=Fonte
-          Icon=fonte
-          Type=Application
-          Categories=Office;
-          DESKEOF
-      - run: cp deploy/icons/icon-512.png AppDir/fonte.png
-      - run: |
-          sudo apt-get install -y fuse 2>/dev/null || true
-          wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -O /tmp/appimagetool
-          chmod +x /tmp/appimagetool
-          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 /tmp/appimagetool --no-appstream AppDir Fonte.AppImage
+      - run: cp dist/Fonte dist/Fonte-linux
       - uses: actions/upload-artifact@v4
         with:
           name: Fonte-linux
-          path: Fonte.AppImage
+          path: dist/Fonte-linux
 
   build-macos:
     runs-on: macos-latest
@@ -111,7 +88,7 @@ jobs:
       - run: |
           mkdir -p _release
           [ -f "Fonte-windows/Fonte.exe" ] && cp "Fonte-windows/Fonte.exe" _release/
-          [ -f "Fonte-linux/Fonte.AppImage" ] && cp "Fonte-linux/Fonte.AppImage" _release/
+          [ -f "Fonte-linux/Fonte-linux" ] && cp "Fonte-linux/Fonte-linux" _release/
           [ -f "Fonte-macos/Fonte.dmg" ] && cp "Fonte-macos/Fonte.dmg" _release/
           ls -lh _release/
       - uses: softprops/action-gh-release@v2
