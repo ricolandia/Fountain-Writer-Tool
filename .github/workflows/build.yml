@@ -14,7 +14,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r desktop/requirements.txt pyinstaller
-      - run: pyinstaller --onefile --windowed --name Fonte --icon deploy/icons/icon-192.png desktop/desktop.py
+      - run: pyinstaller --onefile --windowed --name Fonte desktop/desktop.py
       - uses: actions/upload-artifact@v4
         with:
           name: Fonte-windows
@@ -29,7 +29,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r desktop/requirements.txt pyinstaller
-      - run: pyinstaller --onefile --windowed --name Fonte --icon deploy/icons/icon-192.png desktop/desktop.py
+      - run: pyinstaller --onefile --windowed --name Fonte  desktop/desktop.py
       - uses: actions/upload-artifact@v4
         with:
           name: Fonte-linux
@@ -43,7 +43,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r desktop/requirements.txt pyinstaller
-      - run: pyinstaller --onefile --windowed --name Fonte --icon deploy/icons/icon-192.png desktop/desktop.py
+      - run: pyinstaller --onefile --windowed --name Fonte  desktop/desktop.py
       - uses: actions/upload-artifact@v4
         with:
           name: Fonte-macos
