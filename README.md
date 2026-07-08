@@ -105,6 +105,19 @@ O Fonte usa dois sistemas de persistência:
 
 Baixe o `Fonte-web.zip` na [página de Releases](https://github.com/ricolandia/Fountain-Writer-Tool/releases), extraia e abra `index.html`.
 
+### 📲 Instalar no celular
+
+**📦 Pelo zip (qualquer dispositivo):**
+Após extrair o zip e abrir `index.html` no navegador:
+- **Android (Chrome):** ⋮ → **Instalar Fonte**
+- **iPhone/iPad (Safari):** Compartilhar → **Adicionar à tela de início**
+
+O app funciona offline como se fosse nativo.
+
+**📱 Pelo demo online:**
+Acesse [https://www.ricolandia.com/editor-roteiros-gratuito/Demo/index.html](https://www.ricolandia.com/editor-roteiros-gratuito/Demo/index.html)
+pelo navegador do celular e siga o mesmo passo. Não precisa baixar nada.
+
 ### 🖥 Opção 2 — Servidor local
 
 ```bash
@@ -163,6 +176,19 @@ python3 serve.py
 ```
 
 Or open `web/index.html` directly (some features need HTTP server).
+
+### 📲 Install on mobile
+
+**📦 From the zip (any device):**
+After extracting and opening `index.html` in the browser:
+- **Android (Chrome):** ⋮ → **Install Fonte**
+- **iPhone/iPad (Safari):** Share → **Add to Home Screen**
+
+Works offline like a native app.
+
+**📱 From the online demo:**
+Visit [https://www.ricolandia.com/editor-roteiros-gratuito/Demo/index.html](https://www.ricolandia.com/editor-roteiros-gratuito/Demo/index.html)
+on your phone browser and follow the same steps. No download needed.
 
 ### Downloads
 - **📦 Web:** [Download Fonte-web.zip](https://github.com/ricolandia/Fountain-Writer-Tool/releases) — extract and open `index.html`
