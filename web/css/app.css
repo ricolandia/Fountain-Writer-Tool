@@ -224,6 +224,11 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
   #status { font-size: 8pt; gap: 4px; height: 20px; }
   #status span { font-size: 8pt; }
   .modal { max-width: 100%; margin: 10px; border-radius: 6px; }
+  #titulo-form { padding: 15px 16px; max-width: 100%; }
+  #titulo-form .form-row { flex-direction: column; align-items: stretch; gap: 4px; margin-bottom: 12px; }
+  #titulo-form .form-row label { min-width: 0; font-size: 9pt; }
+  #titulo-form select { min-width: 0; }
+  #titulo-form input, #titulo-form textarea, #titulo-form select { padding: 8px 10px; font-size: 10pt; }
 
   /* Checkbox hack: show pane as fixed overlay when checked */
   #show-scenes:checked ~ #panes #pane-left,
