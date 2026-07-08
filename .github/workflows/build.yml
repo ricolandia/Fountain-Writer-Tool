@@ -39,11 +39,33 @@ jobs:
           python-version: '3.12'
       - run: pip install -r desktop/requirements.txt pyinstaller
       - run: pyinstaller --onefile --windowed --name Fonte desktop/desktop.py
-      - run: cp dist/Fonte dist/Fonte-linux
+      - run: |
+          mkdir -p AppDir/usr/bin
+          cp dist/Fonte AppDir/usr/bin/
+          chmod +x AppDir/usr/bin/Fonte
+          cat > AppDir/AppRun << 'RUNEOF'
+#!/bin/bash
+exec /usr/bin/Fonte
+RUNEOF
+          chmod +x AppDir/AppRun
+          cat > AppDir/fonte.desktop << 'DESKTOP'
+[Desktop Entry]
+Name=Fonte
+Comment=Screenplay Editor
+Exec=Fonte
+Icon=fonte
+Type=Application
+Categories=Office;
+DESKTOP
+          cp deploy/icons/icon-512.png AppDir/fonte.png
+      - uses: AppImageCrafters/appimage-action@v1
+        with:
+          appdir: AppDir
+          output: Fonte.AppImage
       - uses: actions/upload-artifact@v4
         with:
           name: Fonte-linux
-          path: dist/Fonte-linux
+          path: Fonte.AppImage
 
   build-macos:
     runs-on: macos-latest
@@ -57,17 +79,13 @@ jobs:
       - run: pip install -r desktop/requirements.txt pyinstaller
       - run: pyinstaller --onefile --windowed --name Fonte desktop/desktop.py
       - run: |
-          # macOS pode gerar dist/Fonte ou dist/Fonte.app
-          if [ -f "dist/Fonte" ]; then
-            echo "BINARY=dist/Fonte" >> $GITHUB_ENV
-          elif [ -d "dist/Fonte.app" ]; then
-            ditto -c -k --keepParent dist/Fonte.app dist/Fonte-macos.zip
-            echo "BINARY=dist/Fonte-macos.zip" >> $GITHUB_ENV
-          fi
+          mkdir -p dmg
+          cp -R dist/Fonte.app dmg/
+          hdiutil create -volname "Fonte" -srcfolder dmg -ov -format UDZO Fonte.dmg
       - uses: actions/upload-artifact@v4
         with:
           name: Fonte-macos
-          path: ${{ env.BINARY }}
+          path: Fonte.dmg
 
   release:
     needs: [build-windows, build-linux, build-macos]
@@ -76,17 +94,12 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
       - run: |
-          ls -R
-          FILES=""
-          [ -f "Fonte-windows/Fonte.exe" ] && FILES="$FILES Fonte-windows/Fonte.exe"
-          [ -f "Fonte-linux/Fonte-linux" ] && FILES="$FILES Fonte-linux/Fonte-linux"
-          [ -f "Fonte-macos/Fonte" ] && FILES="$FILES Fonte-macos/Fonte"
-          echo "FILES=$FILES" >> $GITHUB_ENV
+          mkdir -p _release
+          [ -f "Fonte-windows/Fonte.exe" ] && cp "Fonte-windows/Fonte.exe" _release/
+          [ -f "Fonte-linux/Fonte.AppImage" ] && cp "Fonte-linux/Fonte.AppImage" _release/
+          [ -f "Fonte-macos/Fonte.dmg" ] && cp "Fonte-macos/Fonte.dmg" _release/
       - uses: softprops/action-gh-release@v2
         with:
-          files: |
-            Fonte-windows/Fonte.exe
-            Fonte-linux/Fonte-linux
-            Fonte-macos/Fonte
+          files: _release/*
           generate_release_notes: true
           make_latest: true
