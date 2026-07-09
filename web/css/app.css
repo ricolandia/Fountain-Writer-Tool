@@ -1,6 +1,6 @@
 /* ── Theme variables ── */
 :root { --bg: #f5f0e8; --surface: #faf5ef; --surface2: #f0ebe4; --surface3: #e8e3dc;
-  --fg: #1a1a18; --fg-sec: #6b6b64; --border: #d4cfc8; --accent: #888;
+  --fg: #1a1a18; --fg-sec: #5c5c54; --border: #cac5bd; --accent: #6e6e66;
   --editor-bg: #f8f4ec; }
 .dark { --bg: #0e0e12; --surface: #17171c; --surface2: #1e1e24; --surface3: #26262d;
   --fg: #ececed; --fg-sec: #9d9da8; --border: #2a2a32; --accent: #888;

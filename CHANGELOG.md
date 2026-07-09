@@ -1,5 +1,75 @@
 # Changelog
 
+## v2.3.0 (2026-07-09)
+
+### 🇧🇷 Português
+
+#### ✨ Novidades
+- **Auto-completar personagens** — dropdown ao digitar nome, sugere personagens já usados no texto
+- **Compartilhar projeto** — Web Share API (mobile) + download + toast (desktop)
+- **Modal de exportação** — escolha quais seções incluir: Folha de Rosto, Ficha do Filme, Estrutura
+- **Seção 11 — Pitch** no Projeto Cultural (tagline, comparação, diferencial, similares, pitch narrativo, elenco)
+- **Testes automatizados** — 30 testes (parser Fountain, i18n, guessType, estrutura)
+- **API desacoplada** — `fountain_utils.py` independente do PySide6
+
+#### 🔧 Melhorias
+- i18n completo de botões (Projeto, Quadro, Roteiro, Compartilhar)
+- i18n dos dropdowns da Estrutura (~87 opções PT↔EN)
+- i18n do Beat Guide modal (10 chaves novas)
+- i18n do save-indicator e status bar
+- i18n do botão "Gerar PDF" na Ficha
+- i18n do tooltip "Remover ato" e mensagens da timeline
+- Contraste melhorado no tema claro (--fg-sec, --accent, --border)
+- Fontes maiores no Projeto Cultural (9pt→10pt, 10pt→11pt)
+- Responsividade mobile: sem scroll horizontal na Estrutura e no Projeto
+- Service worker cache v3 (força recache do i18n.js novo)
+
+#### 🐛 Correções
+- Botões "Projeto" e "Quadro" agora traduzem ao mudar idioma
+- toggleProjeto() usava texto fixo em PT — agora usa _()
+- Status bar exibia "beats" (EN) + "Salve seu projeto" (PT) misturados
+- save-indicator mostrava "✓ Salvo" mesmo em EN
+- Ortografia: "marca mudança" → "marca a mudança" (fountain_acts)
+- "Cartaz, filipetas, etc" → "Cartaz, filipeta, etc." (proj_div_mat_ph)
+- "Full format at" → "Full format at:" (fountain_full EN)
+- "Descriptive Subtitles" → "Closed Captions" (proj_acess_legendas EN)
+
+---
+
+### 🇺🇸 English
+
+#### ✨ New Features
+- **Character autocomplete** — dropdown with suggestions as you type character names
+- **Share project** — Web Share API (mobile) + download + toast (desktop)
+- **Export modal** — choose which sections to include: Title Page, Film Sheet, Structure
+- **Section 11 — Pitch** in Cultural Project (tagline, comparison, USP, pitch paragraph, cast)
+- **Automated tests** — 30 tests (Fountain parser, i18n, guessType, structure)
+- **Decoupled API** — `fountain_utils.py` independent from PySide6
+
+#### 🔧 Improvements
+- Full i18n for toolbar buttons (Project, Board, Script, Share)
+- Structure dropdowns i18n (~87 options PT↔EN)
+- Beat Guide modal i18n (10 new keys)
+- Save indicator and status bar i18n
+- "Generate PDF" button i18n in Film Sheet
+- "Remove act" tooltip and timeline messages i18n
+- Improved contrast in light theme (--fg-sec, --accent, --border)
+- Larger fonts in Cultural Project (9pt→10pt, 10pt→11pt)
+- Mobile responsiveness: no horizontal scroll in Structure and Project
+- Service worker cache v3 (forces new i18n.js reload)
+
+#### 🐛 Bug Fixes
+- "Project" and "Board" buttons now translate on language switch
+- toggleProjeto() used hardcoded PT text — now uses _()
+- Status bar mixed language ("beats" + PT "Salve seu projeto")
+- Save indicator showed "✓ Salvo" even in EN mode
+- "marca mudança" → "marca a mudança" (missing article in fountain_acts)
+- "Cartaz, filipetas, etc" → "Cartaz, filipeta, etc." (typo in proj_div_mat_ph)
+- "Full format at" → "Full format at:" (missing colon in fountain_full EN)
+- "Descriptive Subtitles" → "Closed Captions" (more accurate term)
+
+---
+
 ## v2.2.0 (2026-07-08)
 
 ### 🇧🇷 Português
