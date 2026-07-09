@@ -253,7 +253,7 @@ const app = {
   _renderActSeparator(list, actName, actColors) {
     const sep = document.createElement('li');
     sep.style.cssText = 'padding:3px 6px;font-weight:bold;font-size:8pt;color:var(--fg-sec);background:var(--surface2);border-radius:3px;margin:4px 0 2px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid ' + (actColors[actName] || '#888');
-    sep.innerHTML = '<span>' + esc(actName) + '</span><span class="act-remove" style="cursor:pointer;color:var(--fg-sec);font-size:7pt" title="Remover ato">✕</span>';
+    sep.innerHTML = '<span>' + esc(actName) + '</span><span class="act-remove" style="cursor:pointer;color:var(--fg-sec);font-size:7pt" title="' + _('act_remove') + '">✕</span>';
     sep.querySelector('.act-remove').addEventListener('click', e => { e.stopPropagation(); this.removeAct(actName); });
     list.appendChild(sep);
   },
@@ -1129,7 +1129,7 @@ const app = {
       return;
     }
     if (numCols === 0) {
-      el.innerHTML = '<span style="padding:8px;color:var(--fg-sec);font-size:10pt">Sem atos para exibir</span>';
+      el.innerHTML = '<span style="padding:8px;color:var(--fg-sec);font-size:10pt">' + _('timeline_empty') + '</span>';
       return;
     }
 
@@ -1138,7 +1138,7 @@ const app = {
     headerRow.style.cssText = 'display:grid;grid-template-columns:70px repeat(' + numCols + ',minmax(110px,1fr));gap:2px;padding:2px 4px';
     const corner = document.createElement('div');
     corner.style.cssText = 'padding:3px;font-size:8pt;color:var(--fg-sec);font-weight:bold';
-    corner.textContent = 'Trama\\Ato';
+    corner.textContent = _('timeline_header');
     headerRow.appendChild(corner);
     actNames.forEach(act => {
       const h = document.createElement('div');
@@ -1180,7 +1180,7 @@ const app = {
           const sc = document.createElement('div');
           sc.style.cssText = 'padding:2px 4px;font-size:8pt;cursor:pointer;border-radius:2px;background:var(--surface);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px dashed ' + (plotColors[pl] || '#888');
           sc.textContent = (b.title || '?') + ' ⟡';
-          sc.title = (b.title || '?') + ' (beat sem cena)';
+          sc.title = (b.title || '?') + _('beat_no_scene');
           sc.addEventListener('click', () => document.querySelector('#right-tabs .tab[data-tab="beats"]').click());
           cell.appendChild(sc);
         });
