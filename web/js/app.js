@@ -764,14 +764,15 @@ const app = {
     return out;
   },
 
-  renderTitleHTML(data) {
+  renderTitleHTML(data, sections) {
     if (!data) return '';
+    sections = sections || { titlePage: true, filmSheet: true, structure: true };
     const clean = (s) => esc(s.replace(/:$/, ''));
     let r = '<div style="text-align:center;margin-bottom:3em">';
 
     // Tab 1: Title page
     const tpKeys = ['title','credit','author','source','draft_date','contact'];
-    const hasTp = tpKeys.some(k => data[k]);
+    const hasTp = sections.titlePage && tpKeys.some(k => data[k]);
     if (hasTp) {
       tpKeys.forEach(k => {
         const v = data[k];
@@ -790,7 +791,7 @@ const app = {
 
     // Tab 2: Film sheet
     const fichaKeys = ['logline','sinopse','argumento','genero','duracao','publico'];
-    const hasFicha = fichaKeys.some(k => data[k]);
+    const hasFicha = sections.filmSheet && fichaKeys.some(k => data[k]);
     if (hasFicha) {
       r += '<hr style="margin:1.5em 0"><h3 style="text-align:center;font-size:1em">' + esc(_('tab_ficha')) + '</h3>';
       fichaKeys.forEach(k => {
@@ -810,7 +811,7 @@ const app = {
       'forca_antagonica','tipo_conflito','tipo_trama','dilema','tipo_final'];
     const qKeys = [['pergunta_1','q_mundo'],['pergunta_2','q_perturba'],['pergunta_3','q_decide'],['pergunta_4','q_obstaculos'],
       ['pergunta_5','q_descoberta'],['pergunta_6','q_crise'],['pergunta_7','q_desafio'],['pergunta_8','q_resolucao']];
-    const hasEst = selKeys.some(k => data[k]) || qKeys.some(([k]) => data[k]);
+    const hasEst = sections.structure && (selKeys.some(k => data[k]) || qKeys.some(([k]) => data[k]));
     if (hasEst) {
       r += '<hr style="margin:1.5em 0"><h3 style="text-align:center;font-size:1em">' + esc(_('section_estrutura')) + '</h3>';
       selKeys.forEach(k => {
@@ -1483,7 +1484,9 @@ const app = {
       'proj-mid-cartaz-formato':'midCartazFormato','proj-mid-cartaz-esp':'midCartazEsp',
       'proj-mid-flyer-formato':'midFlyerFormato','proj-mid-flyer-esp':'midFlyerEsp',
       'proj-mid-social-formato':'midSocialFormato','proj-mid-social-esp':'midSocialEsp',
-      'proj-mid-press-formato':'midPressFormato','proj-mid-press-esp':'midPressEsp'
+      'proj-mid-press-formato':'midPressFormato','proj-mid-press-esp':'midPressEsp',
+      'proj-pitch-tagline':'pitchTagline','proj-pitch-comp':'pitchComp','proj-pitch-diferencial':'pitchDiferencial',
+      'proj-pitch-similares':'pitchSimilares','proj-pitch-texto':'pitchTexto','proj-pitch-elenco':'pitchElenco'
     };
     Object.entries(map).forEach(([id, key]) => {
       const el = document.getElementById(id);
@@ -1578,7 +1581,10 @@ const app = {
       midCartazFormato: getVal('proj-mid-cartaz-formato'), midCartazEsp: getVal('proj-mid-cartaz-esp'),
       midFlyerFormato: getVal('proj-mid-flyer-formato'), midFlyerEsp: getVal('proj-mid-flyer-esp'),
       midSocialFormato: getVal('proj-mid-social-formato'), midSocialEsp: getVal('proj-mid-social-esp'),
-      midPressFormato: getVal('proj-mid-press-formato'), midPressEsp: getVal('proj-mid-press-esp')
+      midPressFormato: getVal('proj-mid-press-formato'), midPressEsp: getVal('proj-mid-press-esp'),
+      pitchTagline: getVal('proj-pitch-tagline'), pitchComp: getVal('proj-pitch-comp'),
+      pitchDiferencial: getVal('proj-pitch-diferencial'), pitchSimilares: getVal('proj-pitch-similares'),
+      pitchTexto: getVal('proj-pitch-texto'), pitchElenco: getVal('proj-pitch-elenco')
     };
     if (cronoSalvo) this.projetoData.cronograma = cronoSalvo;
     localStorage.setItem('fw_projeto', JSON.stringify(this.projetoData));
@@ -1620,6 +1626,7 @@ const app = {
       '<tr><td>' + _('proj_mid_flyer') + '</td><td>' + e(d.midFlyerFormato) + '</td><td>' + e(d.midFlyerEsp) + '</td></tr>' +
       '<tr><td>' + _('proj_mid_social') + '</td><td>' + e(d.midSocialFormato) + '</td><td>' + e(d.midSocialEsp) + '</td></tr>' +
       '<tr><td>' + _('proj_mid_press') + '</td><td>' + e(d.midPressFormato) + '</td><td>' + e(d.midPressEsp) + '</td></tr></table>' +
+      '<h2>' + _('proj_section11') + '</h2><p><b>' + _('proj_pitch_tagline') + ':</b> ' + e(d.pitchTagline) + '<br><b>' + _('proj_pitch_comp') + ':</b> ' + e(d.pitchComp) + '<br><b>' + _('proj_pitch_diferencial') + ':</b> ' + e(d.pitchDiferencial) + '<br><b>' + _('proj_pitch_similares') + ':</b> ' + e(d.pitchSimilares) + '<br><b>' + _('proj_pitch_texto') + ':</b> ' + e(d.pitchTexto) + '<br><b>' + _('proj_pitch_elenco') + ':</b> ' + e(d.pitchElenco) + '</p>' +
       '<p style="text-align:center;margin-top:40px;color:#999;font-size:9pt">' + _('export_gerado_por') + '</p>' +
       '</body></html>';
     const w = window.open('', '', 'width=800,height=600');
@@ -1797,26 +1804,45 @@ const app = {
     return css;
   },
 
-  exportHTML() {
+  openExportModal() {
+    document.getElementById('export-modal').style.display = 'flex';
+  },
+  closeExportModal() {
+    document.getElementById('export-modal').style.display = 'none';
+  },
+  _getExportSections() {
+    return {
+      titlePage: document.getElementById('exp-include-title').checked,
+      filmSheet: document.getElementById('exp-include-ficha').checked,
+      structure: document.getElementById('exp-include-estrutura').checked,
+    };
+  },
+  doExportHTML() {
+    const sec = this._getExportSections();
+    this.closeExportModal();
     const html = this._renderScriptHtml(this.editor.value);
     const title = this.fileName || 'Roteiro';
+    const titleHtml = this.titleData ? this.renderTitleHTML(this.titleData, sec) : '';
     const full = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + title + '</title><style>' +
       'body{max-width:800px;margin:40px auto;padding:60px 80px}' +
       this._scriptStylesheet(false) +
       '</style></head><body>' +
-      (this.titleData ? this.renderTitleHTML(this.titleData) + '<hr>' : '') + this.processHighlights(html) + '</body></html>';
+      (titleHtml ? titleHtml + '<hr>' : '') + this.processHighlights(html) + '</body></html>';
     const blob = new Blob([full], { type: 'text/html;charset=utf-8' });
     const a = document.getElementById('download-link');
     a.href = URL.createObjectURL(blob); a.download = (this.fileName || 'roteiro').replace(/\.fountain$/, '') + '.html'; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 500);
   },
-  printPDF() {
+  doExportPDF() {
+    const sec = this._getExportSections();
+    this.closeExportModal();
     const scriptHtml = this._renderScriptHtml(this.editor.value);
     const title = this.fileName || 'Roteiro';
+    const titleHtml = this.titleData ? this.renderTitleHTML(this.titleData, sec) : '';
     const html = '<!DOCTYPE html><html><head><title>' + title + '</title><style>' +
       this._scriptStylesheet(true) +
       '</style></head><body><div id="print-area">' +
-      (this.titleData ? this.renderTitleHTML(this.titleData) + '<hr>' : '') + this.processHighlights(scriptHtml) + '</div></body></html>';
+      (titleHtml ? titleHtml + '<hr>' : '') + this.processHighlights(scriptHtml) + '</div></body></html>';
     const w = window.open('', '', 'width=800,height=600');
     w.document.write(html); w.document.close(); w.focus();
     w.onafterprint = () => { w.close(); };
