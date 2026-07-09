@@ -1272,7 +1272,7 @@ const app = {
   toggleProjeto() {
     this.viewMode = this.viewMode === 'roteiro' ? 'projeto' : 'roteiro';
     const btn = document.getElementById('projeto-btn');
-    btn.textContent = this.viewMode === 'projeto' ? '✏ Roteiro' : '📋 Projeto';
+    btn.textContent = this.viewMode === 'projeto' ? '✏ ' + _('tb_roteiro') : '📋 ' + _('tb_projeto');
     const editorWrap = document.getElementById('textarea-wrap');
     const previewWrap = document.getElementById('preview-wrap');
     const projetoForm = document.getElementById('projeto-form');
@@ -1300,6 +1300,14 @@ const app = {
       rightPane.style.display = '';
       leftPane.style.display = '';
     }
+  },
+
+  /* ── Help tabs ── */
+  selHelpTab(tab) {
+    document.querySelectorAll('.help-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.help-tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('help-tab-' + tab).classList.add('active');
+    document.querySelector('.help-tab[onclick*="' + tab + '"]').classList.add('active');
   },
 
   selTitleTab(tab) {
@@ -1581,37 +1589,37 @@ const app = {
     this.salvarProjeto();
     const d = this.projetoData || {};
     const e = (v) => esc(v || '');
-    const s = (v) => v ? 'Sim' : 'Não';
-    const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Projeto Cultural</title>' +
+    const s = (v) => v ? _('export_sim') : _('export_nao');
+    const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + _('proj_title') + '</title>' +
       '<style>body{font-family:Arial,sans-serif;font-size:11pt;margin:40px}h1{font-size:14pt}h2{font-size:12pt;margin-top:20px}' +
       'table{width:100%;border-collapse:collapse;margin:10px 0}td,th{border:1px solid #ccc;padding:6px;text-align:left}th{background:#eee}' +
       '</style></head><body>' +
-      '<h1>Projeto Cultural</h1>' +
-      '<h2>1. Dados do Proponente e Projeto</h2>' +
-      '<table><tr><td><b>Nome:</b> ' + e(d.nome) + '</td><td><b>Proponente:</b> ' + e(d.proponente) + '</td></tr>' +
-      '<tr><td><b>CPF:</b> ' + e(d.cpf) + '</td><td><b>Segmento:</b> ' + e(d.segmento) + '</td></tr>' +
-      '<tr><td><b>Produto:</b> ' + e(d.produto) + '</td><td><b>Valor:</b> R$ ' + e(d.valor) + '</td></tr></table>' +
-      '<h2>2. Perfil</h2><p><b>Resumo:</b> ' + e(d.resumo) + '</p>' +
-      '<p><b>Objetivo Geral:</b> ' + e(d.objGeral) + '</p>' +
-      '<p><b>Objetivos Específicos:</b> ' + e(d.objEspec) + '</p>' +
-      '<p><b>Justificativa:</b> ' + e(d.justificativa) + '</p>' +
-      '<h2>3. Equipe</h2><p>Direção: ' + e(d.eqDirecao) + '<br>Animação: ' + e(d.eqAnimacao) + '<br>Arte: ' + e(d.eqArte) + '<br>Trilha: ' + e(d.eqTrilha) + '<br>Produção: ' + e(d.eqProducao) + '</p>' +
-      '<h2>4. Plano de Divulgação</h2><p><b>Redes Sociais:</b> ' + e(d.divRedes) + '<br><b>Assessoria de Imprensa:</b> ' + e(d.divImprensa) + '<br><b>Material Gráfico:</b> ' + e(d.divMaterial) + '</p>' +
-      '<h2>5. Acessibilidade e Democratização</h2><p>Libras: ' + s(d.acessLibras) + ' | Audiodescrição: ' + s(d.acessAudio) + ' | Legendas: ' + s(d.acessLegendas) + '</p><p><b>Sessões Gratuitas:</b> ' + e(d.acessSessoes) + '</p>' +
-      '<h2>6. Contrapartidas</h2><p><b>Social:</b> ' + e(d.contaSocial) + '<br><b>Cultural (CC):</b> ' + e(d.contaCultural) + '<br><b>Imagem do Patrocinador:</b> ' + e(d.contaImagem) + '</p>' +
-      '<h2>7. Orçamento</h2><table><tr><th>Rubrica</th><th>Descrição</th><th>Valor</th></tr>' +
-      '<tr><td>Pré-Produção</td><td>' + e(d.orcPreDesc) + '</td><td>R$ ' + e(d.orcPreValor) + '</td></tr>' +
-      '<tr><td>Produção</td><td>' + e(d.orcProdDesc) + '</td><td>R$ ' + e(d.orcProdValor) + '</td></tr>' +
-      '<tr><td>Pós-Produção</td><td>' + e(d.orcPosDesc) + '</td><td>R$ ' + e(d.orcPosValor) + '</td></tr>' +
-      '<tr><td>Divulgação</td><td>' + e(d.orcDivDesc) + '</td><td>R$ ' + e(d.orcDivValor) + '</td></tr>' +
-      '<tr><td>Despesas Adm.</td><td>' + e(d.orcAdmDesc) + '</td><td>R$ ' + e(d.orcAdmValor) + '</td></tr></table>' +
-      '<h2>8. Plano de Distribuição</h2><p><b>Público-Alvo:</b> ' + e(d.distPublico) + '<br><b>Metas de Alcance:</b> ' + e(d.distMetas) + '<br><b>Municípios:</b> ' + e(d.distMunicipios) + '<br><b>Festivais:</b> ' + e(d.distFestivais) + '</p>' +
-      '<h2>9. Especificações Técnicas das Peças</h2><table><tr><th>Tipo</th><th>Formato</th><th>Especificações</th></tr>' +
-      '<tr><td>Cartaz</td><td>' + e(d.midCartazFormato) + '</td><td>' + e(d.midCartazEsp) + '</td></tr>' +
-      '<tr><td>Filipeta</td><td>' + e(d.midFlyerFormato) + '</td><td>' + e(d.midFlyerEsp) + '</td></tr>' +
-      '<tr><td>Social Media</td><td>' + e(d.midSocialFormato) + '</td><td>' + e(d.midSocialEsp) + '</td></tr>' +
-      '<tr><td>Press-kit</td><td>' + e(d.midPressFormato) + '</td><td>' + e(d.midPressEsp) + '</td></tr></table>' +
-      '<p style="text-align:center;margin-top:40px;color:#999;font-size:9pt">Gerado por Fonte</p>' +
+      '<h1>' + _('proj_title') + '</h1>' +
+      '<h2>' + _('proj_section1') + '</h2>' +
+      '<table><tr><td><b>' + _('export_nome') + ':</b> ' + e(d.nome) + '</td><td><b>' + _('export_proponente') + ':</b> ' + e(d.proponente) + '</td></tr>' +
+      '<tr><td><b>CPF/CNPJ:</b> ' + e(d.cpf) + '</td><td><b>' + _('export_segmento') + ':</b> ' + e(d.segmento) + '</td></tr>' +
+      '<tr><td><b>' + _('export_produto') + ':</b> ' + e(d.produto) + '</td><td><b>' + _('export_valor') + ':</b> R$ ' + e(d.valor) + '</td></tr></table>' +
+      '<h2>' + _('proj_section2') + '</h2><p><b>' + _('export_resumo') + ':</b> ' + e(d.resumo) + '</p>' +
+      '<p><b>' + _('export_objetivo_geral') + ':</b> ' + e(d.objGeral) + '</p>' +
+      '<p><b>' + _('export_objetivos_espec') + ':</b> ' + e(d.objEspec) + '</p>' +
+      '<p><b>' + _('export_justificativa') + ':</b> ' + e(d.justificativa) + '</p>' +
+      '<h2>' + _('proj_section3') + '</h2><p><b>' + _('export_direcao') + ':</b> ' + e(d.eqDirecao) + '<br><b>' + _('export_animacao') + ':</b> ' + e(d.eqAnimacao) + '<br><b>' + _('export_arte') + ':</b> ' + e(d.eqArte) + '<br><b>' + _('export_trilha') + ':</b> ' + e(d.eqTrilha) + '<br><b>' + _('export_producao') + ':</b> ' + e(d.eqProducao) + '</p>' +
+      '<h2>' + _('proj_section4') + '</h2><p><b>' + _('proj_div_redes') + ':</b> ' + e(d.divRedes) + '<br><b>' + _('proj_div_imprensa') + ':</b> ' + e(d.divImprensa) + '<br><b>' + _('proj_div_material') + ':</b> ' + e(d.divMaterial) + '</p>' +
+      '<h2>' + _('proj_section5') + '</h2><p><b>' + _('proj_acess_libras') + ':</b> ' + s(d.acessLibras) + ' | <b>' + _('proj_acess_audio') + ':</b> ' + s(d.acessAudio) + ' | <b>' + _('proj_acess_legendas') + ':</b> ' + s(d.acessLegendas) + '</p><p><b>' + _('proj_acess_sessoes') + ':</b> ' + e(d.acessSessoes) + '</p>' +
+      '<h2>' + _('proj_section6') + '</h2><p><b>' + _('proj_conta_social') + ':</b> ' + e(d.contaSocial) + '<br><b>' + _('proj_conta_cultural') + ':</b> ' + e(d.contaCultural) + '<br><b>' + _('proj_conta_imagem') + ':</b> ' + e(d.contaImagem) + '</p>' +
+      '<h2>' + _('proj_section7') + '</h2><table><tr><th>' + _('proj_orc_rubrica') + '</th><th>' + _('proj_orc_desc') + '</th><th>' + _('proj_orc_valor') + '</th></tr>' +
+      '<tr><td>' + _('proj_orc_pre') + '</td><td>' + e(d.orcPreDesc) + '</td><td>R$ ' + e(d.orcPreValor) + '</td></tr>' +
+      '<tr><td>' + _('proj_orc_prod') + '</td><td>' + e(d.orcProdDesc) + '</td><td>R$ ' + e(d.orcProdValor) + '</td></tr>' +
+      '<tr><td>' + _('proj_orc_pos') + '</td><td>' + e(d.orcPosDesc) + '</td><td>R$ ' + e(d.orcPosValor) + '</td></tr>' +
+      '<tr><td>' + _('proj_orc_div') + '</td><td>' + e(d.orcDivDesc) + '</td><td>R$ ' + e(d.orcDivValor) + '</td></tr>' +
+      '<tr><td>' + _('proj_orc_adm') + '</td><td>' + e(d.orcAdmDesc) + '</td><td>R$ ' + e(d.orcAdmValor) + '</td></tr></table>' +
+      '<h2>' + _('proj_section9') + '</h2><p><b>' + _('proj_dist_publico') + ':</b> ' + e(d.distPublico) + '<br><b>' + _('proj_dist_metas') + ':</b> ' + e(d.distMetas) + '<br><b>' + _('proj_dist_municipios') + ':</b> ' + e(d.distMunicipios) + '<br><b>' + _('proj_dist_festivais') + ':</b> ' + e(d.distFestivais) + '</p>' +
+      '<h2>' + _('proj_section10') + '</h2><table><tr><th>' + _('proj_mid_tipo') + '</th><th>' + _('proj_mid_formato') + '</th><th>' + _('proj_mid_espec') + '</th></tr>' +
+      '<tr><td>' + _('proj_mid_cartaz') + '</td><td>' + e(d.midCartazFormato) + '</td><td>' + e(d.midCartazEsp) + '</td></tr>' +
+      '<tr><td>' + _('proj_mid_flyer') + '</td><td>' + e(d.midFlyerFormato) + '</td><td>' + e(d.midFlyerEsp) + '</td></tr>' +
+      '<tr><td>' + _('proj_mid_social') + '</td><td>' + e(d.midSocialFormato) + '</td><td>' + e(d.midSocialEsp) + '</td></tr>' +
+      '<tr><td>' + _('proj_mid_press') + '</td><td>' + e(d.midPressFormato) + '</td><td>' + e(d.midPressEsp) + '</td></tr></table>' +
+      '<p style="text-align:center;margin-top:40px;color:#999;font-size:9pt">' + _('export_gerado_por') + '</p>' +
       '</body></html>';
     const w = window.open('', '', 'width=800,height=600');
     w.document.write(html); w.document.close(); w.focus();
@@ -1953,9 +1961,10 @@ const app = {
       }
     });
   },
-
-  openFountainGuide() { document.getElementById('fountain-guide-modal').style.display = 'flex'; },
-  closeFountainGuide() { document.getElementById('fountain-guide-modal').style.display = 'none'; },
+  openFountainGuide() {
+    document.getElementById('help-modal').style.display = 'flex';
+    this.selHelpTab('fountain');
+  },
 
   /* ── Character editing ── */
   openChar(name) {
@@ -2070,7 +2079,7 @@ const app = {
       let text = _(key);
       const match = el.textContent.match(/^([\u{1F000}-\u{1FFFF}]|[\u2600-\u27BF]|[\u{2700}-\u{27BF}]|[⬇📋🌗▶⏹🖨📑✓▶⏸🍅⏰🔊🔇🖍📊🎯💾📂📄👁🔍🎬⏱])/u);
       if (match) text = match[1] + ' ' + text;
-      el.textContent = text;
+      el.innerHTML = text;
     });
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
       el.placeholder = _(el.dataset.i18nPlaceholder);
@@ -2080,6 +2089,20 @@ const app = {
     });
     document.getElementById('lang-btn').textContent = lang === 'pt-BR' ? 'PT' : 'EN';
     document.title = 'Fonte';
+    if (typeof structureOpts !== 'undefined') this.populateStructureSelects();
+  },
+
+  populateStructureSelects() {
+    const idx = lang === 'pt-BR' ? 0 : 1;
+    Object.keys(structureOpts).forEach(id => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      Array.from(sel.options).forEach(opt => {
+        if (!opt.value) return;
+        const pair = structureOpts[id].find(p => p[0] === opt.value);
+        if (pair) opt.textContent = pair[idx];
+      });
+    });
   },
 
   /* ── Focus mode ── */

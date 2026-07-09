@@ -45,8 +45,8 @@
     <button onclick="app.toggleTimeline()" data-i18n="tb_timeline">📊 Trama</button>
     <button onclick="app.toggleTimelineHeight()" data-i18n-title="title_expand" title="Expandir timeline">⤢</button>
     <span class="sep"></span>
-    <button onclick="app.toggleProjeto()" id="projeto-btn">📋 Projeto</button>
-    <button onclick="app.openExcalidraw()" data-i18n-title="title_quadro" title="Quadro de planejamento visual">🧩 Quadro</button>
+    <button onclick="app.toggleProjeto()" id="projeto-btn" data-i18n="tb_projeto">📋 Projeto</button>
+    <button onclick="app.openExcalidraw()" data-i18n="tb_quadro" data-i18n-title="title_quadro" title="Quadro de planejamento visual">🧩 Quadro</button>
     <span class="sep"></span>
     <button onclick="app.toggleTimerMode()" id="timer-mode-btn" data-i18n="tb_timer">⏱ Escrita</button>
     <button onclick="app.toggleTimer()" id="timer-start-btn" style="font-size:9pt;padding:2px 4px">▶</button>
@@ -58,7 +58,6 @@
     <button onclick="app.toggleTheme()">🌗</button>
     <button onclick="app.toggleLang()" id="lang-btn" style="font-size:9pt">PT</button>
     <button onclick="app.openHelp()">❓</button>
-    <button onclick="app.openFountainGuide()" data-i18n-title="title_fguide" title="Guia Fountain">?!</button>
     <span id="save-indicator" style="font-size:10pt;color:var(--fg-sec)">💾</span>
     <span class="timer" id="timer-display">⏱ 00:00</span>
     <span class="sep"></span>
@@ -76,9 +75,9 @@
       <div id="textarea-wrap"><textarea id="editor" data-i18n-placeholder="editor_placeholder"></textarea></div>
       <div id="preview-wrap"><div id="preview"></div></div>
       <div id="projeto-form" style="display:none;padding:20px 40px;overflow-y:auto;flex:1;background:var(--editor-bg)">
-        <h2 style="margin-bottom:16px;font-size:13pt">Projeto Cultural</h2>
+        <h2 style="margin-bottom:16px;font-size:13pt" data-i18n="proj_title">Projeto Cultural</h2>
         <!-- 1. Dados do Projeto -->
-        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">1. Dados do Proponente e Projeto ▸</h3>
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')" data-i18n="proj_section1">1. Dados do Proponente e Projeto ▸</h3>
           <div class="proj-corpo">
             <div class="proj-linha"><label>Nome do Projeto</label><input type="text" id="proj-nome" style="flex:1"></div>
             <div class="proj-linha"><label>Proponente</label><input type="text" id="proj-proponente" style="flex:1"></div>
@@ -90,7 +89,7 @@
           </div>
         </div>
         <!-- 2. Perfil -->
-        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">2. Perfil do Projeto ▸</h3>
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')" data-i18n="proj_section2">2. Perfil do Projeto ▸</h3>
           <div class="proj-corpo">
             <div class="proj-linha"><label>Resumo</label><textarea id="proj-resumo" rows="4" style="flex:1"></textarea></div>
             <div class="proj-linha"><label>Objetivo Geral</label><textarea id="proj-obj-geral" rows="3" style="flex:1"></textarea></div>
@@ -99,7 +98,7 @@
           </div>
         </div>
         <!-- 3. Equipe -->
-        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">3. Equipe Principal ▸</h3>
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')" data-i18n="proj_section3">3. Equipe Principal ▸</h3>
           <div class="proj-corpo">
             <div class="proj-linha"><label>Direção e Roteiro</label><input type="text" id="proj-equipe-direcao" style="flex:1"></div>
             <div class="proj-linha"><label>Direção de Animação</label><input type="text" id="proj-equipe-animacao" style="flex:1"></div>
@@ -109,76 +108,76 @@
           </div>
         </div>
         <!-- 4. Divulgação -->
-        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">4. Plano de Divulgação e Mídia ▸</h3>
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')" data-i18n="proj_section4">4. Plano de Divulgação e Mídia ▸</h3>
           <div class="proj-corpo">
-            <div class="proj-linha"><label>Redes Sociais</label><textarea id="proj-div-redes" rows="3" style="flex:1"></textarea></div>
-            <div class="proj-linha"><label>Assessoria de Imprensa</label><textarea id="proj-div-imprensa" rows="3" style="flex:1"></textarea></div>
-            <div class="proj-linha"><label>Material Gráfico</label><textarea id="proj-div-material" rows="3" style="flex:1" placeholder="Cartaz, filipetas, etc"></textarea></div>
+            <div class="proj-linha"><label data-i18n="proj_div_redes">Redes Sociais</label><textarea id="proj-div-redes" rows="3" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label data-i18n="proj_div_imprensa">Assessoria de Imprensa</label><textarea id="proj-div-imprensa" rows="3" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label data-i18n="proj_div_material">Material Gráfico</label><textarea id="proj-div-material" rows="3" style="flex:1" data-i18n-placeholder="proj_div_mat_ph" placeholder="Cartaz, filipetas, etc"></textarea></div>
           </div>
         </div>
         <!-- 5. Acessibilidade -->
-        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">5. Acessibilidade e Democratização ▸</h3>
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')" data-i18n="proj_section5">5. Acessibilidade e Democratização ▸</h3>
           <div class="proj-corpo">
-            <div class="proj-linha"><label>Intérprete de Libras</label><input type="checkbox" id="proj-acess-libras" style="width:auto"></div>
-            <div class="proj-linha"><label>Audiodescrição</label><input type="checkbox" id="proj-acess-audio" style="width:auto"></div>
-            <div class="proj-linha"><label>Legendas Descritivas</label><input type="checkbox" id="proj-acess-legendas" style="width:auto"></div>
-            <div class="proj-linha"><label>Sessões Gratuitas</label><textarea id="proj-acess-sessoes" rows="2" style="flex:1" placeholder="Quantidade e locais"></textarea></div>
+            <div class="proj-linha"><label data-i18n="proj_acess_libras">Intérprete de Libras</label><input type="checkbox" id="proj-acess-libras" style="width:auto"></div>
+            <div class="proj-linha"><label data-i18n="proj_acess_audio">Audiodescrição</label><input type="checkbox" id="proj-acess-audio" style="width:auto"></div>
+            <div class="proj-linha"><label data-i18n="proj_acess_legendas">Legendas Descritivas</label><input type="checkbox" id="proj-acess-legendas" style="width:auto"></div>
+            <div class="proj-linha"><label data-i18n="proj_acess_sessoes">Sessões Gratuitas</label><textarea id="proj-acess-sessoes" rows="2" style="flex:1" data-i18n-placeholder="proj_acess_sessoes_ph" placeholder="Quantidade e locais"></textarea></div>
           </div>
         </div>
         <!-- 6. Contrapartidas -->
-        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">6. Contrapartidas ▸</h3>
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')" data-i18n="proj_section6">6. Contrapartidas ▸</h3>
           <div class="proj-corpo">
-            <div class="proj-linha"><label>Social/Educacional</label><textarea id="proj-conta-social" rows="3" style="flex:1"></textarea></div>
-            <div class="proj-linha"><label>Cultural (Creative Commons)</label><textarea id="proj-conta-cultural" rows="3" style="flex:1"></textarea></div>
-            <div class="proj-linha"><label>Imagem do Patrocinador</label><textarea id="proj-conta-imagem" rows="2" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label data-i18n="proj_conta_social">Social/Educacional</label><textarea id="proj-conta-social" rows="3" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label data-i18n="proj_conta_cultural">Cultural (Creative Commons)</label><textarea id="proj-conta-cultural" rows="3" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label data-i18n="proj_conta_imagem">Imagem do Patrocinador</label><textarea id="proj-conta-imagem" rows="2" style="flex:1"></textarea></div>
           </div>
         </div>
         <!-- 7. Orçamento -->
-        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">7. Orçamento Detalhado ▸</h3>
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')" data-i18n="proj_section7">7. Orçamento Detalhado ▸</h3>
           <div class="proj-corpo">
             <div style="display:grid;grid-template-columns:2fr 1fr 80px;gap:8px;font-weight:bold;font-size:9pt;margin-bottom:6px;color:var(--fg-sec)">
-              <span>Rubrica</span><span>Descrição</span><span>Valor (R$)</span>
+              <span data-i18n="proj_orc_rubrica">Rubrica</span><span data-i18n="proj_orc_desc">Descrição</span><span data-i18n="proj_orc_valor">Valor (R$)</span>
             </div>
-            <div class="proj-linha"><label>Pré-Produção</label><input type="text" id="proj-orc-pre-desc" style="flex:1" placeholder="Descrição"><input type="text" id="proj-orc-pre-valor" style="width:100px" placeholder="0,00"></div>
-            <div class="proj-linha"><label>Produção</label><input type="text" id="proj-orc-prod-desc" style="flex:1" placeholder="Descrição"><input type="text" id="proj-orc-prod-valor" style="width:100px" placeholder="0,00"></div>
-            <div class="proj-linha"><label>Pós-Produção</label><input type="text" id="proj-orc-pos-desc" style="flex:1" placeholder="Descrição"><input type="text" id="proj-orc-pos-valor" style="width:100px" placeholder="0,00"></div>
-            <div class="proj-linha"><label>Divulgação</label><input type="text" id="proj-orc-div-desc" style="flex:1" placeholder="Descrição"><input type="text" id="proj-orc-div-valor" style="width:100px" placeholder="0,00"></div>
-            <div class="proj-linha"><label>Despesas Adm.</label><input type="text" id="proj-orc-adm-desc" style="flex:1" placeholder="Descrição"><input type="text" id="proj-orc-adm-valor" style="width:100px" placeholder="0,00"></div>
-            <div style="text-align:right;font-weight:bold;margin-top:4px" id="proj-orc-total">Total: R$ 0,00</div>
+            <div class="proj-linha"><label data-i18n="proj_orc_pre">Pré-Produção</label><input type="text" id="proj-orc-pre-desc" style="flex:1" data-i18n-placeholder="proj_orc_ph_desc" placeholder="Descrição"><input type="text" id="proj-orc-pre-valor" style="width:100px" data-i18n-placeholder="proj_orc_ph_valor" placeholder="0,00"></div>
+            <div class="proj-linha"><label data-i18n="proj_orc_prod">Produção</label><input type="text" id="proj-orc-prod-desc" style="flex:1" data-i18n-placeholder="proj_orc_ph_desc" placeholder="Descrição"><input type="text" id="proj-orc-prod-valor" style="width:100px" data-i18n-placeholder="proj_orc_ph_valor" placeholder="0,00"></div>
+            <div class="proj-linha"><label data-i18n="proj_orc_pos">Pós-Produção</label><input type="text" id="proj-orc-pos-desc" style="flex:1" data-i18n-placeholder="proj_orc_ph_desc" placeholder="Descrição"><input type="text" id="proj-orc-pos-valor" style="width:100px" data-i18n-placeholder="proj_orc_ph_valor" placeholder="0,00"></div>
+            <div class="proj-linha"><label data-i18n="proj_orc_div">Divulgação</label><input type="text" id="proj-orc-div-desc" style="flex:1" data-i18n-placeholder="proj_orc_ph_desc" placeholder="Descrição"><input type="text" id="proj-orc-div-valor" style="width:100px" data-i18n-placeholder="proj_orc_ph_valor" placeholder="0,00"></div>
+            <div class="proj-linha"><label data-i18n="proj_orc_adm">Despesas Adm.</label><input type="text" id="proj-orc-adm-desc" style="flex:1" data-i18n-placeholder="proj_orc_ph_desc" placeholder="Descrição"><input type="text" id="proj-orc-adm-valor" style="width:100px" data-i18n-placeholder="proj_orc_ph_valor" placeholder="0,00"></div>
+            <div style="text-align:right;font-weight:bold;margin-top:4px" id="proj-orc-total"><span data-i18n="proj_orc_total">Total:</span> R$ 0,00</div>
           </div>
         </div>
         <!-- 8. Cronograma -->
-        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">8. Cronograma de Execução ▸</h3>
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')" data-i18n="proj_section8">8. Cronograma de Execução ▸</h3>
           <div class="proj-corpo" style="overflow-x:auto">
-            <p style="font-size:8pt;color:var(--fg-sec);margin-bottom:6px">Clique nas células para marcar/desmarcar</p>
+            <p style="font-size:8pt;color:var(--fg-sec);margin-bottom:6px" data-i18n="proj_crono_hint">Clique nas células para marcar/desmarcar</p>
             <div id="proj-cronograma" style="display:grid;grid-template-columns:140px repeat(12,1fr);gap:2px;font-size:8pt;min-width:600px"></div>
           </div>
         </div>
         <!-- 9. Plano de Distribuição -->
-        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">9. Plano de Distribuição ▸</h3>
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')" data-i18n="proj_section9">9. Plano de Distribuição ▸</h3>
           <div class="proj-corpo">
-            <div class="proj-linha"><label>Público-Alvo</label><textarea id="proj-dist-publico" rows="3" style="flex:1"></textarea></div>
-            <div class="proj-linha"><label>Metas de Alcance</label><textarea id="proj-dist-metas" rows="3" style="flex:1"></textarea></div>
-            <div class="proj-linha"><label>Municípios</label><input type="text" id="proj-dist-municipios" style="flex:1" placeholder="Separados por vírgula"></div>
-            <div class="proj-linha"><label>Festivais</label><textarea id="proj-dist-festivais" rows="2" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label data-i18n="proj_dist_publico">Público-Alvo</label><textarea id="proj-dist-publico" rows="3" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label data-i18n="proj_dist_metas">Metas de Alcance</label><textarea id="proj-dist-metas" rows="3" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label data-i18n="proj_dist_municipios">Municípios</label><input type="text" id="proj-dist-municipios" style="flex:1" data-i18n-placeholder="proj_dist_muni_ph" placeholder="Separados por vírgula"></div>
+            <div class="proj-linha"><label data-i18n="proj_dist_festivais">Festivais</label><textarea id="proj-dist-festivais" rows="2" style="flex:1"></textarea></div>
           </div>
         </div>
         <!-- 10. Mídia / Especificações Técnicas -->
-        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')">10. Especificações Técnicas das Peças ▸</h3>
+        <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')" data-i18n="proj_section10">10. Especificações Técnicas das Peças ▸</h3>
           <div class="proj-corpo">
             <div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:8px;font-weight:bold;font-size:9pt;margin-bottom:6px;color:var(--fg-sec)">
-              <span>Tipo</span><span>Formato</span><span>Especificações</span>
+              <span data-i18n="proj_mid_tipo">Tipo</span><span data-i18n="proj_mid_formato">Formato</span><span data-i18n="proj_mid_espec">Especificações</span>
             </div>
-            <div class="proj-linha"><label>Cartaz</label><input type="text" id="proj-mid-cartaz-formato" style="flex:1" placeholder="A3"><input type="text" id="proj-mid-cartaz-esp" style="flex:2" placeholder="Especificações"></div>
-            <div class="proj-linha"><label>Filipeta</label><input type="text" id="proj-mid-flyer-formato" style="flex:1" placeholder="A5"><input type="text" id="proj-mid-flyer-esp" style="flex:2" placeholder="Especificações"></div>
-            <div class="proj-linha"><label>Social Media</label><input type="text" id="proj-mid-social-formato" style="flex:1" placeholder="1080x1080"><input type="text" id="proj-mid-social-esp" style="flex:2" placeholder="Especificações"></div>
-            <div class="proj-linha"><label>Press-kit</label><input type="text" id="proj-mid-press-formato" style="flex:1" placeholder="PDF"><input type="text" id="proj-mid-press-esp" style="flex:2" placeholder="Especificações"></div>
+            <div class="proj-linha"><label data-i18n="proj_mid_cartaz">Cartaz</label><input type="text" id="proj-mid-cartaz-formato" style="flex:1" data-i18n-placeholder="proj_mid_ph_formato" placeholder="A3"><input type="text" id="proj-mid-cartaz-esp" style="flex:2" data-i18n-placeholder="proj_mid_ph_espec" placeholder="Especificações"></div>
+            <div class="proj-linha"><label data-i18n="proj_mid_flyer">Filipeta</label><input type="text" id="proj-mid-flyer-formato" style="flex:1" data-i18n-placeholder="proj_mid_ph_formato" placeholder="A5"><input type="text" id="proj-mid-flyer-esp" style="flex:2" data-i18n-placeholder="proj_mid_ph_espec" placeholder="Especificações"></div>
+            <div class="proj-linha"><label data-i18n="proj_mid_social">Social Media</label><input type="text" id="proj-mid-social-formato" style="flex:1" data-i18n-placeholder="proj_mid_ph_formato" placeholder="1080x1080"><input type="text" id="proj-mid-social-esp" style="flex:2" data-i18n-placeholder="proj_mid_ph_espec" placeholder="Especificações"></div>
+            <div class="proj-linha"><label data-i18n="proj_mid_press">Press-kit</label><input type="text" id="proj-mid-press-formato" style="flex:1" data-i18n-placeholder="proj_mid_ph_formato" placeholder="PDF"><input type="text" id="proj-mid-press-esp" style="flex:2" data-i18n-placeholder="proj_mid_ph_espec" placeholder="Especificações"></div>
           </div>
         </div>
         <!-- Ações -->
         <div style="display:flex;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
-          <button onclick="app.salvarProjeto()">💾 Salvar Dados</button>
-          <button onclick="app.exportProjetoPDF()">🖨 Exportar PDF</button>
+          <button onclick="app.salvarProjeto()" data-i18n="proj_save">💾 Salvar Dados</button>
+          <button onclick="app.exportProjetoPDF()" data-i18n="proj_export">🖨 Exportar PDF</button>
         </div>
       </div>
       <!-- Título / Ficha / Estrutura (página inteira) -->
@@ -204,11 +203,11 @@
           <div class="form-row"><label data-i18n="tp_argumento">Argumento:</label><textarea id="tp-argumento" rows="4"></textarea></div>
           <div class="form-row"><label data-i18n="tp_genero">Gênero:</label>
             <select id="tp-genero">
-              <option value="">—</option><option>Ação</option><option>Aventura</option>
-              <option>Comédia</option><option>Drama</option><option>Ficção Científica</option>
-              <option>Terror</option><option>Romance</option><option>Suspense</option>
-              <option>Fantasia</option><option>Animação</option><option>Documentário</option>
-              <option>Musical</option><option>Western</option>
+              <option value="">—</option><option value="Ação">Ação</option><option value="Aventura">Aventura</option>
+              <option value="Comédia">Comédia</option><option value="Drama">Drama</option><option value="Ficção Científica">Ficção Científica</option>
+              <option value="Terror">Terror</option><option value="Romance">Romance</option><option value="Suspense">Suspense</option>
+              <option value="Fantasia">Fantasia</option><option value="Animação">Animação</option><option value="Documentário">Documentário</option>
+              <option value="Musical">Musical</option><option value="Western">Western</option>
             </select>
           </div>
           <div class="form-row"><label data-i18n="tp_duracao">Duração (min):</label><input type="number" id="tp-duracao" min="1" max="999"></div>
@@ -218,103 +217,103 @@
         <div id="tab-estrutura" class="page-tab-content">
           <div class="form-row"><label data-i18n="tp_tom">Tom:</label>
             <select id="tp-tom">
-              <option value="">—</option><option>Realista</option><option>Poético</option>
-              <option>Expressionista</option><option>Noir</option><option>Épico</option>
-              <option>Íntimo</option><option>Surrealista</option><option>Satírico</option>
-              <option>Melodramático</option><option>Experimental</option>
+              <option value="">—</option><option value="Realista">Realista</option><option value="Poético">Poético</option>
+              <option value="Expressionista">Expressionista</option><option value="Noir">Noir</option><option value="Épico">Épico</option>
+              <option value="Íntimo">Íntimo</option><option value="Surrealista">Surrealista</option><option value="Satírico">Satírico</option>
+              <option value="Melodramático">Melodramático</option><option value="Experimental">Experimental</option>
             </select>
           </div>
           <div class="form-row"><label data-i18n="tp_tema">Tema:</label>
             <select id="tp-tema">
-              <option value="">—</option><option>Amor</option><option>Vingança</option>
-              <option>Redenção</option><option>Amizade</option><option>Sobrevivência</option>
-              <option>Poder</option><option>Liberdade</option><option>Identidade</option>
-              <option>Justiça</option><option>Sacrifício</option><option>Outro</option>
+              <option value="">—</option><option value="Amor">Amor</option><option value="Vingança">Vingança</option>
+              <option value="Redenção">Redenção</option><option value="Amizade">Amizade</option><option value="Sobrevivência">Sobrevivência</option>
+              <option value="Poder">Poder</option><option value="Liberdade">Liberdade</option><option value="Identidade">Identidade</option>
+              <option value="Justiça">Justiça</option><option value="Sacrifício">Sacrifício</option><option value="Outro">Outro</option>
             </select>
             <input type="text" id="tp-outro-tema" data-i18n-placeholder="other_specify" placeholder="Especifique..." style="display:none;flex:1">
           </div>
           <div class="form-row"><label data-i18n="tp_ideia_governante">Ideia Governante:</label>
             <select id="tp-ideia-governante">
               <option value="">—</option>
-              <option>A coragem leva à vitória.</option>
-              <option>A obsessão pelo poder leva à destruição.</option>
-              <option>O amor verdadeiro supera qualquer obstáculo.</option>
-              <option>A busca pela verdade pode levar à solidão.</option>
-              <option>A ambição desenfreada leva à ruína.</option>
-              <option>Outro</option>
+              <option value="A coragem leva à vitória.">A coragem leva à vitória.</option>
+              <option value="A obsessão pelo poder leva à destruição.">A obsessão pelo poder leva à destruição.</option>
+              <option value="O amor verdadeiro supera qualquer obstáculo.">O amor verdadeiro supera qualquer obstáculo.</option>
+              <option value="A busca pela verdade pode levar à solidão.">A busca pela verdade pode levar à solidão.</option>
+              <option value="A ambição desenfreada leva à ruína.">A ambição desenfreada leva à ruína.</option>
+              <option value="Outro">Outro</option>
             </select>
             <input type="text" id="tp-outro-ideia-governante" data-i18n-placeholder="other_specify" placeholder="Especifique..." style="display:none;flex:1">
           </div>
           <div class="form-row"><label data-i18n="tp_valor_central">Valor Central:</label>
             <select id="tp-valor-central">
-              <option value="">—</option><option>Amor</option><option>Justiça</option>
-              <option>Liberdade</option><option>Sobrevivência</option><option>Honra</option>
-              <option>Vingança</option><option>Poder</option><option>Lealdade</option>
-              <option>Verdade</option><option>Perdão</option>
+              <option value="">—</option><option value="Amor">Amor</option><option value="Justiça">Justiça</option>
+              <option value="Liberdade">Liberdade</option><option value="Sobrevivência">Sobrevivência</option><option value="Honra">Honra</option>
+              <option value="Vingança">Vingança</option><option value="Poder">Poder</option><option value="Lealdade">Lealdade</option>
+              <option value="Verdade">Verdade</option><option value="Perdão">Perdão</option>
             </select>
           </div>
           <div class="form-row"><label data-i18n="tp_premissa">Premissa Central:</label>
             <select id="tp-premissa">
               <option value="">—</option>
-              <option>Um jovem deve escolher entre a tradição familiar e seus próprios sonhos.</option>
-              <option>Um cientista enfrenta dilemas éticos ao descobrir uma tecnologia revolucionária.</option>
-              <option>Um criminoso busca redenção ao proteger uma pessoa inocente.</option>
-              <option>Um soldado precisa decidir entre seguir ordens ou salvar civis.</option>
-              <option>Um detetive precisa resolver um crime ligado ao seu passado.</option>
-              <option>Outro</option>
+              <option value="Um jovem deve escolher entre a tradição familiar e seus próprios sonhos.">Um jovem deve escolher entre a tradição familiar e seus próprios sonhos.</option>
+              <option value="Um cientista enfrenta dilemas éticos ao descobrir uma tecnologia revolucionária.">Um cientista enfrenta dilemas éticos ao descobrir uma tecnologia revolucionária.</option>
+              <option value="Um criminoso busca redenção ao proteger uma pessoa inocente.">Um criminoso busca redenção ao proteger uma pessoa inocente.</option>
+              <option value="Um soldado precisa decidir entre seguir ordens ou salvar civis.">Um soldado precisa decidir entre seguir ordens ou salvar civis.</option>
+              <option value="Um detetive precisa resolver um crime ligado ao seu passado.">Um detetive precisa resolver um crime ligado ao seu passado.</option>
+              <option value="Outro">Outro</option>
             </select>
             <input type="text" id="tp-outro-premissa" data-i18n-placeholder="other_specify" placeholder="Especifique..." style="display:none;flex:1">
           </div>
           <div class="form-row"><label data-i18n="tp_forca_antagonica">Força Antagônica:</label>
             <select id="tp-forca-antagonica">
               <option value="">—</option>
-              <option>Um vilão com objetivos claros</option>
-              <option>A sociedade ou sistema</option>
-              <option>O próprio protagonista (conflito interno)</option>
-              <option>Forças naturais ou sobrenaturais</option>
-              <option>Um rival ou competidor</option>
-              <option>Instituições corruptas</option>
-              <option>Traumas do passado</option>
-              <option>Preconceitos sociais</option>
-              <option>Tecnologia descontrolada</option>
-              <option>Destino ou fatalidade</option>
+              <option value="Um vilão com objetivos claros">Um vilão com objetivos claros</option>
+              <option value="A sociedade ou sistema">A sociedade ou sistema</option>
+              <option value="O próprio protagonista (conflito interno)">O próprio protagonista (conflito interno)</option>
+              <option value="Forças naturais ou sobrenaturais">Forças naturais ou sobrenaturais</option>
+              <option value="Um rival ou competidor">Um rival ou competidor</option>
+              <option value="Instituições corruptas">Instituições corruptas</option>
+              <option value="Traumas do passado">Traumas do passado</option>
+              <option value="Preconceitos sociais">Preconceitos sociais</option>
+              <option value="Tecnologia descontrolada">Tecnologia descontrolada</option>
+              <option value="Destino ou fatalidade">Destino ou fatalidade</option>
             </select>
           </div>
           <div class="form-row"><label data-i18n="tp_tipo_conflito">Tipo de Conflito:</label>
             <select id="tp-tipo-conflito">
               <option value="">—</option>
-              <option>Conflito Externo (protagonista vs. mundo)</option>
-              <option>Conflito Interno (protagonista vs. si mesmo)</option>
-              <option>Conflito Interpessoal (protagonista vs. outro)</option>
-              <option>Conflito Social (protagonista vs. sociedade)</option>
-              <option>Conflito Existencial (protagonista vs. destino)</option>
+              <option value="Conflito Externo (protagonista vs. mundo)">Conflito Externo (protagonista vs. mundo)</option>
+              <option value="Conflito Interno (protagonista vs. si mesmo)">Conflito Interno (protagonista vs. si mesmo)</option>
+              <option value="Conflito Interpessoal (protagonista vs. outro)">Conflito Interpessoal (protagonista vs. outro)</option>
+              <option value="Conflito Social (protagonista vs. sociedade)">Conflito Social (protagonista vs. sociedade)</option>
+              <option value="Conflito Existencial (protagonista vs. destino)">Conflito Existencial (protagonista vs. destino)</option>
             </select>
           </div>
           <div class="form-row"><label data-i18n="tp_tipo_trama">Tipo de Trama:</label>
             <select id="tp-tipo-trama">
               <option value="">—</option>
-              <option>Arquitrama (Estrutura clássica)</option>
-              <option>Minitrama (Minimalista/introspectiva)</option>
-              <option>Antitrama (Não-linear/experimental)</option>
+              <option value="Arquitrama (Estrutura clássica)">Arquitrama (Estrutura clássica)</option>
+              <option value="Minitrama (Minimalista/introspectiva)">Minitrama (Minimalista/introspectiva)</option>
+              <option value="Antitrama (Não-linear/experimental)">Antitrama (Não-linear/experimental)</option>
             </select>
           </div>
           <div class="form-row"><label data-i18n="tp_dilema">Dilema Dramático:</label>
             <select id="tp-dilema">
               <option value="">—</option>
-              <option>Lealdade vs. Traição</option><option>Amor vs. Dever</option>
-              <option>Verdade vs. Mentira</option><option>Liberdade vs. Segurança</option>
-              <option>Justiça vs. Vingança</option><option>Razão vs. Emoção</option>
-              <option>Poder vs. Moralidade</option><option>Vida vs. Morte</option>
+              <option value="Lealdade vs. Traição">Lealdade vs. Traição</option><option value="Amor vs. Dever">Amor vs. Dever</option>
+              <option value="Verdade vs. Mentira">Verdade vs. Mentira</option><option value="Liberdade vs. Segurança">Liberdade vs. Segurança</option>
+              <option value="Justiça vs. Vingança">Justiça vs. Vingança</option><option value="Razão vs. Emoção">Razão vs. Emoção</option>
+              <option value="Poder vs. Moralidade">Poder vs. Moralidade</option><option value="Vida vs. Morte">Vida vs. Morte</option>
             </select>
           </div>
           <div class="form-row"><label data-i18n="tp_tipo_final">Tipo de Final:</label>
             <select id="tp-tipo-final">
               <option value="">—</option>
-              <option>Fechado (resolução clara)</option>
-              <option>Aberto (interpretação do público)</option>
-              <option>Cíclico (história se repete)</option>
-              <option>Irônico (resultado oposto ao esperado)</option>
-              <option>Ambíguo (múltiplas possibilidades)</option>
+              <option value="Fechado (resolução clara)">Fechado (resolução clara)</option>
+              <option value="Aberto (interpretação do público)">Aberto (interpretação do público)</option>
+              <option value="Cíclico (história se repete)">Cíclico (história se repete)</option>
+              <option value="Irônico (resultado oposto ao esperado)">Irônico (resultado oposto ao esperado)</option>
+              <option value="Ambíguo (múltiplas possibilidades)">Ambíguo (múltiplas possibilidades)</option>
             </select>
           </div>
           <hr style="margin:12px 0;border-color:var(--border)">
@@ -375,39 +374,82 @@
 
 <!-- Help Modal -->
 <div id="help-modal" class="modal-overlay" style="display:none">
-  <div class="modal" style="max-width:360px">
-    <div class="modal-header">Fonte</div>
-    <div class="modal-body" style="font-size:10pt;line-height:1.6">
-      <p><b>Editor de roteiros no formato Fountain.</b></p>
-      <p>Grátis · Offline · Sem cadastro</p>
-      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0">
-      <p><b>Funcionalidades:</b></p>
-      <ul style="padding-left:16px;margin:4px 0">
-        <li>Preview ao vivo com formatação Fountain</li>
-        <li>Navegador de cenas com drag reorder</li>
-        <li>Beats, personagens e locais</li>
-        <li>Find/Replace · Folha de rosto</li>
-        <li>Timeline · Estatísticas · Pomodoro</li>
-        <li>Export HTML/PDF · Temas · i18n</li>
-      </ul>
-      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0">
-      <p style="font-size:8pt;line-height:1.6">
-        <b>📲 Instalar como app (PWA)</b><br>
-        O app funciona em qualquer navegador abrindo o <code>index.html</code>.
-        Abaixo, as opções para instalá-lo como aplicativo:<br><br>
-        <b>✅ Chrome / Edge / Brave:</b> ⋮ → Instalar<br>
-        <b>✅ Samsung Internet:</b> ⋮ → Adicionar página a → Tela inicial<br>
-        <b>⚠️ Firefox Android:</b> ⋮ → Adicionar à tela inicial<br>
-        <b>⚠️ Firefox Desktop:</b> só funciona no navegador (sem botão Instalar)<br>
-        <b>⚠️ iOS (Safari):</b> Compartilhar → Adicionar à tela de início<br>
-        <b>❌ Xiaomi (Mi Browser):</b> não suporta PWA — use o Chrome pela Play Store<br>
-        <b>💡 Dica:</b> O app também pode ser baixado como <code>Fonte-web.zip</code> (Release do GitHub)
-      </p>
-      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0">
-      <p style="text-align:center">
-        <b>Ricardo A. B. Graça</b><br>
-        <a href="https://www.ricolandia.com" target="_blank" style="color:var(--accent)">www.ricolandia.com</a>
-      </p>
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header" style="padding-bottom:0">
+      <div class="help-tabs">
+        <span class="help-tab active" data-i18n="help_tab_sobre" onclick="app.selHelpTab('sobre')">📖 Sobre</span>
+        <span class="help-tab" data-i18n="help_tab_fountain" onclick="app.selHelpTab('fountain')">📝 Fountain</span>
+        <span class="help-tab" data-i18n="help_tab_sync" onclick="app.selHelpTab('sync')">☁️ Sincronia</span>
+        <span class="help-tab" data-i18n="help_tab_install" onclick="app.selHelpTab('install')">📲 Instalar</span>
+      </div>
+    </div>
+    <div class="modal-body" style="font-size:11pt;line-height:1.7;overflow-y:auto;max-height:70vh">
+      <!-- Tab 1: Sobre -->
+      <div id="help-tab-sobre" class="help-tab-content active">
+        <p><b>Editor de roteiros no formato Fountain.</b></p>
+        <p data-i18n="about_tagline">Grátis · Offline · Sem cadastro</p>
+        <hr style="border:none;border-top:1px solid var(--border);margin:10px 0">
+        <p><b data-i18n="about_features">Funcionalidades:</b></p>
+        <ul style="padding-left:18px;margin:6px 0">
+          <li data-i18n="about_feat1">Preview ao vivo com formatação Fountain</li>
+          <li data-i18n="about_feat2">Navegador de cenas com drag reorder</li>
+          <li data-i18n="about_feat3">Beats, personagens e locais</li>
+          <li data-i18n="about_feat4">Find/Replace · Folha de rosto</li>
+          <li data-i18n="about_feat5">Timeline · Estatísticas · Pomodoro</li>
+          <li data-i18n="about_feat6">Export HTML/PDF · Temas · i18n</li>
+        </ul>
+        <hr style="border:none;border-top:1px solid var(--border);margin:10px 0">
+        <p style="text-align:center">
+          <b>Ricardo A. B. Graça</b><br>
+          <a href="https://www.ricolandia.com" target="_blank" style="color:var(--accent)">www.ricolandia.com</a>
+        </p>
+      </div>
+      <!-- Tab 2: Fountain -->
+      <div id="help-tab-fountain" class="help-tab-content">
+        <p data-i18n="fountain_scene"><b>Cabeçalho de cena:</b> <code>INT. CASA - DIA</code> ou <code>.CENA</code></p>
+        <p data-i18n="fountain_char"><b>Personagem:</b> <code>JOÃO</code> (maiúsculas, sozinho na linha)</p>
+        <p data-i18n="fountain_dialog"><b>Diálogo:</b> linha abaixo do personagem</p>
+        <p data-i18n="fountain_parent"><b>Rubrica:</b> <code>(sorrindo)</code> entre parênteses</p>
+        <p data-i18n="fountain_trans"><b>Transição:</b> <code>CUT TO:</code> ou <code>&gt; FADE OUT</code></p>
+        <p data-i18n="fountain_center"><b>Centralizado:</b> <code>&gt; texto &lt;</code></p>
+        <p data-i18n="fountain_acts"><b>Atos:</b> <code># Ato 2</code> (marca mudança de ato)</p>
+        <p data-i18n="fountain_synopsis"><b>Sinopse:</b> <code>= resumo da cena</code> (não aparece na impressão)</p>
+        <p data-i18n="fountain_note"><b>Nota de produção:</b> <code>[[ nota ]]</code> (não aparece na impressão)</p>
+        <p data-i18n="fountain_comment"><b>Comentário descartável:</b> <code>/* texto */</code> (ignorado)</p>
+        <p data-i18n="fountain_action"><b>Forçar ação:</b> <code>! texto</code></p>
+        <p data-i18n="fountain_force"><b>Forçar personagem:</b> <code>@ nome</code></p>
+        <p data-i18n="fountain_pagebreak"><b>Quebra de página:</b> <code>===</code></p>
+        <hr style="border:none;border-top:1px solid var(--border);margin:10px 0">
+        <p style="color:var(--fg-sec);font-size:10pt"><span data-i18n="fountain_full">Formato completo em</span> <a href="https://fountain.io" target="_blank" style="color:var(--accent)">fountain.io</a></p>
+      </div>
+      <!-- Tab 3: Sincronia -->
+      <div id="help-tab-sync" class="help-tab-content">
+        <p data-i18n="sync_title"><b>☁️ Sincronizar entre dispositivos</b></p>
+        <p data-i18n="sync_desc">O Fonte salva seus roteiros no formato <code>.fountain.json</code>. Para acessar de qualquer computador:</p>
+        <ol style="padding-left:18px;margin:8px 0">
+          <li data-i18n="sync_step1">Instale o Dropbox, OneDrive ou Google Drive no seu PC</li>
+          <li data-i18n="sync_step2">Crie uma pasta sincronizada (ex: <code>Dropbox/Roteiros/</code>)</li>
+          <li data-i18n="sync_step3">No Fonte, clique em 💾 <b>Salvar</b> e escolha essa pasta</li>
+          <li data-i18n="sync_step4">Na próxima vez, o 💾 salva automaticamente no mesmo lugar</li>
+          <li data-i18n="sync_step5">No outro computador, abra 📂 <b>Abrir</b> e selecione o arquivo</li>
+        </ol>
+        <p style="color:var(--fg-sec);font-size:10pt" data-i18n="sync_footer">O sincronismo é feito pelo próprio serviço de nuvem — o Fonte não precisa de servidor nem de login.</p>
+      </div>
+      <!-- Tab 4: Instalar -->
+      <div id="help-tab-install" class="help-tab-content">
+        <p data-i18n="install_zip"><b>📦 Zip universal</b><br>
+        Baixe o <code>Fonte-web.zip</code> na página de <a href="https://github.com/ricolandia/Fountain-Writer-Tool/releases" target="_blank" style="color:var(--accent)">Releases do GitHub</a>, extraia e abra <code>index.html</code>.</p>
+        <hr style="border:none;border-top:1px solid var(--border);margin:10px 0">
+        <p data-i18n="install_pwa_title"><b>📲 Instalar como app (PWA)</b></p>
+        <p data-i18n="install_pwa_desc">O app funciona em qualquer navegador. Para instalá-lo como aplicativo:</p>
+        <p style="margin:6px 0">
+        <span data-i18n="install_chrome"><b>✅ Chrome / Edge / Brave:</b> ⋮ → Instalar</span><br>
+        <span data-i18n="install_samsung"><b>✅ Samsung Internet:</b> ⋮ → Adicionar página a → Tela inicial</span><br>
+        <span data-i18n="install_firefox_android"><b>⚠️ Firefox Android:</b> ⋮ → Adicionar à tela inicial</span><br>
+        <span data-i18n="install_firefox_desktop"><b>⚠️ Firefox Desktop:</b> só funciona no navegador (sem botão Instalar)</span><br>
+        <span data-i18n="install_ios"><b>⚠️ iOS (Safari):</b> Compartilhar → Adicionar à tela de início</span><br>
+        <span data-i18n="install_xiaomi"><b>❌ Xiaomi (Mi Browser):</b> não suporta PWA — use o Chrome pela Play Store</span></p>
+      </div>
     </div>
     <div class="modal-footer">
       <span style="flex:1"></span>
@@ -459,34 +501,6 @@
     </div>
     <div class="modal-body" style="padding:0;height:calc(100% - 50px);display:block">
       <iframe id="excalidraw-iframe" src="index.excalidraw.html" style="width:100%;height:100%;border:none" title="Excalidraw"></iframe>
-    </div>
-  </div>
-</div>
-
-<!-- Fountain Guide Modal -->
-<div id="fountain-guide-modal" class="modal-overlay" style="display:none">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-header" data-i18n="fguide_header">Guia Fountain</div>
-    <div class="modal-body" style="font-size:9pt;line-height:1.5">
-      <p><b>Cabeçalho de cena:</b> <code>INT. CASA - DIA</code> ou <code>.CENA</code></p>
-      <p><b>Personagem:</b> <code>JOÃO</code> (maiúsculas, sozinho na linha)</p>
-      <p><b>Diálogo:</b> linha abaixo do personagem</p>
-      <p><b>Rubrica:</b> <code>(sorrindo)</code> entre parênteses</p>
-      <p><b>Transição:</b> <code>CUT TO:</code> ou <code>> FADE OUT</code></p>
-      <p><b>Centralizado:</b> <code>> texto &lt;</code></p>
-      <p><b>Atos:</b> <code># Ato 2</code> (marca mudança de ato)</p>
-      <p><b>Sinopse:</b> <code>= resumo da cena</code> (não aparece na impressão)</p>
-      <p><b>Nota de produção:</b> <code>[[ nota ]]</code> (não aparece na impressão)</p>
-      <p><b>Comentário descartável:</b> <code>/* texto */</code> (ignorado)</p>
-      <p><b>Forçar ação:</b> <code>! texto</code></p>
-      <p><b>Forçar personagem:</b> <code>@ nome</code></p>
-      <p><b>Quebra de página:</b> <code>===</code></p>
-      <hr style="border:none;border-top:1px solid var(--border);margin:8px 0">
-      <p style="color:var(--fg-sec)">Formato Fountain completo em <a href="https://fountain.io" target="_blank" style="color:var(--accent)">fountain.io</a></p>
-    </div>
-    <div class="modal-footer">
-      <span style="flex:1"></span>
-      <button onclick="app.closeFountainGuide()" data-i18n="close">Fechar</button>
     </div>
   </div>
 </div>
