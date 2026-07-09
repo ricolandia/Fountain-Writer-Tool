@@ -222,20 +222,31 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
   html, body { height: 100%; }
   body { height: 100%; overflow: hidden; }
   #app { height: 100%; }
+  #app { overflow-x: hidden; }
+  #pane-center { min-width: 0; overflow-x: hidden; }
   #pane-left { display: none; }
   #pane-right { display: none; }
   .mobile-only { display: inline; }
   .pane-btn { display: inline-flex; cursor: pointer; }
   #textarea-wrap { padding: 20px 24px; }
   #toolbar .sep { display: none; }
-  #status { font-size: 8pt; gap: 4px; height: 20px; }
+  #status { font-size: 8pt; gap: 4px; height: 20px; flex-wrap: wrap; }
   #status span { font-size: 8pt; }
   .modal { max-width: 100%; margin: 10px; border-radius: 6px; }
-  #titulo-form { padding: 15px 16px; max-width: 100%; }
+  .modal .modal-body { max-width: 100%; overflow-x: hidden; }
+  #titulo-form { padding: 15px 16px; max-width: 100%; overflow-x: hidden; }
   #titulo-form .form-row { flex-direction: column; align-items: stretch; gap: 4px; margin-bottom: 12px; }
   #titulo-form .form-row label { min-width: 0; font-size: 9pt; }
   #titulo-form select { min-width: 0; }
-  #titulo-form input, #titulo-form textarea, #titulo-form select { padding: 8px 10px; font-size: 10pt; }
+  #titulo-form input, #titulo-form textarea, #titulo-form select { padding: 8px 10px; font-size: 10pt; max-width: 100%; }
+  #projeto-form { padding: 15px 16px !important; max-width: 100%; overflow-x: hidden !important; }
+  .proj-linha { flex-direction: column; align-items: stretch; gap: 4px; }
+  .proj-linha label { min-width: 0; font-size: 9pt; }
+  .proj-linha input, .proj-linha textarea, .proj-linha select { max-width: 100%; font-size: 10pt; }
+  .proj-linha input[type=checkbox] { width: 18px; height: 18px; align-self: flex-start; }
+  #timeline-bar .expanded { min-height: 200px; }
+  #preview { padding: 0 4px; max-width: 100%; }
+  #preview-wrap { padding: 15px 16px; }
 
   /* Checkbox hack: show pane as fixed overlay when checked */
   #show-scenes:checked ~ #panes #pane-left,
@@ -277,11 +288,12 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
 #titulo-form { max-width: 800px; margin: 0 auto; }
 #titulo-form .form-row { margin-bottom: 16px; }
 #titulo-form .form-row label { min-width: 160px; font-size: 10pt; }
-#titulo-form select { min-width: 200px; }
+#titulo-form select { min-width: 0; }
 #titulo-form input, #titulo-form textarea, #titulo-form select {
   background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
   padding: 10px 14px; font: 11pt 'Courier New', monospace; color: var(--fg);
-  transition: border-color 0.15s; }
+  transition: border-color 0.15s;
+  max-width: 100%; box-sizing: border-box; }
 #titulo-form input:focus, #titulo-form textarea:focus, #titulo-form select:focus {
   border-color: var(--accent); outline: none; }
 #titulo-form button { padding: 10px 20px; border: 1px solid var(--border);
