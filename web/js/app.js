@@ -174,7 +174,7 @@ const app = {
     const name = this.projectName || this.fileName || _('tb_project_name');
     document.title = 'Fonte — ' + name + (this.isModified ? ' •' : '');
     const el = document.getElementById('save-indicator');
-    if (el) el.textContent = this.isModified ? '💾' : '✓ Salvo';
+    if (el) el.textContent = this.isModified ? '💾' : '✓ ' + _('tb_saved');
   },
 
   updateScenes(text) {
@@ -185,11 +185,10 @@ const app = {
       const beat = this._findBeatForScene(s.label, s.line);
       this._sceneActMap[s.line] = beat ? (beat.act || 'Ato 1') : null;
     });
-    // Status bar: beat count + save reminder
     const el = document.getElementById('dbg');
     if (el) {
       const saved = localStorage.getItem('fw_project_saved');
-      el.textContent = this.beats.length + ' beats' + (!saved ? ' | 💾 Salve seu projeto' : '');
+      el.textContent = this.beats.length + ' ' + _('tb_beats').toLowerCase() + (!saved ? ' | 💾 ' + _('save_reminder') : '');
     }
     // Only the visible view needs rebuilding — the hidden one gets a
     // fresh render the moment toggleSceneView() switches to it, so there's
@@ -1369,7 +1368,7 @@ const app = {
   printTitleSheet() {
     this.salvarTitulo();
     const d = this.titleData || {};
-    const title = d.title || 'Ficha';
+    const title = d.title || _('title_header');
     const body = this.renderTitleHTML(d);
     const css = 'body{font-family:"Courier New",monospace;font-size:12pt;line-height:1.4;max-width:700px;margin:40px auto;padding:40px 60px;color:#1a1a18}' +
       'h3{margin-top:1.5em;text-align:center;font-size:1.1em}' +
