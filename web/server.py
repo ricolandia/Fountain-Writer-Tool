@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Fonte — API Server (PDF, export)"""
 
-import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'desktop'))
+import io
+import textwrap
 
 from fastapi import FastAPI
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+from fountain_utils import get_line_type, LineType, export_fountain_to_html
 
 app = FastAPI(title="Fonte API")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -29,10 +29,6 @@ def export_pdf(req: ExportRequest):
         from reportlab.lib.units import inch
     except ImportError:
         return Response("reportlab not installed", status_code=500)
-
-    from app.models.fountain import get_line_type, LineType
-    import textwrap
-    import io
 
     page_size = A4 if req.page_size == "A4" else LETTER
     buf = io.BytesIO()
@@ -82,8 +78,7 @@ def export_pdf(req: ExportRequest):
 
 @app.post("/api/html")
 def export_html(req: ExportRequest):
-    from app.core.exporter import export_html as html_export
-    result = html_export(req.text, req.title)
+    result = export_fountain_to_html(req.text, req.title)
     return Response(result, media_type="text/html",
                     headers={"Content-Disposition": f"attachment; filename={req.title}.html"})
 

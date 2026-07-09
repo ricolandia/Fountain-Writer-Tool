@@ -2,7 +2,7 @@ const i18n = {
   'pt-BR': {
     tb_new: 'Novo', tb_open: 'Abrir', tb_save: 'Salvar',
     tb_import: 'Importar',
-    tb_projeto: 'Projeto', tb_quadro: 'Quadro', tb_roteiro: 'Roteiro',
+    tb_projeto: 'Projeto', tb_quadro: 'Quadro', tb_roteiro: 'Roteiro', tb_share: 'Compartilhar',
     tb_html: 'HTML', tb_pdf: 'PDF',
     tb_find: 'Buscar',     tb_title: 'Ficha', tb_stats: 'Stats', tb_apoio: 'Apoie',
     tb_goal: 'Meta', tb_backup: 'Backups',
@@ -159,7 +159,7 @@ const i18n = {
   en: {
     tb_new: 'New', tb_open: 'Open', tb_save: 'Save',
     tb_import: 'Import',
-    tb_projeto: 'Project', tb_quadro: 'Board', tb_roteiro: 'Script',
+    tb_projeto: 'Project', tb_quadro: 'Board', tb_roteiro: 'Script', tb_share: 'Share',
     tb_html: 'HTML', tb_pdf: 'PDF',
     tb_find: 'Find',     tb_title: 'Sheet', tb_stats: 'Stats', tb_apoio: 'Support',
     tb_goal: 'Goal', tb_backup: 'Backups',

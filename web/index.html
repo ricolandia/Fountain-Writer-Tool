@@ -54,6 +54,7 @@
     <span class="sep"></span>
     <button onclick="app.toggleSound()" id="sound-btn" data-i18n="tb_sound">🔇 Som</button>
     <button onclick="app.copyScript()" id="copy-btn" data-i18n-title="title_copiar" title="Copiar roteiro">📋</button>
+    <button onclick="app.shareProject()" id="share-btn" data-i18n="tb_share">📤 Compartilhar</button>
     <button onclick="app.toggleFocus()" data-i18n="tb_focus">🎯 Foco</button>
     <button onclick="app.toggleTheme()">🌗</button>
     <button onclick="app.toggleLang()" id="lang-btn" style="font-size:9pt">PT</button>
@@ -72,7 +73,7 @@
     </div>
 
     <div id="pane-center" class="pane">
-      <div id="textarea-wrap"><textarea id="editor" data-i18n-placeholder="editor_placeholder"></textarea></div>
+      <div id="textarea-wrap"><textarea id="editor" data-i18n-placeholder="editor_placeholder"></textarea><div id="autocomplete-box" style="display:none;position:absolute;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:4px;max-height:180px;overflow-y:auto;font:9pt 'Courier New',monospace;box-shadow:0 4px 12px rgba(0,0,0,0.15)"></div></div>
       <div id="preview-wrap"><div id="preview"></div></div>
       <div id="projeto-form" style="display:none;padding:20px 40px;overflow-y:auto;flex:1;background:var(--editor-bg)">
         <h2 style="margin-bottom:16px;font-size:13pt" data-i18n="proj_title">Projeto Cultural</h2>

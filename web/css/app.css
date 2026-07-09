@@ -34,7 +34,7 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
   border-left: 1px solid var(--border); }
 
 /* ── Textarea / Preview ── */
-#textarea-wrap { flex: 1; padding: 40px 60px; background: var(--editor-bg); overflow: auto; }
+#textarea-wrap { flex: 1; padding: 40px 60px; background: var(--editor-bg); overflow: auto; position: relative; }
 #editor { width: 100%; height: 100%; border: none; resize: none; outline: none;
   background: transparent; color: var(--fg);
   font: 12pt 'Courier New', Courier, monospace; line-height: 1.2; }
@@ -127,6 +127,13 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   background: var(--surface3);
 }
+
+/* ── Autocomplete ── */
+#autocomplete-box { min-width: 180px; }
+#autocomplete-box .ac-item { padding: 4px 8px; cursor: pointer; color: var(--fg); display: flex; justify-content: space-between; }
+#autocomplete-box .ac-item:hover,
+#autocomplete-box .ac-item.hover { background: var(--surface2); }
+#autocomplete-box .ac-count { color: var(--fg-sec); font-size: 7pt; }
 
 /* ── Status bar (compact) ── */
 #status { padding: 1px 8px; background: var(--surface2);

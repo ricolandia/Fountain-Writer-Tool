@@ -45,10 +45,11 @@ const app = {
     });
 
     // Events
-    let timer;
+    let timer, acTimer;
     this.editor.addEventListener('input', () => {
-      clearTimeout(timer);
+      clearTimeout(timer); clearTimeout(acTimer);
       timer = setTimeout(() => { this.update(); this.trackProductivity(); }, 100);
+      acTimer = setTimeout(() => { this._showAutocomplete(); }, 150);
       this.playTick();
     });
     this.editor.addEventListener('mouseup', () => { this.updateMarkButtonStates(); this.updateCurrentAct(); });
@@ -2178,9 +2179,108 @@ const app = {
     if (e.ctrlKey && e.key === '=') { e.preventDefault(); this.zoomIn(); }
     if (e.ctrlKey && e.key === '-') { e.preventDefault(); this.zoomOut(); }
     if (e.ctrlKey && e.key === '0') { e.preventDefault(); this.zoomReset(); }
-    // Enter → sync beats immediately (scene heading complete)
+    const ac = document.getElementById('autocomplete-box');
+    if (ac.style.display !== 'none') {
+      const items = ac.querySelectorAll('.ac-item');
+      let hover = ac.querySelector('.hover');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = hover ? hover.nextElementSibling : items[0];
+        if (next) { if (hover) hover.classList.remove('hover'); next.classList.add('hover'); }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = hover ? hover.previousElementSibling : items[items.length - 1];
+        if (prev) { if (hover) hover.classList.remove('hover'); prev.classList.add('hover'); }
+      } else if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        if (hover) hover.click();
+      } else if (e.key === 'Escape') {
+        this._hideAutocomplete();
+      }
+      return;
+    }
     if (e.key === 'Enter') {
       this.syncBeatsFromScenes(this.editor.value);
+    }
+  },
+
+  _getCharacterNamesMap(text) {
+    const chars = {};
+    const lines = text.split('\n');
+    let prev = 'ACTION';
+    lines.forEach(line => {
+      const t = guessType(line, prev);
+      if (t === 'CHARACTER') { const n = line.trim().toUpperCase(); chars[n] = (chars[n] || 0) + 1; }
+      if (t !== 'BLANK') prev = t;
+    });
+    return chars;
+  },
+
+  _showAutocomplete() {
+    const ta = this.editor;
+    const line = ta.value.slice(0, ta.selectionStart).split('\n').length - 1;
+    const lines = ta.value.split('\n');
+    const currentLine = lines[line] || '';
+    const prevType = line > 0 ? guessType(lines[line - 1], 'ACTION') : 'ACTION';
+    const curType = guessType(currentLine, prevType);
+    const text = currentLine.trim();
+    if (curType !== 'CHARACTER' || !text || text.length < 1) { this._hideAutocomplete(); return; }
+    const chars = this._getCharacterNamesMap(ta.value);
+    const matching = Object.keys(chars).filter(n => n.startsWith(text)).sort((a, b) => chars[b] - chars[a]);
+    if (matching.length === 0 || (matching.length === 1 && matching[0] === text)) { this._hideAutocomplete(); return; }
+    const box = document.getElementById('autocomplete-box');
+    box.innerHTML = '';
+    matching.forEach(name => {
+      const div = document.createElement('div');
+      div.className = 'ac-item';
+      div.innerHTML = '<span>' + esc(name) + '</span><span class="ac-count">' + chars[name] + '</span>';
+      div.addEventListener('mousedown', e => { e.preventDefault(); this._insertAutocomplete(name); });
+      div.addEventListener('mouseenter', () => { box.querySelectorAll('.hover').forEach(el => el.classList.remove('hover')); div.classList.add('hover'); });
+      box.appendChild(div);
+    });
+    box.style.display = 'block';
+  },
+
+  _hideAutocomplete() {
+    document.getElementById('autocomplete-box').style.display = 'none';
+  },
+
+  _insertAutocomplete(name) {
+    const ta = this.editor;
+    const line = ta.value.slice(0, ta.selectionStart).split('\n').length - 1;
+    const lines = ta.value.split('\n');
+    const before = lines.slice(0, line).join('\n');
+    const after = lines.slice(line + 1).join('\n');
+    const prefix = before ? '\n' : '';
+    const suffix = after ? '\n' : '';
+    ta.value = before + prefix + name + suffix + after;
+    const pos = (before + prefix + name).length;
+    ta.selectionStart = ta.selectionEnd = pos;
+    this._hideAutocomplete();
+    this.update();
+  },
+
+  shareProject() {
+    const data = {
+      name: this.projectName || _('tb_project_name'),
+      draft: this.editor.value,
+      beats: this.beats,
+      titleData: this.titleData,
+      updated: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const file = new File([blob], (this.projectName || 'roteiro') + '.fountain.json', { type: 'application/json' });
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: 'Fonte - ' + (this.projectName || 'Roteiro') }).catch(() => {});
+    } else {
+      const a = document.getElementById('download-link');
+      a.href = URL.createObjectURL(blob);
+      a.download = file.name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      const subject = encodeURIComponent('Roteiro: ' + (this.projectName || 'Sem título'));
+      const body = encodeURIComponent('Segue em anexo o roteiro gerado pelo Fonte.\n\nAbra em: https://github.com/ricolandia/Fountain-Writer-Tool');
+      window.open('mailto:?subject=' + subject + '&body=' + body, '_blank');
     }
   },
 
