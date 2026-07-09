@@ -2238,6 +2238,17 @@ const app = {
       div.addEventListener('mouseenter', () => { box.querySelectorAll('.hover').forEach(el => el.classList.remove('hover')); div.classList.add('hover'); });
       box.appendChild(div);
     });
+    const lh = parseFloat(getComputedStyle(ta).lineHeight) || 18;
+    const lineTop = line * lh - ta.scrollTop;
+    const wrap = ta.closest('#textarea-wrap');
+    const padLeft = parseFloat(getComputedStyle(wrap).paddingLeft) || 60;
+    const availableBelow = wrap.clientHeight - lineTop - lh;
+    if (availableBelow > 120) {
+      box.style.top = (lineTop + lh + 2) + 'px';
+    } else {
+      box.style.top = Math.max(0, lineTop - 120) + 'px';
+    }
+    box.style.left = padLeft + 'px';
     box.style.display = 'block';
   },
 
@@ -2278,10 +2289,17 @@ const app = {
       a.download = file.name;
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-      const subject = encodeURIComponent('Roteiro: ' + (this.projectName || 'Sem título'));
-      const body = encodeURIComponent('Segue em anexo o roteiro gerado pelo Fonte.\n\nAbra em: https://github.com/ricolandia/Fountain-Writer-Tool');
-      window.open('mailto:?subject=' + subject + '&body=' + body, '_blank');
+      this._showToast();
     }
+  },
+
+  _showToast() {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = _('tb_share_toast');
+    el.style.display = 'block';
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => { el.style.display = 'none'; }, 4000);
   },
 
   wrapSelection(before, after) {
