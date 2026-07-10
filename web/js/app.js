@@ -1974,7 +1974,17 @@ const app = {
     }).catch(() => {});
   },
 
-  openExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'flex'; },
+  openExcalidraw() {
+    const body = document.getElementById('excalidraw-body');
+    body.innerHTML = '';
+    const iframe = document.createElement('iframe');
+    iframe.id = 'excalidraw-iframe';
+    iframe.src = 'index.excalidraw.html?_=' + Date.now();
+    iframe.style.cssText = 'width:100%;height:100%;border:none';
+    iframe.title = 'Excalidraw';
+    body.appendChild(iframe);
+    document.getElementById('excalidraw-modal').style.display = 'flex';
+  },
   closeExcalidraw() {
     if (!confirm(_('excalidraw_unsaved'))) return;
     document.getElementById('excalidraw-modal').style.display = 'none';
