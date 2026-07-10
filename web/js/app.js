@@ -1984,6 +1984,10 @@ const app = {
     iframe.title = 'Excalidraw';
     body.appendChild(iframe);
     document.getElementById('excalidraw-modal').style.display = 'flex';
+    setTimeout(() => {
+      const scene = this._excalidrawScene || { elements: [], appState: {} };
+      iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
+    }, 300);
   },
   closeExcalidraw() {
     if (!confirm(_('excalidraw_unsaved'))) return;
