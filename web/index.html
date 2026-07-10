@@ -511,8 +511,13 @@
         <span onclick="app.closeExcalidraw()" style="cursor:pointer;font-weight:bold;font-size:14pt">✕</span>
       </span>
     </div>
-    <div class="modal-body" style="padding:0;height:calc(100% - 50px);display:block">
-      <iframe id="excalidraw-iframe" src="index.excalidraw.html" style="width:100%;height:100%;border:none" title="Excalidraw"></iframe>
+    <div id="excalidraw-body" style="flex:1;position:relative;height:calc(100% - 50px)">
+      <div id="excalidraw-placeholder" style="display:flex;align-items:center;justify-content:center;height:100%;background:var(--editor-bg);color:var(--fg-sec);font-size:12pt;text-align:center;line-height:1.6;cursor:pointer;flex-direction:column" onclick="app.excalidrawStart()">
+        <div style="font-size:36px;margin-bottom:12px">🎨</div>
+        <div><b data-i18n="excalidraw_placeholder_title">Crie visualmente aqui</b></div>
+        <div style="font-size:9pt;margin-top:6px" data-i18n="excalidraw_placeholder_sub">Clique para começar ou arraste um arquivo .excalidraw</div>
+      </div>
+      <iframe id="excalidraw-iframe" src="index.excalidraw.html" style="width:100%;height:100%;border:none;display:none"></iframe>
     </div>
   </div>
 </div>
