@@ -1978,8 +1978,15 @@ const app = {
     if (!this._excalidrawScene || !this._excalidrawScene.elements) {
       this._excalidrawScene = { elements: [], appState: {} };
     }
+    const body = document.getElementById('excalidraw-body');
+    body.innerHTML = '';
+    const iframe = document.createElement('iframe');
+    iframe.id = 'excalidraw-iframe';
+    iframe.src = 'index.excalidraw.html?_=' + Date.now();
+    iframe.style.cssText = 'width:100%;height:100%;border:none';
+    iframe.title = 'Excalidraw';
+    body.appendChild(iframe);
     document.getElementById('excalidraw-modal').style.display = 'flex';
-    document.getElementById('excalidraw-iframe').src = 'index.excalidraw.html?_=' + Date.now();
   },
   closeExcalidraw() {
     if (!confirm(_('excalidraw_unsaved'))) return;
@@ -1997,7 +2004,7 @@ const app = {
     window.addEventListener('message', (e) => {
       if (!e.data || typeof e.data !== 'object') return;
       if (e.data.type === 'EXCALIDRAW_READY') {
-        const iframe = document.querySelector('#excalidraw-modal iframe');
+        const iframe = document.getElementById('excalidraw-iframe');
         if (iframe) {
           iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene: this._excalidrawScene }, '*');
         }
