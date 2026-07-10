@@ -1969,11 +1969,10 @@ const app = {
   },
 
   openExcalidraw() {
-    this._excalidrawModified = false;
     document.getElementById('excalidraw-modal').style.display = 'flex';
   },
   closeExcalidraw() {
-    if (this._excalidrawModified && !confirm(_('excalidraw_unsaved'))) return;
+    if (!confirm(_('excalidraw_unsaved'))) return;
     document.getElementById('excalidraw-modal').style.display = 'none';
   },
   toggleExcalidrawFullscreen() {
@@ -1982,7 +1981,7 @@ const app = {
     modal.classList.toggle('excalidraw-fullscreen');
     btn.textContent = modal.classList.contains('excalidraw-fullscreen') ? '✕' : '⛶';
   },
-  _excalidrawScene: null, _excalidrawModified: false,
+  _excalidrawScene: null,
 
   _setupExcalidrawListener() {
     window.addEventListener('message', (e) => {
@@ -1995,7 +1994,6 @@ const app = {
       }
       if (e.data.type === 'SCENE_DATA') {
         this._excalidrawScene = e.data.scene || null;
-        this._excalidrawModified = true;
       }
     });
   },
