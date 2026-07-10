@@ -1968,15 +1968,21 @@ const app = {
     }).catch(() => {});
   },
 
-  openExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'flex'; },
-  closeExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'none'; },
+  openExcalidraw() {
+    this._excalidrawModified = false;
+    document.getElementById('excalidraw-modal').style.display = 'flex';
+  },
+  closeExcalidraw() {
+    if (this._excalidrawModified && !confirm(_('excalidraw_unsaved'))) return;
+    document.getElementById('excalidraw-modal').style.display = 'none';
+  },
   toggleExcalidrawFullscreen() {
     const modal = document.querySelector('.excalidraw-modal');
     const btn = document.getElementById('excalidraw-fullscreen-btn');
     modal.classList.toggle('excalidraw-fullscreen');
     btn.textContent = modal.classList.contains('excalidraw-fullscreen') ? '✕' : '⛶';
   },
-  _excalidrawScene: null,
+  _excalidrawScene: null, _excalidrawModified: false,
 
   _setupExcalidrawListener() {
     window.addEventListener('message', (e) => {
@@ -1989,6 +1995,7 @@ const app = {
       }
       if (e.data.type === 'SCENE_DATA') {
         this._excalidrawScene = e.data.scene || null;
+        this._excalidrawModified = true;
       }
     });
   },
