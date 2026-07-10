@@ -2001,9 +2001,10 @@ const app = {
     window.addEventListener('message', (e) => {
       if (!e.data || typeof e.data !== 'object') return;
       if (e.data.type === 'EXCALIDRAW_READY') {
-        const iframe = document.querySelector('#excalidraw-modal iframe');
+        const iframe = document.getElementById('excalidraw-iframe');
         if (iframe) {
-          iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene: this._excalidrawScene }, '*');
+          const scene = this._excalidrawScene || { elements: [], appState: {} };
+          iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
         }
       }
       if (e.data.type === 'SCENE_DATA') {
