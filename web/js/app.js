@@ -920,7 +920,7 @@ const app = {
     this.beats[idx].comments.push({
       author: this.projectName || 'Autor',
       text,
-      time: new Date().toLocaleString()
+      time: new Date().toLocaleString(lang)
     });
     document.getElementById('beat-comment-input').value = '';
     this._renderBeatComments(this.beats[idx].comments);
@@ -1158,12 +1158,12 @@ const app = {
       row.appendChild(lbl);
       actNames.forEach(act => {
         const cell = document.createElement('div');
-        cell.style.cssText = 'min-height:28px;background:var(--surface2);border-radius:3px;padding:3px;display:flex;flex-direction:column;gap:2px';
+          cell.style.cssText = 'min-height:36px;background:var(--surface2);border-radius:3px;padding:3px;display:flex;flex-direction:column;gap:2px';
         // Scenes that match this act + plotline
         const cellScenes = scenes.filter(s => sceneAct[s.line] === act && scenePlot[s.line] === pl);
         cellScenes.forEach(s => {
           const sc = document.createElement('div');
-          sc.style.cssText = 'padding:2px 4px;font-size:8pt;cursor:pointer;border-radius:2px;background:var(--surface);white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+          sc.style.cssText = 'padding:4px 6px;font-size:9pt;cursor:pointer;border-radius:2px;background:var(--surface);white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
           sc.textContent = s.label;
           sc.title = s.label;
           sc.addEventListener('click', () => this.goToScene(s.line));
@@ -1235,9 +1235,9 @@ const app = {
       actionRow.innerHTML =
         '<span style="font-size:8pt;color:' + color + '">' + esc(pl) + '</span>' +
         '<span style="flex:1"></span>' +
-        '<span style="cursor:pointer;font-size:11pt" onclick="app.editBeat(' + i + ')">✎</span>' +
-        '<span style="cursor:pointer;font-size:11pt" onclick="app.insertBeat(' + i + ')">↗</span>' +
-        '<span style="color:#c00;cursor:pointer;font-size:11pt" onclick="app.deleteBeat(' + i + ')">✕</span>';
+        '<span style="cursor:pointer;font-size:13pt" onclick="app.editBeat(' + i + ')">✎</span>' +
+        '<span style="cursor:pointer;font-size:13pt" onclick="app.insertBeat(' + i + ')">↗</span>' +
+        '<span style="color:#c00;cursor:pointer;font-size:13pt" onclick="app.deleteBeat(' + i + ')">✕</span>';
       div.appendChild(actionRow);
       list.appendChild(div);
     });
@@ -1553,7 +1553,8 @@ const app = {
       return sum + (isNaN(v) ? 0 : v);
     }, 0);
     const el = document.getElementById('proj-orc-total');
-    if (el) el.textContent = 'Total: R$ ' + total.toLocaleString('pt-BR', {minimumFractionDigits:2});
+      const locale = lang === 'pt-BR' ? 'pt-BR' : 'en-US';
+      if (el) el.textContent = 'Total: R$ ' + total.toLocaleString(locale, {minimumFractionDigits:2});
   },
 
   salvarProjeto() {
@@ -1656,7 +1657,7 @@ const app = {
   saveFile() {
     const blob = new Blob([this.editor.value], { type: 'text/plain;charset=utf-8' });
     const a = document.getElementById('download-link');
-    a.href = URL.createObjectURL(blob); a.download = this.fileName || 'roteiro.fountain'; a.click();
+        a.href = URL.createObjectURL(blob); a.download = this.fileName || (lang === 'pt-BR' ? 'roteiro' : 'script') + '.fountain'; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     this.isModified = false;
     this.updateIndicator();
@@ -1684,7 +1685,8 @@ const app = {
       lang: lang,
       updated: new Date().toISOString()
     };
-    const name = (this.projectName || 'roteiro') + '.fountain.json';
+    const defaultName = this.projectName || (lang === 'pt-BR' ? 'roteiro' : 'script');
+    const name = defaultName + '.fountain.json';
     if (window.showSaveFilePicker && this._fileHandle) {
       try {
         const writable = await this._fileHandle.createWritable();
@@ -1698,7 +1700,7 @@ const app = {
       try {
         const handle = await window.showSaveFilePicker({
           suggestedName: name,
-          types: [{ description: 'Projeto Fountain', accept: { 'application/json': ['.json'] } }]
+          types: [{ description: 'Fountain JSON', accept: { 'application/json': ['.json'] } }]
         });
         this._fileHandle = handle;
         const writable = await handle.createWritable();
@@ -1749,12 +1751,13 @@ const app = {
           localStorage.setItem('fw_beats', JSON.stringify(this.beats));
           localStorage.setItem('fw_project_name', this.projectName);
           localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors));
-          this.fileName = file.name.replace(/\.fountain\.json$/, '.fountain');
+          const defaultFileName = lang === 'pt-BR' ? 'roteiro' : 'script';
+      this.fileName = file.name.replace(/\.(?:fountain\.)?json$/, '.fountain');
           this.saveBeats();
           this.update();
           this.syncBeatsFromScenes(this.editor.value);
           this.renderBeats();
-        } catch (err) { alert('Erro ao ler projeto: ' + err.message); }
+        } catch (err) { alert(_('err_import') + ': ' + err.message); }
       };
       reader.readAsText(file, 'UTF-8');
     };
@@ -2310,7 +2313,7 @@ const app = {
       updated: new Date().toISOString()
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const file = new File([blob], (this.projectName || 'roteiro') + '.fountain.json', { type: 'application/json' });
+    const file = new File([blob], (this.projectName || (lang === 'pt-BR' ? 'roteiro' : 'script')) + '.fountain.json', { type: 'application/json' });
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
       navigator.share({ files: [file], title: 'Fonte - ' + (this.projectName || 'Roteiro') }).catch(() => {});
     } else {
@@ -2460,7 +2463,7 @@ const app = {
       for (let i = backups.length - 1; i >= 0; i--) {
         const b = backups[i];
         const date = new Date(b.time);
-        const label = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        const label = date.toLocaleDateString(lang) + ' ' + date.toLocaleTimeString(lang);
         const preview = esc(b.text.split('\n').slice(0, 3).join(' | ').slice(0, 80));
         html += '<div style="padding:6px 0;border-bottom:1px solid var(--border)">';
         html += '<div style="display:flex;justify-content:space-between;align-items:center">';
@@ -2551,7 +2554,7 @@ document.getElementById('file-input').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
   if (file.size > 50 * 1024 * 1024) {
-    alert('Arquivo muito grande. Máximo: 50 MB.');
+    alert(_('err_file_size'));
     e.target.value = '';
     return;
   }

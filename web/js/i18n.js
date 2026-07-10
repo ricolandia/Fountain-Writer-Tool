@@ -182,6 +182,8 @@ const i18n = {
     save_confirm: 'Criar novo? Alterações não salvas serão perdidas.',
     save_before_new: 'Salvar projeto atual antes de criar novo?',
     backup_restore_confirm: 'Restaurar backup? O texto atual será substituído.',
+    err_import: 'Erro ao ler projeto',
+    err_file_size: 'Arquivo muito grande. Máximo: 50 MB.',
   },
   en: {
     tb_new: 'New', tb_open: 'Open', tb_save: 'Save',
@@ -366,6 +368,8 @@ const i18n = {
     save_confirm: 'Create new? Unsaved changes will be lost.',
     save_before_new: 'Save current project before creating new?',
     backup_restore_confirm: 'Restore backup? Current text will be replaced.',
+    err_import: 'Error reading project',
+    err_file_size: 'File too large. Maximum: 50 MB.',
   }
 };
 
