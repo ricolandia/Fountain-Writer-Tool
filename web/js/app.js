@@ -1971,23 +1971,11 @@ const app = {
   },
 
   openExcalidraw() {
-    const hasScene = this._excalidrawScene && this._excalidrawScene.elements && this._excalidrawScene.elements.length > 0;
-    document.getElementById('excalidraw-placeholder').style.display = hasScene ? 'none' : 'flex';
-    document.getElementById('excalidraw-iframe').style.display = hasScene ? 'block' : 'none';
     document.getElementById('excalidraw-modal').style.display = 'flex';
-    if (hasScene) {
-      const iframe = document.querySelector('#excalidraw-iframe');
-      if (iframe && iframe.contentWindow) {
-        iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene: this._excalidrawScene }, '*');
-      }
+    const iframe = document.querySelector('#excalidraw-modal iframe');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene: this._excalidrawScene }, '*');
     }
-  },
-  excalidrawStart() {
-    this._excalidrawScene = { elements: [], appState: {} };
-    document.getElementById('excalidraw-placeholder').style.display = 'none';
-    const iframe = document.getElementById('excalidraw-iframe');
-    iframe.style.display = 'block';
-    iframe.src = 'index.excalidraw.html';
   },
   closeExcalidraw() {
     if (!confirm(_('excalidraw_unsaved'))) return;
