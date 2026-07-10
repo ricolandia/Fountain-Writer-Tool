@@ -1651,8 +1651,6 @@ const app = {
     localStorage.removeItem('fw_project_name'); localStorage.removeItem('fw_scene_colors');
     localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
     this.projetoData = null; localStorage.removeItem('fw_projeto');
-    this._excalidrawScene = { elements: [], appState: {} };
-    localStorage.removeItem('fw_excalidraw_scene');
     this.renderBeats(); this.update();
   },
   openFile() { document.getElementById('file-input').click(); },
@@ -1730,8 +1728,6 @@ const app = {
       reader.onload = ev => {
         try {
           const data = JSON.parse(ev.target.result);
-          this._excalidrawScene = { elements: [], appState: {} };
-          localStorage.removeItem('fw_excalidraw_scene');
           this.editor.value = data.draft || '';
           this._prevText = null;
           this.beats = data.beats || [];
@@ -1972,46 +1968,27 @@ const app = {
     }).catch(() => {});
   },
 
-  openExcalidraw() {
-    const saved = safeJSON('fw_excalidraw_scene', 'null');
-    if (saved && saved.elements) this._excalidrawScene = saved;
-    if (!this._excalidrawScene || !this._excalidrawScene.elements) {
-      this._excalidrawScene = { elements: [], appState: {} };
-    }
-    const body = document.getElementById('excalidraw-body');
-    body.innerHTML = '';
-    const iframe = document.createElement('iframe');
-    iframe.id = 'excalidraw-iframe';
-    iframe.src = 'index.excalidraw.html?_=' + Date.now();
-    iframe.style.cssText = 'width:100%;height:100%;border:none';
-    iframe.title = 'Excalidraw';
-    body.appendChild(iframe);
-    document.getElementById('excalidraw-modal').style.display = 'flex';
-  },
-  closeExcalidraw() {
-    if (!confirm(_('excalidraw_unsaved'))) return;
-    document.getElementById('excalidraw-modal').style.display = 'none';
-  },
+  openExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'flex'; },
+  closeExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'none'; },
   toggleExcalidrawFullscreen() {
     const modal = document.querySelector('.excalidraw-modal');
     const btn = document.getElementById('excalidraw-fullscreen-btn');
     modal.classList.toggle('excalidraw-fullscreen');
     btn.textContent = modal.classList.contains('excalidraw-fullscreen') ? '✕' : '⛶';
   },
-  _excalidrawScene: { elements: [], appState: {} },
+  _excalidrawScene: null,
 
   _setupExcalidrawListener() {
     window.addEventListener('message', (e) => {
       if (!e.data || typeof e.data !== 'object') return;
       if (e.data.type === 'EXCALIDRAW_READY') {
-        const iframe = document.getElementById('excalidraw-iframe');
+        const iframe = document.querySelector('#excalidraw-modal iframe');
         if (iframe) {
           iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene: this._excalidrawScene }, '*');
         }
       }
       if (e.data.type === 'SCENE_DATA') {
         this._excalidrawScene = e.data.scene || null;
-        localStorage.setItem('fw_excalidraw_scene', JSON.stringify(this._excalidrawScene));
       }
     });
   },
