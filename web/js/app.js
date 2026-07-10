@@ -1652,7 +1652,6 @@ const app = {
     localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
     this.projetoData = null; localStorage.removeItem('fw_projeto');
     this._excalidrawScene = null;
-    localStorage.removeItem('fw_backups');
     this.renderBeats(); this.update();
   },
   openFile() { document.getElementById('file-input').click(); },
