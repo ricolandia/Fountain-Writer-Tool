@@ -1746,6 +1746,8 @@ const app = {
     this._hasExcalidrawImages = false;
     localStorage.setItem('fw_excalidraw_scenes', JSON.stringify(this._excalidrawScenes));
     localStorage.setItem('fw_excalidraw_idx', '0');
+    this.closeExcalidraw();
+    this._excalidrawSyncUI();
     this.renderBeats(); this.update();
   },
   openFile() { document.getElementById('file-input').click(); },
@@ -1847,12 +1849,17 @@ const app = {
           if (data.previewMode !== undefined) this.previewMode = data.previewMode;
           if (data.viewMode !== undefined) this.viewMode = data.viewMode;
           if (data.projeto !== undefined) { this.projetoData = data.projeto; localStorage.setItem('fw_projeto', JSON.stringify(data.projeto)); }
-          if (data.excalidrawScenes) {
+          if (data.excalidrawScenes && data.excalidrawScenes.length > 0) {
             this._excalidrawScenes = data.excalidrawScenes;
             this._excalidrawCurrentIdx = data.excalidrawCurrentIdx || 0;
             localStorage.setItem('fw_excalidraw_scenes', JSON.stringify(this._excalidrawScenes));
             localStorage.setItem('fw_excalidraw_idx', String(this._excalidrawCurrentIdx));
+          } else {
+            this._excalidrawScenes = [{ id: 'b1', name: _('excalidraw_empty'), scene: { elements: [], appState: {} } }];
+            this._excalidrawCurrentIdx = 0;
+            localStorage.setItem('fw_excalidraw_scenes', JSON.stringify(this._excalidrawScenes));
           }
+          this._excalidrawSyncUI();
           localStorage.setItem('fw_title', JSON.stringify(this.titleData));
           localStorage.setItem('fw_beats', JSON.stringify(this.beats));
           localStorage.setItem('fw_project_name', this.projectName);
