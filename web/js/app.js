@@ -1651,6 +1651,7 @@ const app = {
     localStorage.removeItem('fw_project_name'); localStorage.removeItem('fw_scene_colors');
     localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
     this.projetoData = null; localStorage.removeItem('fw_projeto');
+    this._excalidrawScene = null;
     this.renderBeats(); this.update();
   },
   openFile() { document.getElementById('file-input').click(); },
@@ -1728,6 +1729,7 @@ const app = {
       reader.onload = ev => {
         try {
           const data = JSON.parse(ev.target.result);
+          this._excalidrawScene = null;
           this.editor.value = data.draft || '';
           this._prevText = null;
           this.beats = data.beats || [];
