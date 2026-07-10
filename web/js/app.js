@@ -1652,7 +1652,6 @@ const app = {
     localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
     this.projetoData = null; localStorage.removeItem('fw_projeto');
     this._excalidrawScene = null;
-    localStorage.removeItem('fw_excalidraw_scene');
     localStorage.setItem('fw_backups', '[]');
     this.renderBeats(); this.update();
   },
@@ -1980,11 +1979,9 @@ const app = {
   openExcalidraw() {
     const iframe = document.getElementById('excalidraw-iframe');
     if (iframe) {
-      localStorage.setItem('fw_excalidraw_scene', JSON.stringify(this._excalidrawScene));
       iframe.src = 'index.excalidraw.html?_=' + Date.now();
       setTimeout(() => {
-        const saved = safeJSON('fw_excalidraw_scene', 'null');
-        const scene = saved && saved.elements ? saved : (this._excalidrawScene || { elements: [], appState: {} });
+        const scene = this._excalidrawScene || { elements: [], appState: {} };
         if (iframe.contentWindow) {
           iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
         }
@@ -2012,7 +2009,6 @@ const app = {
       }
       if (e.data.type === 'SCENE_DATA') {
         this._excalidrawScene = e.data.scene || null;
-        localStorage.setItem('fw_excalidraw_scene', JSON.stringify(this._excalidrawScene));
       }
     });
   },
