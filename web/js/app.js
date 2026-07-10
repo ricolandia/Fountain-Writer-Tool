@@ -21,6 +21,8 @@ const app = {
   _audioContext: null,
   _fileHandle: null,
   _sceneActMap: {},
+  _excalidrawScenes: [], _excalidrawCurrentIdx: 0,
+  _excalidrawLoading: false, _hasExcalidrawImages: false,
   _orcListenersAttached: false,
   _editingBeatIdx: -1,
   _prevText: null,
@@ -66,6 +68,7 @@ const app = {
     this.initAutoSave();
     this.initBackup();
     this._setupExcalidrawListener();
+    this._excalidrawInit();
     window.addEventListener('beforeunload', e => {
       if (this.isModified) { e.preventDefault(); e.returnValue = ''; }
     });
@@ -1305,6 +1308,93 @@ const app = {
     }
   },
 
+  excalidrawPrev() {
+    if (this._excalidrawScenes.length <= 1) return;
+    this._excalidrawSaveCurrent(() => {
+      this._excalidrawCurrentIdx = Math.max(0, this._excalidrawCurrentIdx - 1);
+      this._excalidrawLoadCurrent();
+    });
+  },
+
+  excalidrawNext() {
+    if (this._excalidrawScenes.length <= 1) return;
+    this._excalidrawSaveCurrent(() => {
+      this._excalidrawCurrentIdx = Math.min(this._excalidrawScenes.length - 1, this._excalidrawCurrentIdx + 1);
+      this._excalidrawLoadCurrent();
+    });
+  },
+
+  excalidrawNew() {
+    const name = prompt(_('excalidraw_name_prompt'));
+    if (!name) return;
+    const board = { id: 'b' + Date.now(), name, scene: { elements: [], appState: {} } };
+    this._excalidrawScenes.push(board);
+    this._excalidrawCurrentIdx = this._excalidrawScenes.length - 1;
+    this._excalidrawLoadCurrent();
+  },
+
+  excalidrawRename() {
+    const board = this._excalidrawScenes[this._excalidrawCurrentIdx];
+    if (!board) return;
+    const name = prompt(_('excalidraw_name_prompt'), board.name);
+    if (name) { board.name = name; this._excalidrawSyncUI(); }
+  },
+
+  excalidrawDelete() {
+    if (this._excalidrawScenes.length <= 1) return;
+    const board = this._excalidrawScenes[this._excalidrawCurrentIdx];
+    if (!board) return;
+    if (!confirm(_('excalidraw_confirm_delete').replace('{}', board.name))) return;
+    this._excalidrawScenes.splice(this._excalidrawCurrentIdx, 1);
+    this._excalidrawCurrentIdx = Math.max(0, this._excalidrawCurrentIdx - 1);
+    this._excalidrawLoadCurrent();
+  },
+
+  _excalidrawSaveCurrent(callback) {
+    const iframe = document.querySelector('#excalidraw-modal iframe');
+    if (iframe && iframe.contentWindow) {
+      let done = false;
+      const handler = (e) => {
+        if (e.data && e.data.type === 'SCENE_DATA') {
+          window.removeEventListener('message', handler);
+          const board = this._excalidrawScenes[this._excalidrawCurrentIdx];
+          if (board) board.scene = e.data.scene || board.scene;
+          done = true;
+          if (callback) callback();
+        }
+      };
+      window.addEventListener('message', handler);
+      iframe.contentWindow.postMessage({ type: 'REQUEST_SCENE' }, '*');
+      setTimeout(() => {
+        if (!done) { window.removeEventListener('message', handler); if (callback) callback(); }
+      }, 1000);
+    } else {
+      if (callback) callback();
+    }
+  },
+
+  _excalidrawLoadCurrent() {
+    const board = this._excalidrawScenes[this._excalidrawCurrentIdx];
+    if (!board) return;
+    this._excalidrawSyncUI();
+    this._excalidrawLoading = true;
+    const iframe = document.querySelector('#excalidraw-modal iframe');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene: board.scene }, '*');
+      setTimeout(() => { this._excalidrawLoading = false; }, 500);
+    }
+  },
+
+  _excalidrawSyncUI() {
+    const board = this._excalidrawScenes[this._excalidrawCurrentIdx];
+    const nameEl = document.getElementById('excalidraw-name');
+    const counterEl = document.getElementById('excalidraw-counter');
+    const warnEl = document.getElementById('excalidraw-img-warning');
+    if (nameEl) nameEl.textContent = board ? board.name : '-';
+    if (counterEl) counterEl.textContent = board ? (this._excalidrawCurrentIdx + 1) + '/' + this._excalidrawScenes.length : '0/0';
+    if (warnEl) warnEl.style.display = this._hasExcalidrawImages ? 'inline' : 'none';
+  },
+
   /* ── Help tabs ── */
   selHelpTab(tab) {
     document.querySelectorAll('.help-tab').forEach(t => t.classList.remove('active'));
@@ -1651,6 +1741,11 @@ const app = {
     localStorage.removeItem('fw_project_name'); localStorage.removeItem('fw_scene_colors');
     localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
     this.projetoData = null; localStorage.removeItem('fw_projeto');
+    this._excalidrawScenes = [{ id: 'b1', name: _('excalidraw_empty'), scene: { elements: [], appState: {} } }];
+    this._excalidrawCurrentIdx = 0;
+    this._hasExcalidrawImages = false;
+    localStorage.setItem('fw_excalidraw_scenes', JSON.stringify(this._excalidrawScenes));
+    localStorage.setItem('fw_excalidraw_idx', '0');
     this.renderBeats(); this.update();
   },
   openFile() { document.getElementById('file-input').click(); },
@@ -1682,6 +1777,8 @@ const app = {
       previewMode: this.previewMode,
       viewMode: this.viewMode,
       focusOn: this.focusOn,
+      excalidrawScenes: this._excalidrawScenes,
+      excalidrawCurrentIdx: this._excalidrawCurrentIdx,
       lang: lang,
       updated: new Date().toISOString()
     };
@@ -1714,6 +1811,9 @@ const app = {
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     }
     this.isModified = false; this.updateIndicator();
+    this._hasExcalidrawImages = false; this._excalidrawSyncUI();
+    localStorage.setItem('fw_excalidraw_scenes', JSON.stringify(this._excalidrawScenes));
+    localStorage.setItem('fw_excalidraw_idx', String(this._excalidrawCurrentIdx));
     localStorage.setItem('fw_project_saved', 'true');
   },
 
@@ -1747,6 +1847,12 @@ const app = {
           if (data.previewMode !== undefined) this.previewMode = data.previewMode;
           if (data.viewMode !== undefined) this.viewMode = data.viewMode;
           if (data.projeto !== undefined) { this.projetoData = data.projeto; localStorage.setItem('fw_projeto', JSON.stringify(data.projeto)); }
+          if (data.excalidrawScenes) {
+            this._excalidrawScenes = data.excalidrawScenes;
+            this._excalidrawCurrentIdx = data.excalidrawCurrentIdx || 0;
+            localStorage.setItem('fw_excalidraw_scenes', JSON.stringify(this._excalidrawScenes));
+            localStorage.setItem('fw_excalidraw_idx', String(this._excalidrawCurrentIdx));
+          }
           localStorage.setItem('fw_title', JSON.stringify(this.titleData));
           localStorage.setItem('fw_beats', JSON.stringify(this.beats));
           localStorage.setItem('fw_project_name', this.projectName);
@@ -1968,7 +2074,15 @@ const app = {
     }).catch(() => {});
   },
 
-  openExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'flex'; },
+  openExcalidraw() {
+    document.getElementById('excalidraw-modal').style.display = 'flex';
+    this._excalidrawSyncUI();
+    const iframe = document.querySelector('#excalidraw-modal iframe');
+    const board = this._excalidrawScenes[this._excalidrawCurrentIdx];
+    if (iframe && iframe.contentWindow && board) {
+      iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene: board.scene }, '*');
+    }
+  },
   closeExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'none'; },
   toggleExcalidrawFullscreen() {
     const modal = document.querySelector('.excalidraw-modal');
@@ -1976,19 +2090,37 @@ const app = {
     modal.classList.toggle('excalidraw-fullscreen');
     btn.textContent = modal.classList.contains('excalidraw-fullscreen') ? '✕' : '⛶';
   },
-  _excalidrawScene: null,
+
+  _excalidrawInit() {
+    const saved = safeJSON('fw_excalidraw_scenes', 'null');
+    if (saved && Array.isArray(saved) && saved.length > 0) {
+      this._excalidrawScenes = saved;
+      this._excalidrawCurrentIdx = parseInt(localStorage.getItem('fw_excalidraw_idx') || '0');
+      this._excalidrawCurrentIdx = Math.max(0, Math.min(this._excalidrawCurrentIdx, this._excalidrawScenes.length - 1));
+    } else {
+      this._excalidrawScenes = [{ id: 'b1', name: _('excalidraw_empty'), scene: { elements: [], appState: {} } }];
+      this._excalidrawCurrentIdx = 0;
+    }
+  },
 
   _setupExcalidrawListener() {
     window.addEventListener('message', (e) => {
       if (!e.data || typeof e.data !== 'object') return;
       if (e.data.type === 'EXCALIDRAW_READY') {
         const iframe = document.querySelector('#excalidraw-modal iframe');
-        if (iframe) {
-          iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene: this._excalidrawScene }, '*');
+        const board = this._excalidrawScenes[this._excalidrawCurrentIdx];
+        if (iframe && board && board.scene) {
+          iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene: board.scene }, '*');
         }
       }
       if (e.data.type === 'SCENE_DATA') {
-        this._excalidrawScene = e.data.scene || null;
+        if (this._excalidrawLoading) return;
+        const board = this._excalidrawScenes[this._excalidrawCurrentIdx];
+        if (board) board.scene = e.data.scene || board.scene;
+        if (e.data.scene && e.data.scene.files && Object.keys(e.data.scene.files).length > 0) {
+          this._hasExcalidrawImages = true;
+          this._excalidrawSyncUI();
+        }
       }
     });
   },
