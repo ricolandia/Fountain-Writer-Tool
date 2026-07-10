@@ -2130,6 +2130,7 @@ const app = {
     });
     document.getElementById('lang-btn').textContent = lang === 'pt-BR' ? 'PT' : 'EN';
     document.title = 'Fonte';
+    document.documentElement.lang = lang;
     const pixRow = document.getElementById('pix-entry');
     if (pixRow) pixRow.closest('p').style.display = lang === 'pt-BR' ? 'block' : 'none';
     if (typeof structureOpts !== 'undefined') this.populateStructureSelects();
@@ -2435,7 +2436,8 @@ const app = {
 
   /* ── Auto-save ── */
   initAutoSave() {
-    setInterval(() => {
+    if (this._autoSaveTimer) return;
+    this._autoSaveTimer = setInterval(() => {
       try {
         localStorage.setItem('fw_draft', this.editor.value);
         this.saveBeats();
@@ -2446,7 +2448,8 @@ const app = {
 
   /* ── Auto-backup ── */
   initBackup() {
-    setInterval(() => {
+    if (this._backupTimer) return;
+    this._backupTimer = setInterval(() => {
       const text = this.editor.value;
       if (!text.trim()) return;
       try {
