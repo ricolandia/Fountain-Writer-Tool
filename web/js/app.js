@@ -1972,10 +1972,7 @@ const app = {
 
   openExcalidraw() {
     document.getElementById('excalidraw-modal').style.display = 'flex';
-    const iframe = document.querySelector('#excalidraw-modal iframe');
-    if (iframe && iframe.contentWindow) {
-      iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene: this._excalidrawScene }, '*');
-    }
+    document.getElementById('excalidraw-iframe').src = 'index.excalidraw.html?_=' + Date.now();
   },
   closeExcalidraw() {
     if (!confirm(_('excalidraw_unsaved'))) return;
