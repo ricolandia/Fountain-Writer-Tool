@@ -80,7 +80,7 @@ const app = {
     const text = this.editor.value;
     this._resyncLineAnchors(this._prevText, text);
     this._prevText = text;
-    localStorage.setItem('fw_draft', text);
+    try { localStorage.setItem('fw_draft', text); } catch(e) {}
     this.isModified = true;
     this.updateIndicator();
     this.autoAssignScenes(text);
@@ -130,7 +130,7 @@ const app = {
     });
     if (colorsChanged) {
       this.sceneColors = newColors;
-      localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors));
+      try { localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors)); } catch(e) {}
     }
 
     const marks = this.getLineMarks();
@@ -158,7 +158,7 @@ const app = {
     });
     if (colorsChanged) {
       this.sceneColors = newColors;
-      localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors));
+      try { localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors)); } catch(e) {}
     }
     const marks = this.getLineMarks();
     const newMarks = {};
@@ -2500,7 +2500,7 @@ const app = {
     // draft's colors/highlights keyed to line numbers that likely mean
     // something completely different in the restored (older) text.
     this.sceneColors = backups[idx].sceneColors || {};
-    localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors));
+    try { localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors)); } catch(e) {}
     this.saveLineMarks(backups[idx].lineMarks || {});
     this.update();
     this.renderBeats();
