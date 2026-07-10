@@ -1977,11 +1977,11 @@ const app = {
   },
 
   openExcalidraw() {
+    const scene = this._excalidrawScene || { elements: [], appState: {} };
     const iframe = document.getElementById('excalidraw-iframe');
     if (iframe) {
       iframe.src = 'index.excalidraw.html?_=' + Date.now();
       setTimeout(() => {
-        const scene = this._excalidrawScene || { elements: [], appState: {} };
         if (iframe.contentWindow) {
           iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
         }
@@ -2005,7 +2005,11 @@ const app = {
     window.addEventListener('message', (e) => {
       if (!e.data || typeof e.data !== 'object') return;
       if (e.data.type === 'EXCALIDRAW_READY') {
-        // Scene is sent via setTimeout in openExcalidraw()
+        const iframe = document.getElementById('excalidraw-iframe');
+        if (iframe) {
+          const scene = this._excalidrawScene || { elements: [], appState: {} };
+          iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
+        }
       }
       if (e.data.type === 'SCENE_DATA') {
         this._excalidrawScene = e.data.scene || null;
