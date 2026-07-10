@@ -18,7 +18,7 @@
   <label for="show-scenes" class="backdrop" id="backdrop-scenes"></label>
   <label for="show-beats" class="backdrop" id="backdrop-beats"></label>
 
-  <div id="toolbar">
+  <header id="toolbar">
     <span class="mobile-only"><label for="show-scenes" class="pane-btn">🎬 Cenas</label></span>
     <span class="mobile-only"><label for="show-beats" class="pane-btn">📋 Beats</label></span>
     <button onclick="app.newFile()" data-i18n="tb_new">📄 Novo</button>
@@ -30,8 +30,8 @@
     <button onclick="app.openExportModal()" data-i18n="tb_html">📑 HTML</button>
     <button onclick="app.openExportModal()" data-i18n="tb_pdf">🖨 PDF</button>
     <span style="width:100%;height:0"></span>
-    <button onclick="app.togglePreview()">👁</button>
-    <button onclick="app.openFind()">🔍</button>
+    <button onclick="app.togglePreview()" data-i18n-title="title_preview">👁</button>
+    <button onclick="app.openFind()" data-i18n-title="title_find">🔍</button>
     <span class="sep"></span>
     <button onclick="app.toggleTitulo()" data-i18n="tb_title">📄 Ficha</button>
     <button onclick="app.openStats()" data-i18n="tb_stats">📊 Stats</button>
@@ -49,23 +49,23 @@
     <button onclick="app.openExcalidraw()" data-i18n="tb_quadro" data-i18n-title="title_quadro" title="Quadro de planejamento visual">🧩 Quadro</button>
     <span class="sep"></span>
     <button onclick="app.toggleTimerMode()" id="timer-mode-btn" data-i18n="tb_timer">⏱ Escrita</button>
-    <button onclick="app.toggleTimer()" id="timer-start-btn" style="font-size:9pt;padding:2px 4px">▶</button>
-    <button onclick="app.resetTimer()" id="timer-reset-btn" style="font-size:9pt;padding:2px 4px">⏹</button>
+    <button onclick="app.toggleTimer()" id="timer-start-btn" data-i18n-title="title_timer_start" title="Iniciar cronômetro" style="font-size:9pt;padding:2px 4px">▶</button>
+    <button onclick="app.resetTimer()" id="timer-reset-btn" data-i18n-title="title_timer_reset" title="Resetar cronômetro" style="font-size:9pt;padding:2px 4px">⏹</button>
     <span class="sep"></span>
     <button onclick="app.toggleSound()" id="sound-btn" data-i18n="tb_sound">🔇 Som</button>
     <button onclick="app.copyScript()" id="copy-btn" data-i18n-title="title_copiar" title="Copiar roteiro">📋</button>
     <button onclick="app.shareProject()" id="share-btn" data-i18n="tb_share">📤 Compartilhar</button>
     <button onclick="app.toggleFocus()" data-i18n="tb_focus">🎯 Foco</button>
-    <button onclick="app.toggleTheme()">🌗</button>
+    <button onclick="app.toggleTheme()" data-i18n-title="title_theme">🌗</button>
     <button onclick="app.toggleLang()" id="lang-btn" style="font-size:9pt">PT</button>
-    <button onclick="app.openHelp()">❓</button>
+    <button onclick="app.openHelp()" data-i18n-title="title_help">❓</button>
     <span id="save-indicator" style="font-size:10pt;color:var(--fg-sec)">💾</span>
     <span class="timer" id="timer-display">⏱ 00:00</span>
     <span class="sep"></span>
     <button onclick="app.openApoio()" data-i18n="tb_apoio" style="font-size:9pt;color:var(--fg-sec);cursor:pointer;background:transparent;border:none;padding:2px 6px">☕ Apoie</button>
-  </div>
+  </header>
 
-  <div id="panes">
+  <main id="panes">
     <div id="pane-left" class="pane">
       <div class="pane-header"><span data-i18n="tb_scenes">CENAS</span><span><span id="scene-count">0</span> <button onclick="app.toggleSceneView()" id="view-toggle" style="font-size:8pt;padding:1px 4px" data-i18n-title="title_view" title="Alternar visualização">⊞</button> <button onclick="app.insertActMarker()" style="font-size:8pt;padding:1px 4px" data-i18n-title="title_actmark" title="Marcar novo ato aqui (insere # Ato N no texto)">📍</button> <button onclick="app.addAct()" style="font-size:8pt;padding:1px 4px" data-i18n-title="title_addact" title="Adicionar ato">🎬</button></span></div>
       <ul id="scene-list"></ul>
@@ -366,7 +366,7 @@
       <div class="tab-content" id="tab-chars"><div id="char-list"></div></div>
       <div class="tab-content" id="tab-locs"><div id="loc-list"></div></div>
     </div>
-  </div>
+  </main>
 
   <div id="timeline-bar" style="display:none;padding:4px 8px;background:var(--surface);border-top:1px solid var(--border);gap:6px;align-items:stretch;min-height:350px"></div>
 

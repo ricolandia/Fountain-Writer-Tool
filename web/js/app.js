@@ -2114,6 +2114,7 @@ const app = {
     });
     document.querySelectorAll('[data-i18n-title]').forEach(el => {
       el.title = _(el.dataset.i18nTitle);
+      el.setAttribute('aria-label', _(el.dataset.i18nTitle));
     });
     document.getElementById('lang-btn').textContent = lang === 'pt-BR' ? 'PT' : 'EN';
     document.title = 'Fonte';
