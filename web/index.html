@@ -358,7 +358,7 @@
       <div class="tab-content active" id="tab-beats">
         <p style="padding:4px;display:flex;gap:4px;align-items:center">
           <span id="beat-count" style="color:var(--fg-sec);font-size:9pt">0</span>
-          <span style="color:var(--fg-sec);font-size:7pt">· rascunho</span>
+          <span id="beat-draft-label" style="color:var(--fg-sec);font-size:7pt">· rascunho</span>
           <button onclick="app.addBeat()" data-i18n="tb_add_beat">+ Beat</button>
         </p>
         <div id="beat-list"></div>
@@ -478,7 +478,7 @@
       <p>Se o <b>Fonte</b> te ajuda, considere contribuir.</p>
       <hr style="border:none;border-top:1px solid var(--border);margin:10px 0">
       <p><span style="color:var(--fg-sec)">🧡 Pix:</span><br>
-        <span onclick="app.copiarPix()" style="cursor:pointer;background:var(--surface2);padding:3px 8px;border-radius:4px;display:inline-block;margin-top:4px" data-i18n-title="title_copiar_pix" title="Clique para copiar">ricardograca@ricolandia.com</span>
+        <span id="pix-entry" onclick="app.copiarPix()" style="cursor:pointer;background:var(--surface2);padding:3px 8px;border-radius:4px;display:inline-block;margin-top:4px" data-i18n-title="title_copiar_pix" title="Clique para copiar">ricardograca@ricolandia.com</span>
       </p>
       <p style="margin-top:10px"><span style="color:var(--fg-sec)">💳 PayPal:</span><br>
         <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=ricolandia%40gmail.com&currency_code=BRL" target="_blank" style="color:var(--accent)">Donate via PayPal</a>

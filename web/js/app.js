@@ -104,7 +104,7 @@ const app = {
    * right offset. Anchors that fall inside the actually-edited region are
    * dropped (safer than guessing where they went) instead of drifting. */
   _resyncLineAnchors(oldText, newText) {
-    if (oldText == null || oldText === newText) return;
+    if (oldText === null || oldText === newText) return;
     const oldLines = oldText.split('\n');
     const newLines = newText.split('\n');
     const oldLen = oldLines.length, newLen = newLines.length;
@@ -1192,6 +1192,8 @@ const app = {
   renderBeats() {
     const el2 = document.getElementById('beat-count');
     if (el2) el2.textContent = this.beats.length;
+    const dl = document.getElementById('beat-draft-label');
+    if (dl) dl.style.display = this.beats.length > 0 ? 'inline' : 'none';
     const list = document.getElementById('beat-list');
     list.innerHTML = '';
     if (this.beats.length === 0) { list.innerHTML = '<div class="list-empty">' + _('empty_beats') + '</div>'; return; }
@@ -2115,6 +2117,8 @@ const app = {
     });
     document.getElementById('lang-btn').textContent = lang === 'pt-BR' ? 'PT' : 'EN';
     document.title = 'Fonte';
+    const pixRow = document.getElementById('pix-entry');
+    if (pixRow) pixRow.closest('p').style.display = lang === 'pt-BR' ? 'block' : 'none';
     if (typeof structureOpts !== 'undefined') this.populateStructureSelects();
   },
 
@@ -2419,9 +2423,11 @@ const app = {
   /* ── Auto-save ── */
   initAutoSave() {
     setInterval(() => {
-      localStorage.setItem('fw_draft', this.editor.value);
-      this.saveBeats();
-      this.saveActs(this.getActs());
+      try {
+        localStorage.setItem('fw_draft', this.editor.value);
+        this.saveBeats();
+        this.saveActs(this.getActs());
+      } catch (e) { console.warn('Fonte: auto-save falhou', e); }
     }, 10000);
   },
 
@@ -2430,14 +2436,16 @@ const app = {
     setInterval(() => {
       const text = this.editor.value;
       if (!text.trim()) return;
-      const backups = safeJSON('fw_backups', '[]');
-      backups.push({
-        text, beats: this.beats, acts: this.getActs(),
-        sceneColors: this.sceneColors, lineMarks: this.getLineMarks(),
-        name: this.fileName || 'roteiro', time: Date.now()
-      });
-      if (backups.length > 10) backups.splice(0, backups.length - 10);
-      localStorage.setItem('fw_backups', JSON.stringify(backups));
+      try {
+        const backups = safeJSON('fw_backups', '[]');
+        backups.push({
+          text, beats: this.beats, acts: this.getActs(),
+          sceneColors: this.sceneColors, lineMarks: this.getLineMarks(),
+          name: this.fileName || 'roteiro', time: Date.now()
+        });
+        if (backups.length > 10) backups.splice(0, backups.length - 10);
+        localStorage.setItem('fw_backups', JSON.stringify(backups));
+      } catch (e) { console.warn('Fonte: backup falhou', e); }
     }, 300000); // 5 minutes
   },
 
@@ -2541,6 +2549,11 @@ function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 document.getElementById('file-input').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
+  if (file.size > 50 * 1024 * 1024) {
+    alert('Arquivo muito grande. Máximo: 50 MB.');
+    e.target.value = '';
+    return;
+  }
   const reader = new FileReader();
   reader.onload = ev => { app.editor.value = ev.target.result; app._prevText = null; app.fileName = file.name; app.update(); app.syncBeatsFromScenes(app.editor.value); };
   reader.readAsText(file, 'UTF-8');

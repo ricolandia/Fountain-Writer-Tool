@@ -275,6 +275,11 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
   }
 }
 
+/* ── Focus visible (keyboard navigation) ── */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.modal button:focus-visible, #toolbar button:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { border-color: var(--fg) !important; outline: none; box-shadow: 0 0 0 2px var(--accent); }
+
 /* ── Excalidraw fullscreen toggle ── */
 .excalidraw-fullscreen {
   width: 100vw !important;
