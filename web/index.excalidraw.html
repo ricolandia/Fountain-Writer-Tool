@@ -10,6 +10,24 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 </head>
 <body>
 <div id="root"></div>
+<script>
+// Read scene from URL query parameter
+const params = new URLSearchParams(location.search);
+const sceneData = params.get('scene');
+if (sceneData) {
+  var pendingScene = null;
+  try { pendingScene = JSON.parse(decodeURIComponent(sceneData)); } catch(e) {}
+  if (pendingScene) {
+    window.addEventListener('message', function __exReady(e) {
+      if (e.data && e.data.type === 'EXCALIDRAW_READY') {
+        window.removeEventListener('message', __exReady);
+        window.postMessage({ type: 'LOAD_SCENE', scene: pendingScene }, '*');
+        pendingScene = null;
+      }
+    });
+  }
+}
+</script>
 <script src="lib/excalidraw-embed.js"></script>
 </body>
 </html>
