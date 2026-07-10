@@ -1978,8 +1978,15 @@ const app = {
 
   openExcalidraw() {
     const scene = this._excalidrawScene || { elements: [], appState: {} };
-    const encoded = encodeURIComponent(JSON.stringify(scene));
-    document.getElementById('excalidraw-iframe').src = 'index.excalidraw.html?scene=' + encoded + '&_=' + Date.now();
+    const iframe = document.getElementById('excalidraw-iframe');
+    if (iframe) {
+      iframe.src = 'index.excalidraw.html?_=' + Date.now();
+      setTimeout(() => {
+        if (iframe.contentWindow) {
+          iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
+        }
+      }, 600);
+    }
     document.getElementById('excalidraw-modal').style.display = 'flex';
   },
   closeExcalidraw() {
