@@ -1651,6 +1651,8 @@ const app = {
     localStorage.removeItem('fw_project_name'); localStorage.removeItem('fw_scene_colors');
     localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
     this.projetoData = null; localStorage.removeItem('fw_projeto');
+    this._excalidrawScene = null;
+    localStorage.removeItem('fw_backups');
     this.renderBeats(); this.update();
   },
   openFile() { document.getElementById('file-input').click(); },
@@ -1683,6 +1685,8 @@ const app = {
       viewMode: this.viewMode,
       focusOn: this.focusOn,
       lang: lang,
+      backups: safeJSON('fw_backups', '[]'),
+      excalidrawScene: this._excalidrawScene,
       updated: new Date().toISOString()
     };
     const defaultName = this.projectName || (lang === 'pt-BR' ? 'roteiro' : 'script');
@@ -1747,6 +1751,8 @@ const app = {
           if (data.previewMode !== undefined) this.previewMode = data.previewMode;
           if (data.viewMode !== undefined) this.viewMode = data.viewMode;
           if (data.projeto !== undefined) { this.projetoData = data.projeto; localStorage.setItem('fw_projeto', JSON.stringify(data.projeto)); }
+          if (data.backups) localStorage.setItem('fw_backups', JSON.stringify(data.backups));
+          if (data.excalidrawScene) this._excalidrawScene = data.excalidrawScene;
           localStorage.setItem('fw_title', JSON.stringify(this.titleData));
           localStorage.setItem('fw_beats', JSON.stringify(this.beats));
           localStorage.setItem('fw_project_name', this.projectName);
@@ -2450,7 +2456,7 @@ const app = {
           sceneColors: this.sceneColors, lineMarks: this.getLineMarks(),
           name: this.fileName || 'roteiro', time: Date.now()
         });
-        if (backups.length > 10) backups.splice(0, backups.length - 10);
+        if (backups.length > 5) backups.splice(0, backups.length - 5);
         localStorage.setItem('fw_backups', JSON.stringify(backups));
       } catch (e) { console.warn('Fonte: backup falhou', e); }
     }, 300000); // 5 minutes
