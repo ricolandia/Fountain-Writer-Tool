@@ -1653,6 +1653,8 @@ const app = {
     this.projetoData = null; localStorage.removeItem('fw_projeto');
     this._excalidrawScene = null;
     localStorage.setItem('fw_backups', '[]');
+    const ef = document.getElementById('excalidraw-iframe');
+    if (ef) ef.src = 'index.excalidraw.html?_=' + Date.now();
     this.renderBeats(); this.update();
   },
   openFile() { document.getElementById('file-input').click(); },
@@ -1752,7 +1754,11 @@ const app = {
           if (data.viewMode !== undefined) this.viewMode = data.viewMode;
           if (data.projeto !== undefined) { this.projetoData = data.projeto; localStorage.setItem('fw_projeto', JSON.stringify(data.projeto)); }
           if (data.backups) localStorage.setItem('fw_backups', JSON.stringify(data.backups));
-          if (data.excalidrawScene) this._excalidrawScene = data.excalidrawScene;
+          if (data.excalidrawScene) {
+            this._excalidrawScene = data.excalidrawScene;
+            const ef = document.getElementById('excalidraw-iframe');
+            if (ef) ef.src = 'index.excalidraw.html?_=' + Date.now();
+          }
           localStorage.setItem('fw_title', JSON.stringify(this.titleData));
           localStorage.setItem('fw_beats', JSON.stringify(this.beats));
           localStorage.setItem('fw_project_name', this.projectName);
@@ -1975,19 +1981,12 @@ const app = {
   },
 
   openExcalidraw() {
-    const body = document.getElementById('excalidraw-body');
-    body.innerHTML = '';
-    const iframe = document.createElement('iframe');
-    iframe.id = 'excalidraw-iframe';
-    iframe.src = 'index.excalidraw.html?_=' + Date.now();
-    iframe.style.cssText = 'width:100%;height:100%;border:none';
-    iframe.title = 'Excalidraw';
-    body.appendChild(iframe);
     document.getElementById('excalidraw-modal').style.display = 'flex';
-    setTimeout(() => {
+    const iframe = document.getElementById('excalidraw-iframe');
+    if (iframe && iframe.contentWindow) {
       const scene = this._excalidrawScene || { elements: [], appState: {} };
       iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
-    }, 300);
+    }
   },
   closeExcalidraw() {
     if (!confirm(_('excalidraw_unsaved'))) return;
