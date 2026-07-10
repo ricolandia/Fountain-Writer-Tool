@@ -1969,7 +1969,10 @@ const app = {
   },
 
   openExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'flex'; },
-  closeExcalidraw() { document.getElementById('excalidraw-modal').style.display = 'none'; },
+  closeExcalidraw() {
+    if (!confirm(_('excalidraw_unsaved'))) return;
+    document.getElementById('excalidraw-modal').style.display = 'none';
+  },
   toggleExcalidrawFullscreen() {
     const modal = document.querySelector('.excalidraw-modal');
     const btn = document.getElementById('excalidraw-fullscreen-btn');
