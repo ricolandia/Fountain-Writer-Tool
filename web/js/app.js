@@ -1652,6 +1652,7 @@ const app = {
     localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
     this.projetoData = null; localStorage.removeItem('fw_projeto');
     this._excalidrawScene = { elements: [], appState: {} };
+    localStorage.removeItem('fw_excalidraw_scene');
     this.renderBeats(); this.update();
   },
   openFile() { document.getElementById('file-input').click(); },
@@ -1730,6 +1731,7 @@ const app = {
         try {
           const data = JSON.parse(ev.target.result);
           this._excalidrawScene = { elements: [], appState: {} };
+          localStorage.removeItem('fw_excalidraw_scene');
           this.editor.value = data.draft || '';
           this._prevText = null;
           this.beats = data.beats || [];
@@ -1971,6 +1973,11 @@ const app = {
   },
 
   openExcalidraw() {
+    const saved = safeJSON('fw_excalidraw_scene', 'null');
+    if (saved && saved.elements) this._excalidrawScene = saved;
+    if (!this._excalidrawScene || !this._excalidrawScene.elements) {
+      this._excalidrawScene = { elements: [], appState: {} };
+    }
     document.getElementById('excalidraw-modal').style.display = 'flex';
     document.getElementById('excalidraw-iframe').src = 'index.excalidraw.html?_=' + Date.now();
   },
@@ -1997,6 +2004,7 @@ const app = {
       }
       if (e.data.type === 'SCENE_DATA') {
         this._excalidrawScene = e.data.scene || null;
+        localStorage.setItem('fw_excalidraw_scene', JSON.stringify(this._excalidrawScene));
       }
     });
   },
