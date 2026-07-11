@@ -1754,11 +1754,9 @@ const app = {
           if (data.viewMode !== undefined) this.viewMode = data.viewMode;
           if (data.projeto !== undefined) { this.projetoData = data.projeto; localStorage.setItem('fw_projeto', JSON.stringify(data.projeto)); }
           if (data.backups) localStorage.setItem('fw_backups', JSON.stringify(data.backups));
-          if (data.excalidrawScene) {
-            this._excalidrawScene = data.excalidrawScene;
-            const ef = document.getElementById('excalidraw-iframe');
-            if (ef) ef.src = 'index.excalidraw.html?_=' + Date.now();
-          }
+          this._excalidrawScene = data.excalidrawScene || null;
+          const ef = document.getElementById('excalidraw-iframe');
+          if (ef) ef.src = 'index.excalidraw.html?_=' + Date.now();
           localStorage.setItem('fw_title', JSON.stringify(this.titleData));
           localStorage.setItem('fw_beats', JSON.stringify(this.beats));
           localStorage.setItem('fw_project_name', this.projectName);
