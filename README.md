@@ -6,7 +6,7 @@
 
 **Editor Fountain em HTML/CSS/JS puro. Zero dependências. Funciona em qualquer navegador.**
 
-Disponível em 3 formatos: **📦 Web** (zip universal — baixe, extraia, abra index.html), **🖥 Server** (rede local) e **📱 PWA** (instalável, offline).
+Disponível em 4 formatos: **📦 Web** (zip universal — baixe, extraia, abra index.html), **🖥 Server** (rede local), **📱 PWA** (instalável, offline) e **🌐 PWA Online** ([acesse e instale pelo navegador](https://www.ricolandia.com/editor-roteiros-gratuito/Demo/index.html)).
 
 Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 
@@ -167,7 +167,7 @@ HTML5, CSS3, JavaScript (ES6+), Excalidraw (UMD bundle offline), localStorage, F
 
 **Pure HTML/CSS/JS. Zero dependencies. Works in any browser.**
 
-Available in 4 formats: **Web** (open directly), **Server** (local network), **PWA** (installable, offline) and **Desktop** (native executable).
+Available in 5 formats: **📦 Web** (open directly), **🖥 Server** (local network), **📱 PWA** (installable, offline), **🌐 PWA Online** ([install from browser](https://www.ricolandia.com/editor-roteiros-gratuito/Demo/index.html)) and **Desktop** (native executable).
 
 Author: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 
