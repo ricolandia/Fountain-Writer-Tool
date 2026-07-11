@@ -24,6 +24,7 @@ const app = {
   _orcListenersAttached: false,
   _editingBeatIdx: -1,
   _prevText: null,
+  excalidrawBoards: [],
 
   init() {
     this.translateUI();
@@ -1652,7 +1653,9 @@ const app = {
     localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
     this.projetoData = null; localStorage.removeItem('fw_projeto');
     this._excalidrawScene = null;
+    this.excalidrawBoards = [];
     localStorage.setItem('fw_backups', '[]');
+    this._updateBoardStatus();
     const ef = document.getElementById('excalidraw-iframe');
     if (ef) ef.src = 'index.excalidraw.html?_=' + Date.now();
     this.renderBeats(); this.update();
@@ -1689,6 +1692,7 @@ const app = {
       lang: lang,
       backups: safeJSON('fw_backups', '[]'),
       excalidrawScene: this._excalidrawScene,
+      excalidrawBoards: this.excalidrawBoards,
       updated: new Date().toISOString()
     };
     const defaultName = this.projectName || (lang === 'pt-BR' ? 'roteiro' : 'script');
@@ -1755,8 +1759,10 @@ const app = {
           if (data.projeto !== undefined) { this.projetoData = data.projeto; localStorage.setItem('fw_projeto', JSON.stringify(data.projeto)); }
           if (data.backups) localStorage.setItem('fw_backups', JSON.stringify(data.backups));
           this._excalidrawScene = data.excalidrawScene || null;
+          this.excalidrawBoards = data.excalidrawBoards || [];
           const ef = document.getElementById('excalidraw-iframe');
           if (ef) ef.src = 'index.excalidraw.html?_=' + Date.now();
+          this._updateBoardStatus();
           localStorage.setItem('fw_title', JSON.stringify(this.titleData));
           localStorage.setItem('fw_beats', JSON.stringify(this.beats));
           localStorage.setItem('fw_project_name', this.projectName);
@@ -1988,7 +1994,25 @@ const app = {
   },
   closeExcalidraw() {
     if (!confirm(_('excalidraw_unsaved'))) return;
+    this._excalidrawModified = false;
     document.getElementById('excalidraw-modal').style.display = 'none';
+  },
+  exbNewDrawing() {
+    const hasDrawing = this._excalidrawScene && this._excalidrawScene.elements && this._excalidrawScene.elements.length > 0;
+    if (hasDrawing && !confirm(_('excalidraw_unsaved'))) return;
+    if (hasDrawing) {
+      this.excalidrawBoards.push({ id: 'b' + Date.now(), scene: this._excalidrawScene });
+    }
+    this._excalidrawScene = { elements: [], appState: {} };
+    document.getElementById('excalidraw-iframe').src = 'index.excalidraw.html?_=' + Date.now();
+    this._updateBoardStatus();
+  },
+  _updateBoardStatus() {
+    const el = document.getElementById('stat-exboards');
+    if (!el) return;
+    const n = this.excalidrawBoards.length + (this._excalidrawScene && this._excalidrawScene.elements && this._excalidrawScene.elements.length > 0 ? 1 : 0);
+    if (n > 0) { el.style.display = 'inline'; el.textContent = _('exb_counter', n); }
+    else { el.style.display = 'none'; }
   },
   toggleExcalidrawFullscreen() {
     const modal = document.querySelector('.excalidraw-modal');
@@ -2010,6 +2034,7 @@ const app = {
       }
       if (e.data.type === 'SCENE_DATA') {
         this._excalidrawScene = e.data.scene || null;
+        this._updateBoardStatus();
       }
     });
   },

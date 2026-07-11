@@ -378,6 +378,7 @@
     <span id="stat-pagina">Pg:1</span>
     <span id="stat-duration">~0min</span>
     <span id="stat-goal" style="display:none"></span>
+    <span id="stat-exboards" style="display:none"></span>
     <span id="stat-selection" style="display:none"></span>
     <span id="dbg" style="font-size:7pt;color:var(--fg-sec);margin-left:auto"></span>
     <div id="productivity-chart" style="width:80px;height:20px;margin-left:auto;flex-shrink:0"></div>
@@ -507,6 +508,7 @@
     <div class="modal-header">
       <span data-i18n="excalidraw_header">🧩 Quadro de Planejamento</span>
       <span style="display:flex;gap:8px;align-items:center">
+        <span onclick="app.exbNewDrawing()" style="cursor:pointer;font-size:10pt;padding:4px 8px;border-radius:4px;border:1px solid var(--border)" data-i18n="exb_new_drawing">＋ Novo desenho</span>
         <span onclick="app.toggleExcalidrawFullscreen()" id="excalidraw-fullscreen-btn" style="cursor:pointer;font-size:12pt" data-i18n-title="excalidraw_fullscreen" title="Tela cheia">⛶</span>
         <span onclick="app.closeExcalidraw()" style="cursor:pointer;font-weight:bold;font-size:14pt">✕</span>
       </span>
