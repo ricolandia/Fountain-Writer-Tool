@@ -2,11 +2,31 @@
 
 ## Estado atual
 
-**Último commit:** `e9b2c5a` — "fix: openProject sempre recarrega iframe (mesmo sem cena)"
+**Último commit:** `59fd82c` — "docs: perfis de especialistas + primeira auditoria (63/64 ✅)"
 **Tag:** `v2.3.0`
 **Branch:** `main`
 **Remote:** `origin/main`
 **Status:** Tudo commitado, working tree limpo.
+
+---
+
+## Decisões da sessão (09/Jul/2026)
+
+### Excalidraw — pendência adiada
+O problema do `LOAD_SCENE` (cena salva no `.json` mas não carrega no iframe ao reabrir
+o projeto) será resolvido **junto com o app executável (v2.4 — PyInstaller)**.
+No desktop, o WebView tem comportamento mais previsível que o navegador.
+
+### Testes de navegador — concluídos pelo autor
+Todos os fluxos foram testados manualmente no navegador (editor, save/load,
+i18n, export, mobile, Excalidraw). Combinado com os 30 testes unitários,
+a v2.3.0 é considerada **totalmente validada** pelo autor.
+
+### Auditoria por especialistas — criada
+Novo arquivo `AUDITORIA-ESPECIALISTAS.md` com 4 perfis fixos:
+🎬 Roteirista PhD · 👨‍💻 Programador Sênior · 🎨 Designer UI · ✍️ Redator PT/EN
+**Resultado 1ª rodada:** 63/64 verificações aprovadas
+(única atenção: `webkitAudioContext` — necessário para Safari iOS)
 
 ---
 
@@ -145,7 +165,13 @@ Fountain-Writer-Tool/
 
 ## ⚠️ Pendências para PRÓXIMA SESSÃO
 
-### 1. Excalidraw — cena via LOAD_SCENE não confiável
+### 1. Desktop executável (PyInstaller) — PRIORIDADE
+Compilação para Windows/Linux/macOS usando GitHub Actions.
+Testes Linux com limitações (WebKitGTK).
+**Também deve resolver o problema do Excalidraw LOAD_SCENE** (WebView mais previsível).
+
+### 2. Excalidraw — cena via LOAD_SCENE não confiável
+**Decisão (09/Jul): adiar — resolver junto com o app desktop (item 1).**
 O `postMessage({ type: 'LOAD_SCENE', scene })` para o iframe nem sempre funciona,
 porque a API do Excalidraw (`r.current`) pode não estar pronta quando a mensagem chega.
 
@@ -160,14 +186,12 @@ porque a API do Excalidraw (`r.current`) pode não estar pronta quando a mensage
 - Modificar `index.excalidraw.html` para receber cena via URL
 - Usar `iframe.onload` + setTimeout para garantir API pronta
 
-### 2. Galeria de quadros (múltiplos desenhos por projeto)
-Ideia: permitir criar múltiplos quadros Excalidraw dentro do mesmo projeto,
-salvos em uma lista `excalidrawBoards` no `.fountain.json`.
-Status no canto inferior: "📋 N quadros".
-
-### 3. Desktop executável (PyInstaller)
-Compilação para Windows/Linux/macOS usando GitHub Actions.
-Testes Linux com limitações (WebKitGTK).
-
-### 4. Deploy no site
+### 3. Deploy no site
 Copiar `deploy/` para `www.ricolandia.com/Demo/`.
+
+### ❌ Descartado
+- **Galeria de quadros** (múltiplos desenhos por projeto) — sem sentido sem resolver o LOAD_SCENE. Botão "＋ Novo desenho" mantido.
+- **Contador de quadros no status** — removido.
+- **Tema sépia** — descartado.
+- **Import .fdx/.celtx** — tutorial `MIGRAR-ROTEIROS.md` cobre.
+- **PWA Mobile instruções** — autor fará screencast próprio.
