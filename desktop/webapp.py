@@ -41,12 +41,19 @@ class FonteWindow(QMainWindow):
         self.view.setUrl(QUrl.fromLocalFile(_resolve_web_index()))
         self.setCentralWidget(self.view)
 
+        # DEBUG: mostrar console.log do JS no terminal
+        self.view.page().javaScriptConsoleMessage = self._js_console
+
         # Download handler: abrir diálogo nativo de salvar (ex: .json, .excalidraw, .html)
         profile = QWebEngineProfile.defaultProfile()
         profile.downloadRequested.connect(self._on_download)
 
         self._setup_menus()
         self._run_js('document.title = "Fonte";')
+
+    def _js_console(self, level, message, line, source):
+        if message and 'GPUInfo' not in message:
+            print(f"[JS] {message}")
 
     def _on_download(self, download):
         suggested = download.downloadFileName() or "arquivo"
