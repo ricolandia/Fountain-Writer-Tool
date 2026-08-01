@@ -1722,6 +1722,8 @@ const app = {
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     }
     this.isModified = false; this.updateIndicator();
+    console.log('[fonte] save: excalidrawScene=' +
+      (this._excalidrawScene && this._excalidrawScene.elements ? this._excalidrawScene.elements.length : 'null'));
     localStorage.setItem('fw_project_saved', 'true');
   },
 

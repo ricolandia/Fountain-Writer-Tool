@@ -47,6 +47,9 @@ class FonteWindow(QMainWindow):
         # Download handler: abrir diálogo nativo de salvar (ex: .json, .excalidraw, .html)
         profile = QWebEngineProfile.defaultProfile()
         profile.downloadRequested.connect(self._on_download)
+        # Desabilita cache HTTP entre execuções (evita servir app.js antigo)
+        import tempfile
+        profile.setPersistentStoragePath(os.path.join(tempfile.gettempdir(), "fonte-webview-cache"))
 
         self._setup_menus()
         self._run_js('document.title = "Fonte";')
