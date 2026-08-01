@@ -1981,9 +1981,20 @@ const app = {
   openExcalidraw() {
     document.getElementById('excalidraw-modal').style.display = 'flex';
     const iframe = document.getElementById('excalidraw-iframe');
+    const scene = this._excalidrawScene || { elements: [], appState: {} };
     if (iframe && iframe.contentWindow) {
-      const scene = this._excalidrawScene || { elements: [], appState: {} };
-      iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
+      // LOAD_SCENE pode ser ignorado se a API do Excalidraw ainda não montou
+      // (r.current null). Retry a cada 200ms até 10x para garantir que uma
+      // tentativa chegue quando a API estiver pronta.
+      let attempts = 0;
+      const trySend = () => {
+        if (attempts++ >= 10) return;
+        if (iframe.contentWindow) {
+          iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
+        }
+        setTimeout(trySend, 200);
+      };
+      trySend();
     }
   },
   closeExcalidraw() {

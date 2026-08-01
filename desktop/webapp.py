@@ -12,7 +12,8 @@ import sys
 
 from PySide6.QtCore import QUrl, QTimer
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog
+from PySide6.QtWebEngineCore import QWebEngineProfile
 from PySide6.QtWebEngineWidgets import QWebEngineView
 
 APP_NAME = "Fonte"
@@ -40,8 +41,23 @@ class FonteWindow(QMainWindow):
         self.view.setUrl(QUrl.fromLocalFile(_resolve_web_index()))
         self.setCentralWidget(self.view)
 
+        # Download handler: abrir diálogo nativo de salvar (ex: .json, .excalidraw, .html)
+        profile = QWebEngineProfile.defaultProfile()
+        profile.downloadRequested.connect(self._on_download)
+
         self._setup_menus()
         self._run_js('document.title = "Fonte";')
+
+    def _on_download(self, download):
+        suggested = download.downloadFileName() or "arquivo"
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Salvar arquivo", os.path.join(os.path.expanduser("~"), "Downloads", suggested))
+        if path:
+            download.setDownloadDirectory(os.path.dirname(path))
+            download.setDownloadFileName(os.path.basename(path))
+            download.accept()
+        else:
+            download.cancel()
 
     def _run_js(self, code):
         self.view.page().runJavaScript(code)
