@@ -13,8 +13,6 @@ imagens/*
 *.bak.*
 
 # Desktop app
-desktop/app/
-desktop/main.py
 desktop/dist/
 desktop/build/
 desktop/__pycache__/
@@ -39,3 +37,4 @@ backend.env
 _excalidraw/
 _Estrutura_roteiro_/
 
+backup-v2.3.0-20260709/
