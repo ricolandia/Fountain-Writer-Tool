@@ -1,1 +1,5 @@
-pywebview>=5,<6
+# Fonte Desktop
+# PySide6 inclui QWebEngineView (QtWebEngineWidgets) — WebView Chromium embutido
+PySide6>=6.6
+# Empacotamento (opcional, para build)
+# pyinstaller>=6.0
