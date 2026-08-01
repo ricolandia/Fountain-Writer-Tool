@@ -1652,6 +1652,8 @@ const app = {
     localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
     this.projetoData = null; localStorage.removeItem('fw_projeto');
     this._excalidrawScene = null;
+    clearInterval(this._excalidrawPoll);
+    this._excalidrawPoll = null;
     localStorage.setItem('fw_backups', '[]');
     const ef = document.getElementById('excalidraw-iframe');
     if (ef) ef.src = 'index.excalidraw.html?_=' + Date.now();
@@ -1755,6 +1757,8 @@ const app = {
           if (data.projeto !== undefined) { this.projetoData = data.projeto; localStorage.setItem('fw_projeto', JSON.stringify(data.projeto)); }
           if (data.backups) localStorage.setItem('fw_backups', JSON.stringify(data.backups));
           this._excalidrawScene = data.excalidrawScene || null;
+          clearInterval(this._excalidrawPoll);
+          this._excalidrawPoll = null;
           const ef = document.getElementById('excalidraw-iframe');
           if (ef) ef.src = 'index.excalidraw.html?_=' + Date.now();
           localStorage.setItem('fw_title', JSON.stringify(this.titleData));
@@ -1996,9 +2000,27 @@ const app = {
       };
       trySend();
     }
+    // Polling de GET_SCENE: captura a cena ativa a cada 2s enquanto o modal
+    // está aberto. Necessário porque o onChange do Excalidraw (que envia
+    // SCENE_DATA sozinho) nem sempre dispara no WebView — sem isso, o save
+    // grava "excalidrawScene": null e a cena se perde.
+    clearInterval(this._excalidrawPoll);
+    this._excalidrawPoll = setInterval(() => {
+      const f = document.getElementById('excalidraw-iframe');
+      if (f && f.contentWindow) {
+        f.contentWindow.postMessage({ type: 'GET_SCENE' }, '*');
+      }
+    }, 2000);
   },
   closeExcalidraw() {
+    clearInterval(this._excalidrawPoll);
+    this._excalidrawPoll = null;
     if (!confirm(_('excalidraw_unsaved'))) return;
+    // Captura final antes de fechar (não depende do polling)
+    const iframe = document.getElementById('excalidraw-iframe');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({ type: 'GET_SCENE' }, '*');
+    }
     this._excalidrawModified = false;
     document.getElementById('excalidraw-modal').style.display = 'none';
   },
