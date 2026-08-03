@@ -2013,6 +2013,8 @@ const app = {
         f.contentWindow.postMessage({ type: 'GET_SCENE' }, '*');
       }
     }, 2000);
+    const cs = document.getElementById('excalidraw-capture-state');
+    if (cs) cs.textContent = '📷 capturando...';
   },
   closeExcalidraw() {
     clearInterval(this._excalidrawPoll);
@@ -2052,6 +2054,11 @@ const app = {
       }
       if (e.data.type === 'SCENE_DATA') {
         this._excalidrawScene = e.data.scene || null;
+        const cs = document.getElementById('excalidraw-capture-state');
+        if (cs) {
+          const n = this._excalidrawScene && this._excalidrawScene.elements ? this._excalidrawScene.elements.length : 0;
+          cs.textContent = n > 0 ? '✓ ' + n + ' capturado(s)' : '📷 vazio';
+        }
       }
     });
   },
