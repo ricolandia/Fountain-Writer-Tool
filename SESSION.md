@@ -2,7 +2,7 @@
 
 ## Estado atual
 
-**Último commit:** `59fd82c` — "docs: perfis de especialistas + primeira auditoria (63/64 ✅)"
+**Último commit:** `0981946` — "fix: diálogos JS nativos no desktop (confirm/alert/prompt)"
 **Tag:** `v2.3.0`
 **Branch:** `main`
 **Remote:** `origin/main`
@@ -10,12 +10,44 @@
 
 ---
 
+## 🖥 Desktop PySide6 + QWebEngineView — RESOLVIDO (09/Jul/2026)
+
+O desktop nativo foi implementado e validado:
+
+### O que funciona
+- **`desktop/webapp.py`** — janela nativa Qt 1280×800 com QWebEngineView
+  carregando o app web completo (100% das features)
+- **Menus nativos**: Arquivo (Ctrl+N/O/S/Q), Visualizar (tema/idioma/foco), Ajuda
+- **Download nativo**: .json, .excalidraw, .html abrem diálogo de salvar
+- **Diálogos JS nativos**: `FontePage` subclasse com confirm/alert/prompt Qt
+- **Excalidraw 100% integrado**: desenhar, salvar no .json, restaurar ao reabrir
+
+### Excalidraw — CAUSA RAIZ encontrada e corrigida
+O bundle vendorizado (`excalidraw-embed.js`) usava `importScene`/`exportScene`
+(métodos inexistentes nesta versão da API — que usa `updateScene`/`getSceneElements`),
+causando falha silenciosa. Correções:
+1. **Patch no bundle**: passa `excalidrawAPI` prop no mount → expõe `window.__exAPI`
+2. **Ponte anexada ao bundle**: responde GET_SCENE/LOAD_SCENE com a API correta
+   (normaliza elementos + merge appState completo + sanitiza `collaborators`)
+3. **LOAD_SCENE único** por abertura (flag `_excalidrawLoadSent`) — evita reset
+   do canvas durante o desenho
+4. **NoCache no WebView** — cache servia arquivos antigos (era a causa aparente
+   de "nada funcionava")
+
+### Backup — validado
+- Listagem, restore, auto-backup 5min (limite 5) — testados ✅
+- `confirm()` nativo corrigido (sem isso, restore era cancelado silenciosamente)
+
+### Auditoria de regressão — 12/12 funcionalidades OK
+Editor/auto-save, stats, parse cenas, sync beats, CRUD beats, personagens,
+i18n PT/EN, Projeto Cultural, timeline, export modal, Excalidraw, download nativo.
+
+---
+
 ## Decisões da sessão (09/Jul/2026)
 
-### Excalidraw — pendência adiada
-O problema do `LOAD_SCENE` (cena salva no `.json` mas não carrega no iframe ao reabrir
-o projeto) será resolvido **junto com o app executável (v2.4 — PyInstaller)**.
-No desktop, o WebView tem comportamento mais previsível que o navegador.
+### Excalidraw — RESOLVIDO (ver seção acima)
+A pendência do LOAD_SCENE foi resolvida junto com o desktop (WebView).
 
 ### Testes de navegador — concluídos pelo autor
 Todos os fluxos foram testados manualmente no navegador (editor, save/load,
@@ -167,31 +199,21 @@ Fountain-Writer-Tool/
 
 ### 1. Desktop executável (PyInstaller) — PRIORIDADE
 Compilação para Windows/Linux/macOS usando GitHub Actions.
-Testes Linux com limitações (WebKitGTK).
-**Também deve resolver o problema do Excalidraw LOAD_SCENE** (WebView mais previsível).
+O `desktop/webapp.py` (PySide6 + QWebEngineView) já está validado no Linux.
+Próximo passo: `pip install pyinstaller` + spec + jobs no CI (ubuntu/windows/macos).
 
-### 2. Excalidraw — cena via LOAD_SCENE não confiável
-**Decisão (09/Jul): adiar — resolver junto com o app desktop (item 1).**
-O `postMessage({ type: 'LOAD_SCENE', scene })` para o iframe nem sempre funciona,
-porque a API do Excalidraw (`r.current`) pode não estar pronta quando a mensagem chega.
-
-**Comportamento atual:**
-- Desenha, fecha, reabre (mesmo projeto): ✅ funciona (iframe preserva estado)
-- Novo projeto: ✅ iframe recarregado → canvas vazio
-- Abre projeto com cena: ⚠️ tenta LOAD_SCENE (pode ou não funcionar)
-- Abre projeto sem cena: ✅ iframe recarregado → canvas vazio
-
-**Possíveis soluções futuras:**
-- Retry de LOAD_SCENE a cada 200ms (10 tentativas)
-- Modificar `index.excalidraw.html` para receber cena via URL
-- Usar `iframe.onload` + setTimeout para garantir API pronta
-
-### 3. Deploy no site
+### 2. Deploy no site
 Copiar `deploy/` para `www.ricolandia.com/Demo/`.
 
 ### ❌ Descartado
-- **Galeria de quadros** (múltiplos desenhos por projeto) — sem sentido sem resolver o LOAD_SCENE. Botão "＋ Novo desenho" mantido.
+- **Galeria de quadros** (múltiplos desenhos por projeto) — botão "＋ Novo desenho" mantido.
 - **Contador de quadros no status** — removido.
 - **Tema sépia** — descartado.
 - **Import .fdx/.celtx** — tutorial `MIGRAR-ROTEIROS.md` cobre.
 - **PWA Mobile instruções** — autor fará screencast próprio.
+
+### ✅ Resolvido (09/Jul)
+- **Excalidraw LOAD_SCENE** — patch no bundle (API correta `updateScene`/`getSceneElements`),
+  ponte anexada, LOAD_SCENE único, NoCache no WebView. Funciona no desktop e navegador.
+- **Backup** — validado (listagem, restore, auto-backup 5min). `confirm()` nativo corrigido.
+- **Diálogos JS nativos** no desktop (FontePage: confirm/alert/prompt Qt).
