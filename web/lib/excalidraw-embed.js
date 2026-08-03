@@ -387,7 +387,14 @@ react/cjs/react-jsx-runtime.production.min.js:
           return c;
         });
         var savedAppState = (e.data.scene && e.data.scene.appState) || {};
+        // Sanitiza: remove campos do appState salvo que quebram o Excalidraw
+        // (collaborators deve ser array; outras chaves de versão antiga)
+        delete savedAppState.collaborators;
+        delete savedAppState.collaboratorsMap;
         var mergedState = Object.assign({}, window.__exAPI.getAppState(), savedAppState);
+        if (!Array.isArray(mergedState.collaborators)) {
+          mergedState.collaborators = [];
+        }
         window.__exAPI.updateScene({
           elements: elements,
           appState: mergedState,
