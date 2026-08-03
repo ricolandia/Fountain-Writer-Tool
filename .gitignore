@@ -17,6 +17,7 @@ desktop/dist/
 desktop/build/
 desktop/__pycache__/
 *.spec
+!desktop/fonte.spec
 resources/
 fountain_writer.py
 fountain_writer_BR.py
@@ -38,3 +39,5 @@ _excalidraw/
 _Estrutura_roteiro_/
 
 backup-v2.3.0-20260709/
+
+desktop/build-venv/

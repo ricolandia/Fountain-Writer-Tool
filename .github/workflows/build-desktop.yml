@@ -1,0 +1,84 @@
+name: Build Desktop
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: Fonte-linux
+            exe_name: Fonte
+          - os: windows-latest
+            artifact: Fonte-windows
+            exe_name: Fonte.exe
+          - os: macos-latest
+            artifact: Fonte-macos
+            exe_name: Fonte.app
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependências
+        run: pip install PySide6 pyinstaller
+
+      - name: Build (PyInstaller)
+        run: pyinstaller desktop/fonte.spec --distpath dist --workpath build --noconfirm
+
+      - name: Sanidade (Linux headless)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          QT_QPA_PLATFORM=offscreen timeout 12 ./dist/Fonte/${{ matrix.exe_name }} &
+          sleep 8
+          if kill -0 $! 2>/dev/null; then echo "App iniciou sem crash ✅"; kill $!; else echo "App falhou ao iniciar ❌"; exit 1; fi
+
+      - name: Upload artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/Fonte
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Empacotar releases
+        run: |
+          # Zip web universal
+          cd web
+          zip -r ../Fonte-web.zip . -x "docker-compose.yml" -x "Dockerfile" -x "test-excalidraw.html"
+          cd ..
+          # Zips por plataforma
+          mkdir -p _release
+          cp Fonte-web.zip _release/
+          cd artifacts
+          zip -r ../_release/Fonte-linux.zip Fonte-linux/
+          zip -r ../_release/Fonte-windows.zip Fonte-windows/
+          zip -r ../_release/Fonte-macos.zip Fonte-macos/
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: _release/*
+          body_path: CHANGELOG.md
+          make_latest: true
