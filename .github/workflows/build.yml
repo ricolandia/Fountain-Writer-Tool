@@ -12,9 +12,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: cd web && zip -r ../Fonte-web.zip . -x "docker-compose.yml" -x "Dockerfile" -x "test-excalidraw.html" && cd ..
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: Fonte-web
           path: Fonte-web.zip
@@ -23,8 +23,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
       - run: |
           mkdir -p _release
           cp Fonte-web/Fonte-web.zip _release/

@@ -27,9 +27,9 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -51,7 +51,7 @@ jobs:
           if kill -0 $! 2>/dev/null; then echo "App iniciou sem crash ✅"; kill $!; else echo "App não iniciou no runner (não bloqueia) ⚠️"; fi
 
       - name: Upload artefato
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ matrix.artifact }}
           path: dist/Fonte
@@ -61,25 +61,35 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: artifacts
 
       - name: Empacotar releases
         run: |
-          # Zip web universal
-          cd web
-          zip -r ../Fonte-web.zip . -x "docker-compose.yml" -x "Dockerfile" -x "test-excalidraw.html"
-          cd ..
-          # Zips por plataforma
-          mkdir -p _release
-          cp Fonte-web.zip _release/
-          cd artifacts
-          zip -r ../_release/Fonte-linux.zip Fonte-linux/
-          zip -r ../_release/Fonte-windows.zip Fonte-windows/
-          zip -r ../_release/Fonte-macos.zip Fonte-macos/
+          python3 - <<'EOF'
+          import zipfile, os
+          os.makedirs('_release', exist_ok=True)
+          # Zip web universal (web/)
+          def zip_dir(src, dst, exclude=()):
+              with zipfile.ZipFile(dst, 'w', zipfile.ZIP_DEFLATED) as z:
+                  for root, _, files in os.walk(src):
+                      for f in files:
+                          if f in exclude:
+                              continue
+                          p = os.path.join(root, f)
+                          z.write(p, os.path.relpath(p, src))
+          zip_dir('web', '_release/Fonte-web.zip',
+                  exclude={'docker-compose.yml', 'Dockerfile', 'test-excalidraw.html'})
+          # Zips por plataforma (artifacts/<nome>/...)
+          for name in ('Fonte-linux', 'Fonte-windows', 'Fonte-macos'):
+              src = os.path.join('artifacts', name)
+              if os.path.isdir(src):
+                  zip_dir(src, f'_release/{name}.zip')
+          print('Empacotado:', os.listdir('_release'))
+          EOF
 
       - uses: softprops/action-gh-release@v2
         with:
