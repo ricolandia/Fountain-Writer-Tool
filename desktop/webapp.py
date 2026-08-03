@@ -13,7 +13,7 @@ import sys
 from PySide6.QtCore import QUrl, QTimer
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog
-from PySide6.QtWebEngineCore import QWebEngineProfile
+from PySide6.QtWebEngineCore import QWebEnginePage, QWebEngineProfile
 from PySide6.QtWebEngineWidgets import QWebEngineView
 
 APP_NAME = "Fonte"
@@ -31,18 +31,56 @@ def _resolve_web_index():
     return index
 
 
+class FontePage(QWebEnginePage):
+    """Página com diálogos JS nativos (confirm/alert/prompt).
+
+    Sem isso, o QtWebEngine retorna false para window.confirm() — o que
+    bloqueia restoreBackup, closeExcalidraw, newFile e outras ações.
+    """
+    def javaScriptConfirm(self, url, message):
+        result = QMessageBox.question(
+            None, APP_NAME, message, QMessageBox.Yes | QMessageBox.No)
+        return result == QMessageBox.Yes
+
+    def javaScriptAlert(self, url, message):
+        QMessageBox.information(None, APP_NAME, message)
+
+    def javaScriptPrompt(self, url, message, default_value, result):
+        from PySide6.QtWidgets import QLineEdit, QDialog, QVBoxLayout, QLabel, QPushButton, QHBoxLayout
+        dlg = QDialog()
+        dlg.setWindowTitle(APP_NAME)
+        lay = QVBoxLayout(dlg)
+        lay.addWidget(QLabel(message))
+        edit = QLineEdit(default_value)
+        lay.addWidget(edit)
+        btns = QHBoxLayout()
+        ok = QPushButton("OK")
+        cancel = QPushButton("Cancelar")
+        ok.clicked.connect(dlg.accept)
+        cancel.clicked.connect(dlg.reject)
+        btns.addWidget(ok)
+        btns.addWidget(cancel)
+        lay.addLayout(btns)
+        if dlg.exec():
+            result.setText(edit.text())
+            return True
+        return False
+
+
 class FonteWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle(APP_NAME)
         self.resize(WIDTH, HEIGHT)
 
+        self.page = FontePage(self)
         self.view = QWebEngineView(self)
+        self.view.setPage(self.page)
         self.view.setUrl(QUrl.fromLocalFile(_resolve_web_index()))
         self.setCentralWidget(self.view)
 
         # DEBUG: mostrar console.log do JS no terminal
-        self.view.page().javaScriptConsoleMessage = self._js_console
+        self.page.javaScriptConsoleMessage = self._js_console
 
         # Download handler: abrir diálogo nativo de salvar (ex: .json, .excalidraw, .html)
         profile = QWebEngineProfile.defaultProfile()
