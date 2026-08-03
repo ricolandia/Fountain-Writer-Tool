@@ -1989,16 +1989,16 @@ const app = {
     const iframe = document.getElementById('excalidraw-iframe');
     const scene = this._excalidrawScene || { elements: [], appState: {} };
     if (iframe && iframe.contentWindow) {
-      // LOAD_SCENE pode ser ignorado se a API do Excalidraw ainda não montou
-      // (r.current null). Retry a cada 200ms até 10x para garantir que uma
-      // tentativa chegue quando a API estiver pronta.
+      // Envia LOAD_SCENE quando o iframe avisar que está pronto (EXCALIDRAW_READY)
+      // ou com retry curto (3x / 500ms) caso o READY já tenha chegado antes.
       let attempts = 0;
       const trySend = () => {
-        if (attempts++ >= 10) return;
-        if (iframe.contentWindow) {
+        if (attempts++ >= 3) return;
+        if (iframe.contentWindow && iframe.contentWindow.__exAPI) {
           iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
+        } else {
+          setTimeout(trySend, 500);
         }
-        setTimeout(trySend, 200);
       };
       trySend();
     }
@@ -2046,10 +2046,22 @@ const app = {
     window.addEventListener('message', (e) => {
       if (!e.data || typeof e.data !== 'object') return;
       if (e.data.type === 'EXCALIDRAW_READY') {
+        // Espera a API do Excalidraw existir (window.__exAPI via patch) antes
+        // de enviar a cena — evita "Loading scene" infinito (updateScene
+        // durante a montagem quebra o Excalidraw).
         const iframe = document.getElementById('excalidraw-iframe');
         if (iframe) {
           const scene = this._excalidrawScene || { elements: [], appState: {} };
-          iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
+          let tries = 0;
+          const wait = () => {
+            if (tries++ >= 10) return;
+            if (iframe.contentWindow && iframe.contentWindow.__exAPI) {
+              iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
+            } else {
+              setTimeout(wait, 300);
+            }
+          };
+          wait();
         }
       }
       if (e.data.type === 'SCENE_DATA') {
