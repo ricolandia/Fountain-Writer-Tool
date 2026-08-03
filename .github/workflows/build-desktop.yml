@@ -72,22 +72,26 @@ jobs:
           python3 - <<'EOF'
           import zipfile, os
           os.makedirs('_release', exist_ok=True)
-          # Zip web universal (web/)
-          def zip_dir(src, dst, exclude=()):
-              with zipfile.ZipFile(dst, 'w', zipfile.ZIP_DEFLATED) as z:
-                  for root, _, files in os.walk(src):
-                      for f in files:
-                          if f in exclude:
-                              continue
-                          p = os.path.join(root, f)
-                          z.write(p, os.path.relpath(p, src))
-          zip_dir('web', '_release/Fonte-web.zip',
-                  exclude={'docker-compose.yml', 'Dockerfile', 'test-excalidraw.html'})
-          # Zips por plataforma (artifacts/<nome>/...)
+          # Zip web universal (web/ → Fonte-web.zip)
+          with zipfile.ZipFile('_release/Fonte-web.zip', 'w', zipfile.ZIP_DEFLATED) as z:
+              for root, _, files in os.walk('web'):
+                  for f in files:
+                      if f in ('docker-compose.yml', 'Dockerfile', 'test-excalidraw.html'):
+                          continue
+                      p = os.path.join(root, f)
+                      z.write(p, os.path.relpath(p, 'web'))
+          # Zips por plataforma — cada um dentro de uma pasta Fonte/ (organizado)
           for name in ('Fonte-linux', 'Fonte-windows', 'Fonte-macos'):
               src = os.path.join('artifacts', name)
-              if os.path.isdir(src):
-                  zip_dir(src, f'_release/{name}.zip')
+              if not os.path.isdir(src):
+                  print(f'⚠️  Artefato ausente: {src}')
+                  continue
+              with zipfile.ZipFile(f'_release/{name}.zip', 'w', zipfile.ZIP_DEFLATED) as z:
+                  for root, _, files in os.walk(src):
+                      for f in files:
+                          p = os.path.join(root, f)
+                          # Prefixo 'Fonte/' — extrai organizado numa pasta
+                          z.write(p, os.path.join('Fonte', os.path.relpath(p, src)))
           print('Empacotado:', os.listdir('_release'))
           EOF
 

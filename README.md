@@ -6,7 +6,21 @@
 
 **Editor Fountain em HTML/CSS/JS puro. Zero dependências. Funciona em qualquer navegador.**
 
-Disponível em 4 formatos: **📦 Web** (zip universal — baixe, extraia, abra index.html), **🖥 Server** (rede local), **📱 PWA** (instalável, offline) e **🌐 PWA Online** ([acesse e instale pelo navegador](https://www.ricolandia.com/editor-roteiros-gratuito/Demo/index.html)).
+> ### 🌐 A versão web é universal — menos de 5 MB — com TODAS as funções
+> O `Fonte-web.zip` (ou a PWA online) contém **todas** as funcionalidades das
+> versões standalone: editor, Excalidraw, Projeto Cultural, beats, timeline,
+> backups, i18n — tudo. Não é uma versão reduzida. Funciona offline em qualquer
+> dispositivo, sem instalação.
+
+Disponível em 5 formatos:
+
+| Formato | Tamanho | Uso |
+|---|---|---|
+| **🌐 Web online (PWA)** | ~2 MB | Acesse e instale no navegador ([link](https://www.ricolandia.com/editor-roteiros-gratuito/Demo/index.html)) |
+| **📦 Zip universal** | ~2 MB | Baixe, extraia, abra `index.html` — 100% offline |
+| **🖥 Desktop Windows** | ~200 MB | Exe nativo (ver [Releases](https://github.com/ricolandia/Fountain-Writer-Tool/releases)) |
+| **🖥 Desktop Linux** | ~200 MB | Binário nativo |
+| **🖥 Desktop macOS** | ~200 MB | App nativo |
 
 Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 
@@ -109,9 +123,20 @@ O Fonte usa dois sistemas de persistência:
 
 ## Como usar
 
-### 📦 Opção 1 — Zip universal (recomendado)
+### 🖥 Opção 1 — Desktop nativo (Windows/Linux/macOS)
 
-Baixe o `Fonte-web.zip` na [página de Releases](https://github.com/ricolandia/Fountain-Writer-Tool/releases), extraia e abra `index.html`.
+Baixe o zip do seu sistema na [página de Releases](https://github.com/ricolandia/Fountain-Writer-Tool/releases),
+extraia e execute:
+
+- **Windows:** duplo clique em `Fonte.exe`
+- **Linux:** `./Fonte` (na pasta extraída)
+- **macOS:** clique direito em `Fonte.app` → **Abrir** (primeira vez)
+
+O desktop tem menus nativos (Arquivo/Visualizar/Ajuda) e todas as funções do web.
+
+### 📦 Opção 2 — Zip universal (recomendado — 100% offline)
+
+Baixe o `Fonte-web.zip` na [página de Releases](https://github.com/ricolandia/Fountain-Writer-Tool/releases), extraia e abra `index.html`. **~2 MB, com todas as funções.**
 
 ### 📲 Instalar no celular
 
@@ -126,7 +151,7 @@ O app funciona offline como se fosse nativo.
 Acesse [https://www.ricolandia.com/editor-roteiros-gratuito/Demo/index.html](https://www.ricolandia.com/editor-roteiros-gratuito/Demo/index.html)
 pelo navegador do celular e siga o mesmo passo. Não precisa baixar nada.
 
-### 🖥 Opção 2 — Servidor local
+### 🖥 Opção 3 — Servidor local
 
 ```bash
 python3 serve.py
@@ -135,11 +160,11 @@ python3 serve.py
 
 Ou abrir `web/index.html` direto no navegador (alguns recursos podem precisar de servidor HTTP).
 
-### ☁️ Opção 3 — Deploy estático
+### ☁️ Opção 4 — Deploy estático
 
 Copie a pasta `deploy/` para qualquer servidor HTTP estático (FTP, Nginx, Apache).
 
-### Opção 3 — Docker (API opcional para PDF/HTML)
+### Opção 5 — Docker (API opcional para PDF/HTML)
 
 ```bash
 cd web
@@ -167,20 +192,41 @@ HTML5, CSS3, JavaScript (ES6+), Excalidraw (UMD bundle offline), localStorage, F
 
 **Pure HTML/CSS/JS. Zero dependencies. Works in any browser.**
 
-Available in 5 formats: **📦 Web** (open directly), **🖥 Server** (local network), **📱 PWA** (installable, offline), **🌐 PWA Online** ([install from browser](https://www.ricolandia.com/editor-roteiros-gratuito/Demo/index.html)) and **Desktop** (native executable).
+> ### 🌐 The web version is universal — under 5 MB — with ALL features
+> The `Fonte-web.zip` (or the online PWA) contains **every** feature of the
+> standalone versions: editor, Excalidraw, Cultural Project, beats, timeline,
+> backups, i18n — everything. It is not a reduced version. Works offline on
+> any device, no installation needed.
+
+Available in 5 formats:
+
+| Format | Size | Use |
+|---|---|---|
+| **🌐 Web online (PWA)** | ~2 MB | Open and install from browser ([link](https://www.ricolandia.com/editor-roteiros-gratuito/Demo/index.html)) |
+| **📦 Universal zip** | ~2 MB | Download, extract, open `index.html` — 100% offline |
+| **🖥 Windows desktop** | ~200 MB | Native .exe (see [Releases](https://github.com/ricolandia/Fountain-Writer-Tool/releases)) |
+| **🖥 Linux desktop** | ~200 MB | Native binary |
+| **🖥 macOS desktop** | ~200 MB | Native .app |
 
 Author: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 
 ### Quick start
 
-```bash
-python3 serve.py
-# Open http://localhost:8000/web/index.html
-```
+#### 🖥 Option 1 — Native desktop (Windows/Linux/macOS)
 
-Or open `web/index.html` directly (some features need HTTP server).
+Download the zip for your OS from the [Releases page](https://github.com/ricolandia/Fountain-Writer-Tool/releases), extract and run:
 
-### 📲 Install on mobile
+- **Windows:** double-click `Fonte.exe`
+- **Linux:** `./Fonte` (in the extracted folder)
+- **macOS:** right-click `Fonte.app` → **Open** (first time)
+
+The desktop app has native menus (File/View/Help) and all web features.
+
+#### 📦 Option 2 — Universal zip (recommended — 100% offline)
+
+Download `Fonte-web.zip` from the [Releases page](https://github.com/ricolandia/Fountain-Writer-Tool/releases), extract and open `index.html`. **~2 MB, with all features.**
+
+#### 📲 Install on mobile
 
 **📦 From the zip (any device):**
 After extracting and opening `index.html` in the browser:
@@ -193,8 +239,22 @@ Works offline like a native app.
 Visit [https://www.ricolandia.com/editor-roteiros-gratuito/Demo/index.html](https://www.ricolandia.com/editor-roteiros-gratuito/Demo/index.html)
 on your phone browser and follow the same steps. No download needed.
 
+#### 🖥 Option 3 — Local server
+
+```bash
+python3 serve.py
+# Open http://localhost:8000/web/index.html
+```
+
+Or open `web/index.html` directly (some features need HTTP server).
+
+#### ☁️ Option 4 — Static deploy
+
+Copy the `deploy/` folder to any static HTTP server (FTP, Nginx, Apache).
+
 ### Downloads
 - **📦 Web:** [Download Fonte-web.zip](https://github.com/ricolandia/Fountain-Writer-Tool/releases) — extract and open `index.html`
+- **🖥 Desktop:** Windows / Linux / macOS zips in [Releases](https://github.com/ricolandia/Fountain-Writer-Tool/releases)
 - **📱 PWA:** Chrome/Edge → ⋮ → Install
 - **Source:** `git clone https://github.com/ricolandia/Fountain-Writer-Tool`
 
@@ -204,8 +264,9 @@ on your phone browser and follow the same steps. No download needed.
 - Scene navigator, beats, timeline, characters, locations
 - **Film Sheet:** logline, synopsis, treatment, genre
 - **Story Structure:** McKee's governing idea, central value, antagonistic force, guided questions
-- **Excalidraw Planning Board** with 12 templates
+- **Excalidraw Planning Board** with 12 templates — fully integrated (draw, save, restore)
 - **Cultural Project** module (10 sections for Brazilian incentive laws)
+- **Native desktop app** for Windows/Linux/macOS
 - PWA: installable, works offline
 - i18n: PT-BR / English
 - Dark/light themes, daily goals, pomodoro timer, auto-backup

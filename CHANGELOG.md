@@ -1,5 +1,63 @@
 # Changelog
 
+## v2.4.0 (2026-07-10)
+
+### 🇧🇷 Português
+
+#### ✨ Novidades
+- **🖥 Desktop nativo** — janela PySide6 + QWebEngineView com o app web completo
+  - Menus nativos (Arquivo, Visualizar, Ajuda) com atalhos Ctrl+N/O/S/Q
+  - Download nativo (.json, .excalidraw, .html abrem diálogo de salvar)
+  - Diálogos nativos (confirm/alert/prompt Qt)
+- **📦 Build automático 3-OS** — GitHub Actions gera executáveis para
+  Windows (.exe), Linux e macOS (.app) a cada release
+- **🧩 Excalidraw integrado** — causa raiz corrigida (API incompatível no bundle):
+  desenhar, salvar no `.json` e restaurar agora funcionam no desktop E no navegador
+- **PWA atualizado** — service worker v4, Excalidraw funcionando no mobile
+
+#### 🔧 Melhorias
+- Sistema de backup validado (listagem, restore, auto-backup 5min)
+- Pasta web/ completa incluída nos executáveis desktop
+- Empacotamento de release com Python (cross-platform)
+
+#### 🐛 Correções
+- Excalidraw: `LOAD_SCENE`/`GET_SCENE` falhavam silenciosamente (bundle usava
+  `importScene`/`exportScene` inexistentes — corrigido com a API real `updateScene`)
+- Excalidraw: "Loading scene" infinito (updateScene antes da montagem)
+- Excalidraw: canvas resetava ao desenhar (LOAD_SCENE duplicado)
+- Desktop: `confirm()` não mostrava diálogo (QtWebEngine retorna false por padrão)
+- Desktop: cache do WebView servia arquivos antigos
+
+---
+
+### 🇺🇸 English
+
+#### ✨ New Features
+- **🖥 Native desktop** — PySide6 + QWebEngineView window with the full web app
+  - Native menus (File, View, Help) with Ctrl+N/O/S/Q shortcuts
+  - Native downloads (.json, .excalidraw, .html open save dialog)
+  - Native dialogs (Qt confirm/alert/prompt)
+- **📦 3-OS auto build** — GitHub Actions builds Windows (.exe), Linux and
+  macOS (.app) executables on every release
+- **🧩 Excalidraw integrated** — root cause fixed (incompatible API in bundle):
+  draw, save to `.json` and restore now work on desktop AND browser
+- **PWA updated** — service worker v4, Excalidraw working on mobile
+
+#### 🔧 Improvements
+- Backup system validated (listing, restore, 5-min auto backup)
+- Full web/ folder included in desktop executables
+- Release packaging with Python (cross-platform)
+
+#### 🐛 Bug Fixes
+- Excalidraw: `LOAD_SCENE`/`GET_SCENE` failed silently (bundle used non-existent
+  `importScene`/`exportScene` — fixed with real `updateScene` API)
+- Excalidraw: infinite "Loading scene" (updateScene before mount)
+- Excalidraw: canvas reset while drawing (duplicate LOAD_SCENE)
+- Desktop: `confirm()` showed no dialog (QtWebEngine returns false by default)
+- Desktop: WebView cache served old files
+
+---
+
 ## v2.3.0 (2026-07-09)
 
 ### 🇧🇷 Português
