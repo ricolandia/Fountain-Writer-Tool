@@ -1986,21 +1986,15 @@ const app = {
 
   openExcalidraw() {
     document.getElementById('excalidraw-modal').style.display = 'flex';
+    // LOAD_SCENE é enviado UMA vez: aqui (se o iframe já montou, caso comum
+    // na reabertura) ou pelo EXCALIDRAW_READY handler (primeira carga).
+    // Flag evita updateScene duplicado que reseta o canvas durante o desenho.
+    this._excalidrawLoadSent = false;
     const iframe = document.getElementById('excalidraw-iframe');
-    const scene = this._excalidrawScene || { elements: [], appState: {} };
-    if (iframe && iframe.contentWindow) {
-      // Envia LOAD_SCENE quando o iframe avisar que está pronto (EXCALIDRAW_READY)
-      // ou com retry curto (3x / 500ms) caso o READY já tenha chegado antes.
-      let attempts = 0;
-      const trySend = () => {
-        if (attempts++ >= 3) return;
-        if (iframe.contentWindow && iframe.contentWindow.__exAPI) {
-          iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
-        } else {
-          setTimeout(trySend, 500);
-        }
-      };
-      trySend();
+    if (iframe && iframe.contentWindow && iframe.contentWindow.__exAPI) {
+      this._excalidrawLoadSent = true;
+      const scene = this._excalidrawScene || { elements: [], appState: {} };
+      iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
     }
     // Polling de GET_SCENE: captura a cena ativa a cada 2s enquanto o modal
     // está aberto. Necessário porque o onChange do Excalidraw (que envia
@@ -2013,8 +2007,6 @@ const app = {
         f.contentWindow.postMessage({ type: 'GET_SCENE' }, '*');
       }
     }, 2000);
-    const cs = document.getElementById('excalidraw-capture-state');
-    if (cs) cs.textContent = '📷 capturando...';
   },
   closeExcalidraw() {
     clearInterval(this._excalidrawPoll);
@@ -2046,9 +2038,10 @@ const app = {
     window.addEventListener('message', (e) => {
       if (!e.data || typeof e.data !== 'object') return;
       if (e.data.type === 'EXCALIDRAW_READY') {
-        // Espera a API do Excalidraw existir (window.__exAPI via patch) antes
-        // de enviar a cena — evita "Loading scene" infinito (updateScene
-        // durante a montagem quebra o Excalidraw).
+        // Envia a cena UMA vez (flag) quando a API estiver pronta — evita
+        // "Loading scene" infinito e updateScene duplicado que impede desenho.
+        if (this._excalidrawLoadSent) return;
+        this._excalidrawLoadSent = true;
         const iframe = document.getElementById('excalidraw-iframe');
         if (iframe) {
           const scene = this._excalidrawScene || { elements: [], appState: {} };
