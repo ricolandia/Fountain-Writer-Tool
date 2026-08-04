@@ -1,21 +1,21 @@
 /* Fonte — service worker
  *
- * Estratégia em duas camadas:
+ * Estratégia:
  * 1) PRECACHE: lista pequena e conhecida (o "app shell" do Fonte em si).
- *    Baixada e guardada inteira já na instalação, então funciona offline mesmo
- *    no primeiro uso sem internet (exceto a primeiríssima visita, que precisa
- *    estar online pelo menos uma vez para instalar o service worker).
- * 2) RUNTIME CACHE: qualquer outro arquivo do mesmo domínio (isso cobre
+ *    Baixada e guardada inteira já na instalação, então funciona offline
+ *    mesmo no primeiro uso sem internet (exceto a primeiríssima visita, que
+ *    precisa estar online pelo menos uma vez para instalar o service worker).
+ * 2) NETWORK-FIRST: toda requisição tenta a rede primeiro e atualiza o cache
+ *    runtime. Isso propaga deploys na primeira visita (sem depender de bump
+ *    manual de versão) e mantém o app utilizável offline.
+ * 3) RUNTIME CACHE: qualquer outro arquivo do mesmo domínio (cobre
  *    index.excalidraw.html e tudo que ele carregar — JS, fontes, ícones —
- *    sem precisar listar esses arquivos aqui, já que não são conhecidos de
- *    antemão e podem mudar se o Excalidraw vendorizado for atualizado).
- *    Só fica disponível offline DEPOIS de ter sido aberto ao menos uma vez
- *    com internet — é o preço de não precisar manter uma lista manual.
+ *    sem precisar listar esses arquivos aqui).
  *
  * Ao mudar o app de forma que precise invalidar cache antigo, suba o número
  * da versão abaixo — isso força os clientes a buscarem tudo de novo.
  */
-const VERSION = 'v4';
+const VERSION = 'v5';
 const CACHE_NAME = 'fountain-writer-' + VERSION;
 
 const PRECACHE_URLS = [
@@ -59,17 +59,21 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // Network-first: tenta a rede primeiro (propaga deploys na hora) e só cai
+  // no cache se offline. Arquivos OK são gravados no cache runtime.
   event.respondWith(
-    caches.match(req).then(cached => {
-      const network = fetch(req).then(res => {
-        if (res && res.status === 200) {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
-        }
-        return res;
-      }).catch(() => cached);
-
-      return cached || network;
-    })
+    fetch(req).then(res => {
+      if (res && res.status === 200) {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
+      }
+      return res;
+    }).catch(() =>
+      caches.match(req).then(cached => {
+        if (cached) return cached;
+        if (req.mode === 'navigate') return caches.match('./index.html');
+        return Response.error();
+      })
+    )
   );
 });

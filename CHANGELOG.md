@@ -1,5 +1,35 @@
 # Changelog
 
+## v2.4.2 (2026-08-04)
+
+### 🇧🇷 Português
+
+#### 🐛 Correções
+- **Quadro Excalidraw não restaurava a cena salva no site (demo)** — a
+  restauração dependia de uma janela fixa de 3s para a API do bundle montar;
+  em conexões lentas (bundle de 5,5 MB), a cena se perdia e o quadro abria
+  vazio. Agora há retry persistente a cada 400ms até a API ficar pronta
+  (ou o modal fechar).
+- **Service worker v5 + network-first** — atualizações passam a valer na
+  primeira visita (antes, o cache-first escondia versões novas até bump
+  manual da versão). Offline mantido via cache runtime + app shell.
+
+---
+
+### 🇺🇸 English
+
+#### 🐛 Bug Fixes
+- **Excalidraw board did not restore the saved scene on the website (demo)**
+  — restore depended on a fixed 3s window for the bundle API to mount; on
+  slow connections (5.5 MB bundle) the scene was lost and the board opened
+  empty. Now there is a persistent retry every 400ms until the API is ready
+  (or the modal closes).
+- **Service worker v5 + network-first** — updates now take effect on the
+  first visit (previously, cache-first hid new versions until a manual
+  version bump). Offline kept via runtime cache + app shell.
+
+---
+
 ## v2.4.1 (2026-08-04)
 
 ### 🇧🇷 Português

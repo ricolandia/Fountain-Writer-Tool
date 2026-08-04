@@ -1652,6 +1652,7 @@ const app = {
     localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
     this.projetoData = null; localStorage.removeItem('fw_projeto');
     this._excalidrawScene = null;
+    this._stopExcalidrawLoadRetry();
     clearInterval(this._excalidrawPoll);
     this._excalidrawPoll = null;
     localStorage.setItem('fw_backups', '[]');
@@ -1759,6 +1760,7 @@ const app = {
           if (data.projeto !== undefined) { this.projetoData = data.projeto; localStorage.setItem('fw_projeto', JSON.stringify(data.projeto)); }
           if (data.backups) localStorage.setItem('fw_backups', JSON.stringify(data.backups));
           this._excalidrawScene = data.excalidrawScene || null;
+          this._stopExcalidrawLoadRetry();
           clearInterval(this._excalidrawPoll);
           this._excalidrawPoll = null;
           const ef = document.getElementById('excalidraw-iframe');
@@ -1986,16 +1988,14 @@ const app = {
 
   openExcalidraw() {
     document.getElementById('excalidraw-modal').style.display = 'flex';
-    // LOAD_SCENE é enviado UMA vez: aqui (se o iframe já montou, caso comum
-    // na reabertura) ou pelo EXCALIDRAW_READY handler (primeira carga).
-    // Flag evita updateScene duplicado que reseta o canvas durante o desenho.
+    // LOAD_SCENE é enviado UMA vez por abertura (flag _excalidrawLoadSent):
+    // agora, se a API já montou; senão, o retry (_startExcalidrawLoadRetry)
+    // continua tentando a cada 400ms até o bundle ficar pronto. Em conexões
+    // lentas o bundle (5,5 MB) pode demorar segundos para montar — a antiga
+    // janela fixa de 3s fazia a cena salva se perder ("quadro vazio").
     this._excalidrawLoadSent = false;
-    const iframe = document.getElementById('excalidraw-iframe');
-    if (iframe && iframe.contentWindow && iframe.contentWindow.__exAPI) {
-      this._excalidrawLoadSent = true;
-      const scene = this._excalidrawScene || { elements: [], appState: {} };
-      iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
-    }
+    this._sendExcalidrawSceneOnce();
+    this._startExcalidrawLoadRetry();
     // Polling de GET_SCENE: captura a cena ativa a cada 2s enquanto o modal
     // está aberto. Necessário porque o onChange do Excalidraw (que envia
     // SCENE_DATA sozinho) nem sempre dispara no WebView — sem isso, o save
@@ -2011,6 +2011,7 @@ const app = {
   closeExcalidraw() {
     clearInterval(this._excalidrawPoll);
     this._excalidrawPoll = null;
+    this._stopExcalidrawLoadRetry();
     if (!confirm(_('excalidraw_unsaved'))) return;
     // Captura final antes de fechar (não depende do polling)
     const iframe = document.getElementById('excalidraw-iframe');
@@ -2023,6 +2024,7 @@ const app = {
   exbNewDrawing() {
     const hasDrawing = this._excalidrawScene && this._excalidrawScene.elements && this._excalidrawScene.elements.length > 0;
     if (hasDrawing && !confirm(_('excalidraw_unsaved'))) return;
+    this._stopExcalidrawLoadRetry();
     this._excalidrawScene = { elements: [], appState: {} };
     document.getElementById('excalidraw-iframe').src = 'index.excalidraw.html?_=' + Date.now();
   },
@@ -2033,29 +2035,15 @@ const app = {
     btn.textContent = modal.classList.contains('excalidraw-fullscreen') ? '✕' : '⛶';
   },
   _excalidrawScene: null,
+  _excalidrawRetry: null,
 
   _setupExcalidrawListener() {
     window.addEventListener('message', (e) => {
       if (!e.data || typeof e.data !== 'object') return;
       if (e.data.type === 'EXCALIDRAW_READY') {
-        // Envia a cena UMA vez (flag) quando a API estiver pronta — evita
-        // "Loading scene" infinito e updateScene duplicado que impede desenho.
-        if (this._excalidrawLoadSent) return;
-        this._excalidrawLoadSent = true;
-        const iframe = document.getElementById('excalidraw-iframe');
-        if (iframe) {
-          const scene = this._excalidrawScene || { elements: [], appState: {} };
-          let tries = 0;
-          const wait = () => {
-            if (tries++ >= 10) return;
-            if (iframe.contentWindow && iframe.contentWindow.__exAPI) {
-              iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
-            } else {
-              setTimeout(wait, 300);
-            }
-          };
-          wait();
-        }
+        // API montou: envia a cena (uma vez, flag) ou mantém o retry ativo.
+        this._sendExcalidrawSceneOnce();
+        this._startExcalidrawLoadRetry();
       }
       if (e.data.type === 'SCENE_DATA') {
         this._excalidrawScene = e.data.scene || null;
@@ -2067,6 +2055,40 @@ const app = {
       }
     });
   },
+
+  _sendExcalidrawSceneOnce() {
+    // Envia LOAD_SCENE no máximo UMA vez por abertura — a flag evita o
+    // updateScene duplicado que resetava o canvas durante o desenho.
+    if (this._excalidrawLoadSent) return true;
+    const iframe = document.getElementById('excalidraw-iframe');
+    if (!iframe || !iframe.contentWindow || !iframe.contentWindow.__exAPI) return false;
+    this._excalidrawLoadSent = true;
+    const scene = this._excalidrawScene || { elements: [], appState: {} };
+    iframe.contentWindow.postMessage({ type: 'LOAD_SCENE', scene }, '*');
+    return true;
+  },
+
+  _startExcalidrawLoadRetry() {
+    // Retry a cada 400ms enquanto o modal estiver aberto e a API não montou.
+    // Necessário porque o bundle (5,5 MB) pode demorar para carregar em
+    // conexões lentas — sem isso a cena salva se perdia ("quadro vazio").
+    if (this._excalidrawRetry) return;
+    this._excalidrawRetry = setInterval(() => {
+      if (this._sendExcalidrawSceneOnce()) {
+        this._stopExcalidrawLoadRetry();
+      } else if (document.getElementById('excalidraw-modal').style.display !== 'flex') {
+        this._stopExcalidrawLoadRetry();
+      }
+    }, 400);
+  },
+
+  _stopExcalidrawLoadRetry() {
+    if (this._excalidrawRetry) {
+      clearInterval(this._excalidrawRetry);
+      this._excalidrawRetry = null;
+    }
+  },
+
   openFountainGuide() {
     document.getElementById('help-modal').style.display = 'flex';
     this.selHelpTab('fountain');
