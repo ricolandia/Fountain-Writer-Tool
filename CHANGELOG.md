@@ -1,5 +1,37 @@
 # Changelog
 
+## v2.4.1 (2026-08-04)
+
+### 🇧🇷 Português
+
+#### 🐛 Correções
+- **Desktop Linux não abria** — `QtWebEngineProcess` era empacotado sem
+  permissão de execução (bug do PyInstaller), causando `failed to execvp`
+  e FATAL no zygote do Chromium. Correção dupla:
+  - `fonte.spec`: dá `+x` ao binário no bundle a cada build (3 OS)
+  - `webapp.py`: auto-cura em runtime (chmod + `QTWEBENGINEPROCESS_PATH`)
+    — downloads já existentes passam a funcionar sem rebaixar
+- **Sanidade do CI mais rígida** — além de checar se o app sobe, agora
+  verifica a permissão do `QtWebEngineProcess` e se o processo do
+  webengine é criado de fato (pegava regressões como esta)
+
+---
+
+### 🇺🇸 English
+
+#### 🐛 Bug Fixes
+- **Linux desktop would not open** — `QtWebEngineProcess` was bundled
+  without the executable bit (known PyInstaller bug), causing
+  `failed to execvp` and a FATAL zygote crash in Chromium. Double fix:
+  - `fonte.spec`: chmod `+x` on the binary in every build (3 OS)
+  - `webapp.py`: runtime self-heal (chmod + `QTWEBENGINEPROCESS_PATH`)
+    — existing downloads work without reinstalling
+- **Stricter CI sanity check** — besides checking the app launches, it now
+  verifies the `QtWebEngineProcess` permission and that the webengine
+  process is actually spawned (would catch regressions like this one)
+
+---
+
 ## v2.4.0 (2026-07-10)
 
 ### 🇧🇷 Português

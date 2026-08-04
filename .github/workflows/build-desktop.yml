@@ -46,9 +46,23 @@ jobs:
           # Libs de sistema que o QtWebEngine pode precisar no runner
           sudo apt-get update -qq
           sudo apt-get install -y -qq libnss3 libxkbcommon-x11-0 libasound2t64 libgbm1 libxcomposite1 libxdamage1 libxrandr2 libxtst6 libpci3 libegl1 >/dev/null 2>&1 || true
-          QT_QPA_PLATFORM=offscreen QTWEBENGINE_CHROMIUM_FLAGS="--disable-gpu --no-sandbox" timeout 12 ./dist/Fonte/${{ matrix.exe_name }} &
-          sleep 8
-          if kill -0 $! 2>/dev/null; then echo "App iniciou sem crash ✅"; kill $!; else echo "App não iniciou no runner (não bloqueia) ⚠️"; fi
+          # Verificação 1: permissão de execução do QtWebEngineProcess no bundle
+          WEP="./dist/Fonte/_internal/PySide6/Qt/libexec/QtWebEngineProcess"
+          if [ -x "$WEP" ]; then echo "QtWebEngineProcess executável ✅"; else echo "QtWebEngineProcess SEM +x ⚠️"; ls -la "$WEP" || echo "  (caminho não encontrado)"; fi
+          # Verificação 2: app sobe e o processo QtWebEngineProcess é criado
+          QT_QPA_PLATFORM=offscreen QTWEBENGINE_CHROMIUM_FLAGS="--disable-gpu --no-sandbox" timeout 15 ./dist/Fonte/${{ matrix.exe_name }} &
+          APP_PID=$!
+          sleep 10
+          if kill -0 $APP_PID 2>/dev/null; then
+            if pgrep -f 'QtWebEngineProcess' >/dev/null; then
+              echo "App iniciou + QtWebEngineProcess ativo ✅"
+            else
+              echo "App vivo mas QtWebEngineProcess NÃO subiu ⚠️ (provável problema de exec/permissão)"
+            fi
+            kill $APP_PID
+          else
+            echo "App não iniciou no runner (não bloqueia) ⚠️"
+          fi
 
       - name: Upload artefato
         uses: actions/upload-artifact@v5

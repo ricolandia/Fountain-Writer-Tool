@@ -87,3 +87,14 @@ coll = COLLECT(
     upx_exclude=[],
     name='Fonte',
 )
+
+# O PyInstaller coleta o QtWebEngineProcess sem o bit de execução (bug
+# conhecido), o que faz o WebView falhar com 'failed to execvp' no Linux.
+# Corrige a permissão no bundle gerado (DISTPATH é global do PyInstaller).
+for _base in (os.path.join(DISTPATH, 'Fonte', '_internal'),
+              os.path.join(DISTPATH, 'Fonte')):
+    _proc = os.path.join(_base, 'PySide6', 'Qt', 'libexec', 'QtWebEngineProcess')
+    if os.path.exists(_proc):
+        os.chmod(_proc, 0o755)
+        print(f"[spec] +x aplicado em: {_proc}")
+        break

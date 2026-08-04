@@ -20,6 +20,27 @@ APP_NAME = "Fonte"
 WIDTH, HEIGHT = 1280, 800
 
 
+def _fix_qtwebengine_process():
+    """Garante que o QtWebEngineProcess tenha permissão de execução.
+
+    O PyInstaller coleta esse binário sem o bit +x (bug conhecido), o que
+    faz o QWebEngineProcess falhar com 'failed to execvp' no Linux.
+    Em builds frozen, corrige a permissão in-place (o usuário é dono do
+    arquivo extraído) e aponta QTWEBENGINEPROCESS_PATH para o caminho certo.
+    """
+    if not getattr(sys, 'frozen', False):
+        return
+    base = sys._MEIPASS
+    proc = os.path.join(base, 'PySide6', 'Qt', 'libexec', 'QtWebEngineProcess')
+    if os.path.exists(proc):
+        if not os.access(proc, os.X_OK):
+            try:
+                os.chmod(proc, 0o755)
+            except OSError as e:
+                print(f"[Fonte] não foi possível dar +x ao QtWebEngineProcess: {e}")
+        os.environ.setdefault('QTWEBENGINEPROCESS_PATH', proc)
+
+
 def _resolve_web_index():
     if getattr(sys, 'frozen', False):
         base = sys._MEIPASS
@@ -167,6 +188,7 @@ class FonteWindow(QMainWindow):
 
 
 def main():
+    _fix_qtwebengine_process()
     os.environ.setdefault('QTWEBENGINE_CHROMIUM_FLAGS', '--disable-gpu')
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
