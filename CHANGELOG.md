@@ -1,5 +1,49 @@
 # Changelog
 
+## v2.5.1 (2026-09-23)
+
+### 🇧🇷 Português
+
+#### 🐛 Correções
+- **Seletor de modelos do Quadro não carregava em file:// (zip universal e
+  app desktop)** — `fetch()` é bloqueado nesses contextos, então clicar num
+  modelo não fazia nada. Os 12 modelos agora vão embutidos em
+  `templates/templates.js` (carregado sob demanda via `<script>`, que
+  funciona em file://); o fetch segue como alternativa em servidor/PWA.
+- **Falha silenciosa**: se um modelo não carregar, aparece toast + aviso no
+  cabeçalho do Quadro (antes só havia o `alert`).
+- **Cache antigo podia servir um `app.js` velho no site** — o `.htaccess` do
+  demo cacheava `.js` por 1 semana; agora HTML/JS/CSS revalidam sempre
+  (`no-cache`) e o service worker **v7** pré-carrega o app shell com
+  `cache: 'reload'` (ignora o cache HTTP) e revalida os arquivos a cada
+  carga — quem tinha a versão antiga em cache recebe a nova sem esperar o
+  max-age expirar.
+- Teste novo garante que `templates.js` fica em sincronia com os
+  `.excalidraw` e com o seletor do `index.html`.
+
+---
+
+### 🇺🇸 English
+
+#### 🐛 Fixes
+- **Board template picker did not load on file:// (universal zip and desktop
+  app)** — `fetch()` is blocked in those contexts, so clicking a template did
+  nothing. The 12 templates are now embedded in `templates/templates.js`
+  (loaded on demand via `<script>`, which works on file://); fetch remains as
+  a fallback over server/PWA.
+- **Silent failure**: if a template fails to load, a toast + message in the
+  Board header appear (previously only the `alert`).
+- **Stale cache could serve an old `app.js` on the site** — the demo
+  `.htaccess` cached `.js` for a week; HTML/JS/CSS now always revalidate
+  (`no-cache`) and service worker **v7** precaches the app shell with
+  `cache: 'reload'` (bypasses the HTTP cache) and revalidates files on every
+  load — users with the old version cached get the new one without waiting
+  for max-age to expire.
+- New test ensures `templates.js` stays in sync with the `.excalidraw` files
+  and with the picker in `index.html`.
+
+---
+
 ## v2.5.0 (2026-09-23)
 
 ### 🇧🇷 Português

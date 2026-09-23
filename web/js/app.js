@@ -2205,9 +2205,26 @@ const app = {
     }
     document.getElementById('excalidraw-modal').style.display = 'none';
   },
-  /* Carrega um dos 12 modelos prontos direto no Quadro. Requer o app
-   * servido por HTTP (PWA/servidor) — em file:// o fetch é bloqueado pelo
-   * navegador, e o aviso orienta a usar Open no próprio Excalidraw. */
+  /* Carrega os modelos embutidos (templates/templates.js) via <script> —
+   * funciona em file:// (zip universal aberto direto e app desktop), onde
+   * fetch() é bloqueado pelo navegador. O arquivo só é baixado na primeira
+   * vez que o seletor é usado. */
+  _ensureTemplatesLoaded() {
+    if (window.FONTE_TEMPLATES) return Promise.resolve(window.FONTE_TEMPLATES);
+    if (this._templatesPromise) return this._templatesPromise;
+    this._templatesPromise = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'templates/templates.js';
+      s.onload = () => resolve(window.FONTE_TEMPLATES || {});
+      s.onerror = () => { this._templatesPromise = null; reject(new Error('templates.js')); };
+      document.head.appendChild(s);
+    });
+    return this._templatesPromise;
+  },
+
+  /* Carrega um dos 12 modelos prontos direto no Quadro. Usa os modelos
+   * embutidos (funciona em file://) e, se não houver, tenta buscar o
+   * arquivo .excalidraw avulso (servidor/PWA). */
   async loadExcalidrawTemplate(file) {
     const sel = document.getElementById('excalidraw-template');
     if (!file) return;
@@ -2215,23 +2232,39 @@ const app = {
       if (sel) sel.value = '';
       return;
     }
+    let scene = null;
     try {
-      const res = await fetch('templates/' + file);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const scene = await res.json();
-      const elements = Array.isArray(scene) ? scene : (scene.elements || []);
-      this._excalidrawScene = { elements, appState: (scene && scene.appState) || {} };
-      this._excalidrawLoadSent = false;
-      this._excalidrawBaseline = false;
-      this._excalidrawModified = true;
-      this._sendExcalidrawSceneOnce();
-      this._startExcalidrawLoadRetry();
-    } catch (e) {
-      console.warn('Fonte: modelo não carregou', e);
-      alert(_('exb_template_fail'));
-    } finally {
-      if (sel) sel.value = '';
+      const all = await this._ensureTemplatesLoaded();
+      scene = (all && all[file]) || null;
+    } catch (e) { /* sem os embutidos — tenta o fetch abaixo */ }
+    if (!scene) {
+      try {
+        const res = await fetch('templates/' + file);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        scene = await res.json();
+      } catch (e) {
+        console.warn('Fonte: modelo não carregou', e);
+        // Feedback visível mesmo quando o alert é bloqueado/suprimido
+        this._excalidrawTemplateStatus('⚠️ ' + _('exb_template_fail'));
+        alert(_('exb_template_fail'));
+        if (sel) sel.value = '';
+        return;
+      }
     }
+    const elements = Array.isArray(scene) ? scene : (scene.elements || []);
+    this._excalidrawScene = { elements, appState: (scene && scene.appState) || {} };
+    this._excalidrawLoadSent = false;
+    this._excalidrawBaseline = false;
+    this._excalidrawModified = true;
+    this._sendExcalidrawSceneOnce();
+    this._startExcalidrawLoadRetry();
+    this._showToast(_('exb_template_loaded'));
+    if (sel) sel.value = '';
+  },
+
+  _excalidrawTemplateStatus(msg) {
+    const cs = document.getElementById('excalidraw-capture-state');
+    if (cs) cs.textContent = msg || '';
   },
 
   exbNewDrawing() {
@@ -2254,6 +2287,7 @@ const app = {
   _excalidrawModified: false,
   _excalidrawLastJson: null,
   _excalidrawBaseline: false,
+  _templatesPromise: null,
 
   _setupExcalidrawListener() {
     window.addEventListener('message', (e) => {
@@ -2647,10 +2681,10 @@ const app = {
     }
   },
 
-  _showToast() {
+  _showToast(msg) {
     const el = document.getElementById('toast');
     if (!el) return;
-    el.textContent = _('tb_share_toast');
+    el.textContent = msg || _('tb_share_toast');
     el.style.display = 'block';
     clearTimeout(this._toastTimer);
     this._toastTimer = setTimeout(() => { el.style.display = 'none'; }, 4000);

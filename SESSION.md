@@ -63,6 +63,32 @@ correções em 4 fases. Resumo do que mudou (detalhes no CHANGELOG):
 
 ---
 
+## 🩹 Hotfix 23/Set/2026 (v2.5.1) — seletor de modelos do Quadro
+
+**Sintoma:** clicar num modelo da lista do Quadro não fazia nada.
+
+**Causa (duas frentes):**
+1. `fetch()` é bloqueado em **file://** — zip universal aberto direto e app
+   desktop (QWebEngineView carrega via `QUrl.fromLocalFile`) → o carregamento
+   falhava; em alguns contextos o erro ficava invisível.
+2. No site, o `.htaccess` antigo cacheava `.js` por 1 semana → podia servir
+   `index.html` novo com `app.js` velho (sem `loadExcalidrawTemplate`).
+
+**Correção:**
+- `web/templates/templates.js` (153 KB) com os 12 modelos embutidos,
+  carregado sob demanda via `<script>` (funciona em file://); `fetch` segue
+  como alternativa. Regenerar após editar templates (comando no cabeçalho
+  do arquivo).
+- Feedback visível: toast "🧩 Modelo carregado" e aviso no cabeçalho do
+  Quadro em caso de falha.
+- `.htaccess` do demo com `no-cache` p/ html/js/css + SW **v7** com precache
+  `cache: 'reload'` e revalidação a cada carga (mata cache preso).
+- Testes: `test_templates.js` (sincronia bundle ↔ .excalidraw ↔ seletor) e
+  smoke do Quadro agora usa o seletor de verdade + verifica os embutidos.
+
+> ⚠️ Quem já visitou o site antes precisa de **um reload extra** (ou
+> Ctrl+Shift+R) para o SW v7 assumir e substituir o app.js velho do cache.
+
 ## Como testar
 
 ```bash

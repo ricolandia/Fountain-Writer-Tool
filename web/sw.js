@@ -19,7 +19,7 @@
  * Ao mudar o app de forma que precise invalidar cache antigo, suba o número
  * da versão abaixo — isso força os clientes a buscarem tudo de novo.
  */
-const VERSION = 'v6';
+const VERSION = 'v7';
 const CACHE_NAME = 'fountain-writer-' + VERSION;
 
 const PRECACHE_URLS = [
@@ -46,11 +46,21 @@ function cacheKeyFor(req) {
 }
 
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    // cache: 'reload' ignora o cache HTTP do navegador. Sem isso, um app.js
+    // antigo guardado com max-age longo (o .htaccess antigo do demo pedia
+    // 1 semana) continuaria sendo servido mesmo depois do deploy — foi o
+    // que fez o seletor de modelos "não fazer nada" para quem tinha a
+    // versão antiga em cache.
+    await Promise.all(PRECACHE_URLS.map(async (u) => {
+      try {
+        const res = await fetch(new Request(u, { cache: 'reload' }));
+        if (res && res.status === 200) await cache.put(u, res);
+      } catch (e) { /* offline durante o install: mantém o que já houver */ }
+    }));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', event => {
@@ -101,11 +111,14 @@ self.addEventListener('fetch', event => {
   }
 
   // Documentos e app shell: network-first (deploy vale na primeira visita);
-  // offline cai no cache. O fallback de navegação só devolve o index.html
-  // para a própria página do app — nunca para o iframe do Quadro (que tem
-  // seu próprio index.excalidraw.html precacheado).
+  // offline cai no cache. O `cache: 'no-cache'` força revalidar com o
+  // servidor mesmo quando o cache HTTP ainda está "fresco" (max-age longo
+  // de um deploy anterior), então HTML/JS/CSS nunca ficam presos numa
+  // versão antiga. O fallback de navegação só devolve o index.html para a
+  // própria página do app — nunca para o iframe do Quadro (que tem seu
+  // próprio index.excalidraw.html precacheado).
   event.respondWith(
-    fetch(req).then(res => storeInCache(key, res)).catch(() =>
+    fetch(req, { cache: 'no-cache' }).then(res => storeInCache(key, res)).catch(() =>
       caches.match(key, { ignoreSearch: true }).then(cached => {
         if (cached) return cached;
         if (isDocument && !path.includes('excalidraw')) return caches.match('./index.html');

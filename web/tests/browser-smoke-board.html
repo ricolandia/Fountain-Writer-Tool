@@ -38,9 +38,16 @@ f.onload = async () => {
     for (let i = 0; i < 30 && !ready; i++) { await wait(500); ready = app._excalidrawLoadSent === true; }
     log(ready, 'LOAD_SCENE enviado (API do Excalidraw montou)');
 
-    await app.loadExcalidrawTemplate('estrutura-3-atos.excalidraw');
+    // Fluxo do usuário: escolher o modelo no seletor (dispara o change)
+    const sel = d.getElementById('excalidraw-template');
+    sel.value = 'estrutura-3-atos.excalidraw';
+    sel.dispatchEvent(new w.Event('change', { bubbles: true }));
+    await wait(1500);
     const n = app._excalidrawScene && app._excalidrawScene.elements ? app._excalidrawScene.elements.length : 0;
-    log(n > 0, 'template carregado com elementos = ' + n);
+    log(n > 0, 'modelo do seletor carregado com elementos = ' + n);
+    log(!!w.FONTE_TEMPLATES, 'modelos embutidos carregados (funciona em file://)');
+    const iframeEls = d.getElementById('excalidraw-iframe').contentWindow.__exAPI.getSceneElements().length;
+    log(iframeEls > 0, 'canvas do Quadro recebeu o modelo = ' + iframeEls + ' elementos');
 
     let captured = 0;
     for (let i = 0; i < 16 && captured === 0; i++) {
