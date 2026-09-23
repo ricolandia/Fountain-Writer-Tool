@@ -89,6 +89,31 @@ correções em 4 fases. Resumo do que mudou (detalhes no CHANGELOG):
 > ⚠️ Quem já visitou o site antes precisa de **um reload extra** (ou
 > Ctrl+Shift+R) para o SW v7 assumir e substituir o app.js velho do cache.
 
+## 🩹 Hotfix 23/Set/2026 (v2.5.2) — textos do Quadro invisíveis
+
+**Sintoma:** os modelos carregavam, mas o texto só aparecia depois de
+selecionar a caixa e mexer no tamanho da fonte.
+
+**Causa raiz (investigada com medição de pixels do canvas):** o Excalidraw
+0.17.6 só redesenha textos quando uma webfont termina de carregar — o evento
+`loadingdone` chama `onFontsLoaded`, que invalida o cache de formas
+(`Bi.R.delete`) e remede os elementos de texto. O `loadFontsForElements`
+interno só chama `document.fonts.load()` quando `document.fonts.check()` é
+false; para Helvetica (fonte de sistema usada nos 12 modelos) o check é true
+→ nenhuma fonte carrega → nenhum `loadingdone` → a forma fica "vazia" em
+cache e o texto nunca é desenhado.
+
+**Correção (na ponte do bundle `lib/excalidraw-embed.js`):** após o
+LOAD_SCENE, carrega as famílias usadas + Virgil e dispara um evento
+`loadingdone` sintético (com face fictícia de família única a cada disparo,
+em 120/500/1000/1800/3000ms) → o app invalida o cache e redesenha os textos.
+
+**Prova:** remover os elementos de texto passou a alterar 1296 pixels do
+canvas (antes: 0) e o modelo de visão leu os textos na captura. Smoke do
+Quadro ganhou teste de regressão por pixels.
+
+> ⚠️ O bundle mudou → SW **v8** (cache `lib/` é SWR; o bump garante a troca).
+
 ## Como testar
 
 ```bash

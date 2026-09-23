@@ -1,5 +1,37 @@
 # Changelog
 
+## v2.5.2 (2026-09-23)
+
+### 🇧🇷 Português
+
+#### 🐛 Correções
+- **Textos dos modelos não apareciam no Quadro** — o Excalidraw só redesenha
+  textos quando uma webfont termina de carregar (evento `loadingdone` →
+  `onFontsLoaded` invalida o cache de formas e remede os elementos). Textos
+  com fonte de sistema (Helvetica, usada nos 12 modelos) não disparam esse
+  caminho: a forma ficava "vazia" no cache e o texto só aparecia quando o
+  usuário selecionava a caixa e mexia no tamanho da fonte. A ponte agora
+  carrega as fontes usadas e dispara o `loadingdone` logo após o LOAD_SCENE.
+- **Teste de regressão** no smoke do Quadro: mede os pixels do canvas com e
+  sem os elementos de texto e falha se o texto não for desenhado.
+
+---
+
+### 🇺🇸 English
+
+#### 🐛 Fixes
+- **Template texts did not show on the Board** — Excalidraw only re-renders
+  text when a webfont finishes loading (`loadingdone` event → `onFontsLoaded`
+  invalidates the shape cache and re-measures elements). Text using a system
+  font (Helvetica, used by all 12 templates) never triggers that path: the
+  shape stayed "empty" in cache and the text only appeared after the user
+  selected the box and changed the font size. The bridge now loads the used
+  fonts and fires `loadingdone` right after LOAD_SCENE.
+- **Regression test** in the Board smoke test: measures canvas pixels with and
+  without the text elements and fails if the text is not drawn.
+
+---
+
 ## v2.5.1 (2026-09-23)
 
 ### 🇧🇷 Português

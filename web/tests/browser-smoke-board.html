@@ -42,7 +42,7 @@ f.onload = async () => {
     const sel = d.getElementById('excalidraw-template');
     sel.value = 'estrutura-3-atos.excalidraw';
     sel.dispatchEvent(new w.Event('change', { bubbles: true }));
-    await wait(1500);
+    await wait(3000); // espera o load das fontes + re-render dos textos
     const n = app._excalidrawScene && app._excalidrawScene.elements ? app._excalidrawScene.elements.length : 0;
     log(n > 0, 'modelo do seletor carregado com elementos = ' + n);
     log(!!w.FONTE_TEMPLATES, 'modelos embutidos carregados (funciona em file://)');
@@ -56,6 +56,26 @@ f.onload = async () => {
       captured = m ? +m[1] : 0;
     }
     log(captured > 0, 'cena capturada do iframe = ' + captured + ' elementos');
+
+    // Regressão: o TEXTO do modelo precisa ser desenhado no canvas (o
+    // Excalidraw só re-renderiza textos quando uma webfont carrega; com
+    // fonte de sistema a forma ficava vazia em cache e o texto não aparecia).
+    const darkPixels = () => {
+      const cs = Array.from(d.getElementById('excalidraw-iframe').contentWindow.document.querySelectorAll('canvas'));
+      const cv = cs.sort((a, b) => b.width * b.height - a.width * a.height)[0];
+      const px = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
+      let n = 0;
+      for (let i = 0; i < px.length; i += 4) {
+        if (px[i + 3] > 10 && 0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2] < 120) n++;
+      }
+      return n;
+    };
+    const comTexto = darkPixels();
+    const api = d.getElementById('excalidraw-iframe').contentWindow.__exAPI;
+    api.updateScene({ elements: api.getSceneElements().filter(e => e.type !== 'text') });
+    await wait(1500);
+    const delta = comTexto - darkPixels();
+    log(delta > 200, 'texto do modelo renderizado no canvas (delta de pixels = ' + delta + ')');
 
     app.closeExcalidraw();
     const n2 = app._excalidrawScene && app._excalidrawScene.elements ? app._excalidrawScene.elements.length : 0;

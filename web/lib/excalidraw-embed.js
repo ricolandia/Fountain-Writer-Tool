@@ -368,6 +368,56 @@ react/cjs/react-jsx-runtime.production.min.js:
       files: window.__exAPI.getFiles()
     };
   }
+  var FONT_FAMILIES = { 1: 'Virgil', 2: 'Helvetica', 3: 'Cascadia', 4: 'Assistant' };
+  /* Excalidraw 0.17.6 só desenha texto depois que a fonte está carregada
+   * (checa document.fonts.check e espera o evento 'loadingdone'). Numa cena
+   * inserida via updateScene nada dispara o load das fontes, então os textos
+   * ficam invisíveis até o usuário mexer em algo (ex.: trocar o tamanho da
+   * fonte). Aqui forçamos o load das famílias usadas e re-renderizamos. */
+  function loadFontsAndRefresh(elements) {
+    try {
+      if (!document.fonts || !document.fonts.load) return;
+      var used = {};
+      (elements || []).forEach(function(el) {
+        if (el && el.type === 'text' && el.fontFamily) used[el.fontFamily] = true;
+      });
+      // 1) carrega as webfonts usadas (Virgil/Cascadia/Assistant)
+      var loads = Object.keys(used).map(function(f) {
+        var name = FONT_FAMILIES[f] || 'Virgil';
+        try { return document.fonts.load('16px "' + name + '"'); } catch (err) { return Promise.resolve(); }
+      });
+      try { loads.push(document.fonts.load('16px "Virgil"')); } catch (err) {}
+      var refresh = function() { try { if (window.__exAPI) window.__exAPI.refresh(); } catch (err) {} };
+      Promise.all(loads).then(refresh).catch(refresh);
+      // 2) Força o Excalidraw a invalidar o cache de formas dos textos e
+      //    re-renderizá-los. O app só faz isso no evento 'loadingdone'
+      //    (onFontsLoaded -> invalida o cache + remede os elementos). Um
+      //    texto com fonte de sistema (Helvetica, usada nos templates) não
+      //    dispara esse caminho: a forma fica "vazia" em cache e o texto
+      //    não aparece até o usuário mexer no elemento. Disparamos o evento
+      //    com uma face fictícia para acionar exatamente esse caminho.
+      var nudgeSeq = 0;
+      var nudge = function() {
+        try {
+          // família única a cada disparo: o app ignora o evento se a face
+          // já estiver no set de fontes carregadas (early-return), e o
+          // primeiro disparo pode chegar antes das formas serem cacheadas.
+          var dummy = { family: 'FonteRefresh' + (++nudgeSeq) + Date.now(), style: 'normal', weight: '400' };
+          var ev = document.createEvent('Event');
+          ev.initEvent('loadingdone', false, false);
+          ev.fontfaces = [dummy];
+          document.fonts.dispatchEvent(ev);
+        } catch (err) { /* silencioso */ }
+      };
+      setTimeout(nudge, 120);
+      setTimeout(nudge, 500);
+      setTimeout(nudge, 1000);
+      setTimeout(refresh, 1400);
+      setTimeout(nudge, 1800);
+      setTimeout(nudge, 3000);
+    } catch (err) { /* silencioso */ }
+  }
+
   window.addEventListener('message', function(e) {
     if (!e.data || typeof e.data !== 'object') return;
     try {
@@ -400,6 +450,7 @@ react/cjs/react-jsx-runtime.production.min.js:
           appState: mergedState,
           commitToHistory: true
         });
+        loadFontsAndRefresh(elements);
         window.parent.postMessage({ type: 'SCENE_DATA', scene: capture() }, '*');
       }
     } catch (err) { /* silencioso */ }
