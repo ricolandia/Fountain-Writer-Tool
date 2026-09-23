@@ -15,12 +15,30 @@ ICON_PATH = os.path.join(SPECPATH, 'icons', 'icon.ico')
 
 block_cipher = None
 
+
+def _web_datas():
+    """web/ no bundle (_MEIPASS/web), exceto arquivos de desenvolvimento
+    (testes, smoke tests, backend opcional, docker)."""
+    skip_dirs = {'tests', '__pycache__'}
+    skip_files = {
+        'server.py', 'fountain_utils.py', 'docker-compose.yml',
+        'Dockerfile', 'test-excalidraw.html', 'README.md',
+    }
+    out = []
+    for root, dirs, files in os.walk(WEB_DIR):
+        dirs[:] = [d for d in dirs if d not in skip_dirs]
+        for f in files:
+            if f in skip_files or f.startswith('browser-smoke'):
+                continue
+            out.append((os.path.join(root, f), os.path.relpath(root, ROOT)))
+    return out
+
+
 a = Analysis(
     [os.path.join(SPECPATH, 'webapp.py')],
     pathex=[SPECPATH],
     binaries=[],
-    # Inclui a pasta web/ inteira dentro do bundle (_MEIPASS/web)
-    datas=[(WEB_DIR, 'web')],
+    datas=_web_datas(),
     hiddenimports=[
         'PySide6.QtWebEngineWidgets',
         'PySide6.QtWebEngineCore',

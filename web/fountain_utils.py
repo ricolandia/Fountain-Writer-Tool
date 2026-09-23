@@ -1,3 +1,12 @@
+"""Classificador Fountain simplificado — uso opcional no servidor.
+
+O parser "de verdade" do app é o do frontend (web/js/fountain-parser.js);
+este módulo é um utilitário para a API opcional (server.py) e pode não
+cobrir todos os casos do parser JS (seções, notas, boneyard, dual
+dialogue). Mantenha as regras alinhadas ao guessType do app.js se for
+estender.
+"""
+
 import re
 import html as html_mod
 from enum import Enum, auto
@@ -14,7 +23,7 @@ class LineType(Enum):
     ACTION = auto()
 
 
-_RE_SCENE = re.compile(r"^((INT|EXT|EST|I/E)[.\s]|\.)[\w\W]*", re.IGNORECASE)
+_RE_SCENE = re.compile(r"^(INT|EXT|EST|I/E)[.\s]", re.IGNORECASE)
 _RE_TRANS = re.compile(r"^[A-ZÀ-Ú\s]+(TO|PARA):$")
 _RE_CHAR = re.compile(r"^[A-ZÀ-Ú][A-ZÀ-Ú0-9\s\(\)\.\-']+$")
 _RE_PAREN = re.compile(r"^\s*\(.*\)\s*$")
@@ -32,7 +41,8 @@ def get_line_type(text: str, prev_type: LineType = LineType.ACTION) -> LineType:
         return LineType.CHARACTER
     if clean.startswith(">"):
         return LineType.TRANSITION
-    if clean.startswith("."):
+    # "." força cena, mas ".."/"..." (elipse) não — mesma regra do app.js
+    if clean.startswith(".") and not clean.startswith(".."):
         return LineType.SCENE
     if _RE_SCENE.match(clean):
         return LineType.SCENE

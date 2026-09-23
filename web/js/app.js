@@ -3,6 +3,29 @@ function safeJSON(key, fallback) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : JSON.parse(fallback); }
   catch(e) { console.warn('Fonte: erro ao ler', key, e); return JSON.parse(fallback); }
 }
+
+/* Gravação com tratamento de cota: quando o localStorage enche, avisa o
+ * usuário em vez de falhar em silêncio (o auto-save antes engolia o erro e
+ * o indicador continuava mostrando "salvo"). */
+function store(key, value) {
+  try { localStorage.setItem(key, value); return true; }
+  catch (e) {
+    console.warn('Fonte: erro ao gravar', key, e);
+    if (typeof app !== 'undefined' && app.notifyStorageError) app.notifyStorageError();
+    return false;
+  }
+}
+
+/* "Ato N" é dado persistido (não muda com o idioma); só a EXIBIÇÃO vira
+ * "Act N" em inglês. */
+function actLabel(name) {
+  return lang === 'pt-BR' ? name : String(name).replace(/^Ato\b/i, 'Act');
+}
+
+/* Paleta única (antes repetida em 5 lugares — fonte de divergência). */
+const PLOT_COLORS = { 'Principal': '#569cd6', 'A': '#ce9178', 'B': '#4ec9b0' };
+const ACT_COLORS = { 'Ato 1': '#569cd6', 'Ato 2': '#4ec9b0', 'Ato 3': '#dcdcaa', 'Ato 4': '#c586c0', 'Ato 5': '#d16969' };
+const MARK_COLORS = { '!': '#fff3b0', '*': '#c8e6c9', '?': '#ffcdd2' };
 const app = {
   beats: safeJSON('fw_beats', '[]'),
   titleData: safeJSON('fw_title', 'null'),
@@ -24,13 +47,17 @@ const app = {
   _orcListenersAttached: false,
   _editingBeatIdx: -1,
   _prevText: null,
+  _cronoDraft: null,
+  _storageErrorShown: false,
 
   init() {
     this.translateUI();
     this.editor = document.getElementById('editor');
     this.preview = document.getElementById('preview');
     const stored = localStorage.getItem('fw_draft');
-    if (stored) this.editor.value = stored;
+    // `!== null`: um documento vazio de propósito não deve virar o roteiro
+    // de exemplo ao recarregar ('' é falsy e caía no demo).
+    if (stored !== null) this.editor.value = stored;
     else this.editor.value = 'INT. ESCRITÓRIO - DIA\n\nJOÃO (CEO)\nPrecisamos de resultados!\n\nINT. CAFETERIA - DIA\n\nMARIA (SEC)\nEle nem me olha mais...\n\nEXT. PARQUE - DIA\n\nJOÃO\nO que importa é o lucro!\n\nINT. ESCRITÓRIO - DIA\n\nPEDRO (AMIGO)\nEla gosta de você, cara.\n\nINT. CAFETERIA - DIA\n\nJOÃO\nMaria, posso sentar?';
 
     // Tab switching
@@ -56,8 +83,19 @@ const app = {
     this.editor.addEventListener('keyup', () => { this.updateMarkButtonStates(); this.updateCurrentAct(); });
     this.editor.addEventListener('keydown', e => this.handleKey(e));
 
+    // Mobile pane toggles — botões de verdade (focáveis, Enter/Espaço
+    // funcionam); o checkbox hack continua fazendo o CSS abrir/fechar.
+    document.querySelectorAll('[data-pane-toggle]').forEach(btn => {
+      const cb = document.getElementById(btn.dataset.paneToggle);
+      if (!cb) return;
+      btn.addEventListener('click', () => { cb.checked = !cb.checked; });
+      cb.addEventListener('change', () => btn.setAttribute('aria-expanded', String(cb.checked)));
+    });
+    this._setupModalA11y();
+
     // Drag reorder via Sortable-like manual implementation
     this.initBeatDragReorder();
+    this.initSceneDragReorder();
     this.initDarkMode();
     this.applyFontSize();
     this.displayTimer();
@@ -76,11 +114,27 @@ const app = {
   },
 
   /* ── Updates ── */
+  /* Memo do guessType: cada update() re-varre o texto ~6-8 vezes (cenas,
+   * stats, preview, timeline, atos, personagens). Como a função é pura,
+   * a segunda varredura em diante sai do cache — digitação em roteiros
+   * longos deixa de custar múltiplos passes completos por tecla. */
+  _guessCache: new Map(),
+  _guess(text, prev) {
+    const key = prev + '\u0000' + text;
+    let v = this._guessCache.get(key);
+    if (v === undefined) {
+      v = guessType(text, prev);
+      if (this._guessCache.size >= 50000) this._guessCache.clear();
+      this._guessCache.set(key, v);
+    }
+    return v;
+  },
+
   update() {
     const text = this.editor.value;
     this._resyncLineAnchors(this._prevText, text);
     this._prevText = text;
-    try { localStorage.setItem('fw_draft', text); } catch(e) {}
+    store('fw_draft', text);
     this.isModified = true;
     this.updateIndicator();
     this.autoAssignScenes(text);
@@ -130,7 +184,7 @@ const app = {
     });
     if (colorsChanged) {
       this.sceneColors = newColors;
-      try { localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors)); } catch(e) {}
+      try { store('fw_scene_colors', JSON.stringify(this.sceneColors)); } catch(e) {}
     }
 
     const marks = this.getLineMarks();
@@ -154,18 +208,23 @@ const app = {
     const newColors = {};
     Object.entries(this.sceneColors).forEach(([lineStr, color]) => {
       const nl = lineMap.get(parseInt(lineStr, 10));
-      if (nl !== undefined) newColors[nl] = color; else colorsChanged = true;
+      if (nl !== undefined) newColors[nl] = color;
+      // Também precisa regravar quando a linha só MUDOU DE NÚMERO (antes só
+      // detectava âncora descartada, e a cor ficava apontando para a linha
+      // antiga depois de reordenar).
+      if (nl === undefined || String(nl) !== lineStr) colorsChanged = true;
     });
     if (colorsChanged) {
       this.sceneColors = newColors;
-      try { localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors)); } catch(e) {}
+      try { store('fw_scene_colors', JSON.stringify(this.sceneColors)); } catch(e) {}
     }
     const marks = this.getLineMarks();
     const newMarks = {};
     let marksChanged = false;
     Object.entries(marks).forEach(([lineStr, type]) => {
       const nl = lineMap.get(parseInt(lineStr, 10));
-      if (nl !== undefined) newMarks[nl] = type; else marksChanged = true;
+      if (nl !== undefined) newMarks[nl] = type;
+      if (nl === undefined || String(nl) !== lineStr) marksChanged = true;
     });
     if (marksChanged) this.saveLineMarks(newMarks);
   },
@@ -175,6 +234,72 @@ const app = {
     document.title = 'Fonte — ' + name + (this.isModified ? ' •' : '');
     const el = document.getElementById('save-indicator');
     if (el) el.textContent = this.isModified ? '💾' : '✓ ' + _('tb_saved');
+  },
+
+  /* Acessibilidade dos modais: role=dialog + aria-modal, Esc fecha o modal
+   * de cima e o foco volta para o editor (antes os modais não tinham
+   * nenhum tratamento de teclado/leitor de tela). */
+  _setupModalA11y() {
+    const closers = {
+      'help-modal': 'closeHelp', 'apoio-modal': 'closeApoio',
+      'excalidraw-modal': 'closeExcalidraw', 'export-modal': 'closeExportModal',
+      'find-modal': 'closeFind', 'char-modal': 'closeChar',
+      'stats-modal': 'closeStats', 'backup-modal': 'closeBackups',
+      'goal-modal': 'closeGoal', 'beat-guide-modal': 'closeBeatGuide',
+      'beat-modal': 'closeBeatModal'
+    };
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      const dialog = overlay.querySelector('.modal');
+      if (!dialog) return;
+      dialog.setAttribute('role', 'dialog');
+      dialog.setAttribute('aria-modal', 'true');
+      const header = dialog.querySelector('.modal-header');
+      if (header) dialog.setAttribute('aria-label', header.textContent.trim());
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      const open = Array.from(document.querySelectorAll('.modal-overlay'))
+        .filter(o => o.style.display === 'flex');
+      if (open.length === 0) return;
+      const top = open[open.length - 1];
+      e.preventDefault();
+      const closer = closers[top.id];
+      if (closer && typeof this[closer] === 'function') this[closer]();
+      else top.style.display = 'none';
+      if (this.editor) this.editor.focus();
+    });
+  },
+
+  /* Substitui todo o texto do editor preservando o undo nativo (Ctrl+Z)
+   * quando possível — atribuir direto em `.value` zera o histórico do
+   * navegador, então replace-all/restore/import não podiam ser desfeitos. */
+  _setEditorValue(value, selStart, selEnd) {
+    const ta = this.editor;
+    ta.focus();
+    if (value === '') { ta.value = ''; }
+    else {
+      ta.setSelectionRange(0, ta.value.length);
+      let ok = false;
+      try { ok = document.execCommand('insertText', false, value); } catch (e) { ok = false; }
+      if (!ok) ta.value = value;
+    }
+    if (selStart !== undefined) ta.setSelectionRange(selStart, selEnd === undefined ? selStart : selEnd);
+  },
+
+  /* Chamado pelo store() quando o localStorage está cheio — sem isso o app
+   * seguia exibindo "salvo" enquanto nada era gravado. */
+  notifyStorageError() {
+    if (this._storageErrorShown) return;
+    this._storageErrorShown = true;
+    const el = document.getElementById('save-indicator');
+    if (el) el.textContent = '⚠️';
+    const toast = document.getElementById('toast');
+    if (toast) {
+      toast.textContent = _('storage_full');
+      toast.style.display = 'block';
+      clearTimeout(this._toastTimer);
+      this._toastTimer = setTimeout(() => { toast.style.display = 'none'; }, 8000);
+    }
   },
 
   updateScenes(text) {
@@ -215,8 +340,8 @@ const app = {
     list.innerHTML = '';
     if (scenes.length === 0) { list.innerHTML = '<li class="list-empty" style="cursor:default">' + _('empty_scenes') + '</li>'; return; }
 
-    const plotColors = {'Principal':'#569cd6','A':'#ce9178','B':'#4ec9b0'};
-    const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
+    const plotColors = PLOT_COLORS;
+    const actColors = ACT_COLORS;
 
     // Group scenes by act, preserving text order within each act
     const actGroups = {};
@@ -253,7 +378,7 @@ const app = {
   _renderActSeparator(list, actName, actColors) {
     const sep = document.createElement('li');
     sep.style.cssText = 'padding:3px 6px;font-weight:bold;font-size:8pt;color:var(--fg-sec);background:var(--surface2);border-radius:3px;margin:4px 0 2px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid ' + (actColors[actName] || '#888');
-    sep.innerHTML = '<span>' + esc(actName) + '</span><span class="act-remove" style="cursor:pointer;color:var(--fg-sec);font-size:7pt" title="' + _('act_remove') + '">✕</span>';
+    sep.innerHTML = '<span>' + esc(actLabel(actName)) + '</span><span class="act-remove" style="cursor:pointer;color:var(--fg-sec);font-size:7pt" title="' + _('act_remove') + '">✕</span>';
     sep.querySelector('.act-remove').addEventListener('click', e => { e.stopPropagation(); this.removeAct(actName); });
     list.appendChild(sep);
   },
@@ -261,11 +386,12 @@ const app = {
   _makeSceneLi(s, i, plotColors) {
     const li = document.createElement('li');
     li.style.cssText = 'user-select:none;-webkit-user-select:none';
+    li.draggable = true; // reorder por arrastar (initSceneDragReorder)
     const color = this.sceneColors[s.line];
     if (color) li.style.borderLeftColor = color;
     const marks = this.getLineMarks();
     if (marks[s.line]) {
-      const mc = {'!':'#fff3b0', '*':'#c8e6c9', '?':'#ffcdd2'};
+      const mc = MARK_COLORS;
       li.style.backgroundColor = mc[marks[s.line]] || '';
     }
     const beat = this._findBeatForScene(s.label, s.line);
@@ -287,8 +413,8 @@ const app = {
     board.innerHTML = '';
     if (scenes.length === 0) { board.innerHTML = '<div style="padding:8px;font-size:9pt;color:var(--fg-sec)">' + _('empty_scenes') + '</div>'; return; }
 
-    const plotColors = {'Principal':'#569cd6','A':'#ce9178','B':'#4ec9b0'};
-    const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
+    const plotColors = PLOT_COLORS;
+    const actColors = ACT_COLORS;
 
     // Same grouping as renderSceneList: preserve text order within each act
     const actGroups = {};
@@ -305,7 +431,7 @@ const app = {
       const header = document.createElement('div');
       header.className = 'corkboard-act';
       header.style.borderLeft = '3px solid ' + (actColors[actName] || '#888');
-      header.textContent = actName;
+      header.textContent = actLabel(actName);
       board.appendChild(header);
     };
     const addGrid = (idxs) => {
@@ -342,12 +468,12 @@ const app = {
     const beat = this._findBeatForScene(s.label, s.line);
     let plot = beat ? beat.plotline || 'Principal' : '';
     if (plot === 'C' || plot === 'D') plot = 'B';
-    const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
+    const actColors = ACT_COLORS;
     const act = beat ? beat.act : null;
 
     card.style.borderTop = '3px solid ' + (color || actColors[act] || '#888');
     if (marks[s.line]) {
-      const mc = {'!':'#fff3b0', '*':'#c8e6c9', '?':'#ffcdd2'};
+      const mc = MARK_COLORS;
       card.style.backgroundColor = mc[marks[s.line]] || '';
     }
 
@@ -389,7 +515,7 @@ const app = {
     const scenes = [];
     let prev = 'ACTION';
     lines.forEach((line, i) => {
-      const t = guessType(line, prev);
+      const t = this._guess(line, prev);
       if (t === 'SCENE') scenes.push({ line: i, label: line.trim().replace(/^\./, '').slice(0, 60) });
       if (t !== 'BLANK') prev = t;
     });
@@ -402,13 +528,13 @@ const app = {
     if (!acts) { acts = {'Ato 1': [], 'Ato 2': [], 'Ato 3': [], 'Ato 4': [], 'Ato 5': [], 'Ato 6': [], 'Ato 7': []}; this.saveActs(acts); }
     return acts;
   },
-  saveActs(acts) { localStorage.setItem('fw_acts', JSON.stringify(acts)); },
+  saveActs(acts) { store('fw_acts', JSON.stringify(acts)); },
 
   getSceneBlocks(lines) {
     const blocks = [];
     let prev = 'ACTION';
     lines.forEach((line, idx) => {
-      const t = guessType(line, prev);
+      const t = this._guess(line, prev);
       if (t === 'SCENE') blocks.push({ line: idx, end: lines.length });
       if (t !== 'BLANK') prev = t;
     });
@@ -453,10 +579,8 @@ const app = {
     // blank line.
     const gapBefore = before.length === 0 ? '' : before.endsWith('\n\n') ? '' : before.endsWith('\n') ? '\n' : '\n\n';
     const gapAfter = after.length === 0 ? '' : after.startsWith('\n\n') ? '' : after.startsWith('\n') ? '\n' : '\n\n';
-    this.editor.value = before + gapBefore + marker + gapAfter + after;
     const newPos = (before + gapBefore + marker).length;
-    this.editor.focus();
-    this.editor.selectionStart = this.editor.selectionEnd = newPos;
+    this._setEditorValue(before + gapBefore + marker + gapAfter + after, newPos);
     this.update();
     this.syncBeatsFromScenes(this.editor.value);
   },
@@ -467,7 +591,7 @@ const app = {
     const allScenes = [];
     let prev = 'ACTION';
     lines.forEach((line, i) => {
-      const t = guessType(line, prev);
+      const t = this._guess(line, prev);
       if (t === 'SCENE') allScenes.push(i);
       if (t !== 'BLANK') prev = t;
     });
@@ -492,77 +616,11 @@ const app = {
     this.updateScenes(this.editor.value);
   },
 
-  moveActToScene(fromAct, targetLine) {
-    const acts = this.getActs();
-    const lines = this.editor.value.split('\n');
-    const blocks = this.getSceneBlocks(lines);
-    if (blocks.length === 0) return;
-
-    // Build block→act mapping from BEATS (always current, never stale).
-    // Uses _findBeatForScene (label+line) instead of matching by title
-    // alone, which is ambiguous whenever two scenes share the same heading.
-    const blockToAct = {};
-    blocks.forEach((b, i) => {
-      blockToAct[i] = null;
-      const label = lines[b.line].trim().replace(/^\./, '').slice(0, 60);
-      const beat = this._findBeatForScene(label, b.line);
-      if (beat && beat.act) blockToAct[i] = beat.act;
-    });
-
-    // Find blocks belonging to the dragged act
-    const draggedIdxs = [];
-    blocks.forEach((b, i) => {
-      if (blockToAct[i] === fromAct) draggedIdxs.push(i);
-    });
-    if (draggedIdxs.length === 0) return;
-
-    const otherIdxs = blocks.map((_, i) => i).filter(i => !draggedIdxs.includes(i));
-    if (draggedIdxs.some(i => blocks[i].line === targetLine)) targetLine = lines.length;
-    let insertIdx = otherIdxs.findIndex(i => blocks[i].line >= targetLine);
-    if (insertIdx === -1) insertIdx = otherIdxs.length;
-
-    const newOrderIdxs = [
-      ...otherIdxs.slice(0, insertIdx),
-      ...draggedIdxs,
-      ...otherIdxs.slice(insertIdx)
-    ];
-
-    const savedScroll = this.editor.scrollTop;
-    const savedStart = this.editor.selectionStart;
-    this.editor.value = newOrderIdxs.map(i =>
-      lines.slice(blocks[i].line, blocks[i].end).join('\n')
-    ).join('\n\n');
-    this.editor.selectionStart = savedStart;
-    this.editor.selectionEnd = savedStart;
-    this.editor.scrollTop = savedScroll;
-
-    // Rebuild acts from new block order
-    const newLines = this.editor.value.split('\n');
-    const newBlocks = this.getSceneBlocks(newLines);
-    const rebuilt = {};
-    const lineMap = new Map();
-    newOrderIdxs.forEach((oldIdx, newIdx) => {
-      const act = blockToAct[oldIdx];
-      if (act) {
-        if (!rebuilt[act]) rebuilt[act] = [];
-        rebuilt[act].push(newBlocks[newIdx].line);
-      }
-      // Every line inside this block shifted by the same offset as its
-      // block's start — map them all so scene colors/highlights follow
-      // their scene instead of staying at the old absolute line number.
-      const oldBlock = blocks[oldIdx], newBlock = newBlocks[newIdx];
-      for (let j = 0; j < oldBlock.end - oldBlock.line; j++) {
-        lineMap.set(oldBlock.line + j, newBlock.line + j);
-      }
-    });
-    for (const aname of Object.keys(acts)) { if (!rebuilt[aname]) rebuilt[aname] = []; }
-    this._remapAnchorsByLineMap(lineMap);
-    this.saveActs(rebuilt);
-    this._prevText = this.editor.value;
-    this.updateScenes(this.editor.value);
-  },
-
-  /* ── Single scene move ── */
+  /* ── Single scene move (drag reorder na lista de cenas) ──
+   * Move o bloco da cena `fromLine` para a posição da cena `toLine`
+   * (insere antes dela). Reescreve o texto e reaponta atos, cores,
+   * marcações e os beats (scene_ref é chaveado por linha) — sem isso o
+   * sync criaria beats duplicados. */
   moveScene(fromLine, toLine) {
     const lines = this.editor.value.split('\n');
     const blocks = this.getSceneBlocks(lines);
@@ -590,24 +648,42 @@ const app = {
     if (toIdx > fromIdx) toIdx--;
     newOrder.splice(toIdx, 0, fromIdx);
 
+    // Conteúdo de cada bloco sem as linhas em branco finais (o bloco
+    // inclui o separador até a próxima cena; sem isso cada move inseria
+    // uma linha em branco extra).
+    const content = (b) => {
+      let end = b.end;
+      while (end > b.line && lines[end - 1].trim() === '') end--;
+      return { line: b.line, end, text: lines.slice(b.line, end).join('\n') };
+    };
+    const contents = blocks.map(content);
+    // Preâmbulo antes da primeira cena (ex.: "FADE IN:") fica intocado —
+    // antes ele era descartado ao reescrever o texto.
+    const prefixEnd = blocks[0].line;
+    const prefix = lines.slice(0, prefixEnd).join('\n').replace(/\n+$/, '');
+    const body = newOrder.map(i => contents[i].text).join('\n\n');
+    const newText = prefix ? prefix + '\n\n' + body : body;
+
     const savedScroll = this.editor.scrollTop;
-    this.editor.value = newOrder.map(i =>
-      lines.slice(blocks[i].line, blocks[i].end).join('\n')
-    ).join('\n\n');
+    // _setEditorValue preserva o undo nativo — um reorder errado pode ser
+    // desfeito com Ctrl+Z.
+    this._setEditorValue(newText);
     this.editor.scrollTop = savedScroll;
 
-    const newLines = this.editor.value.split('\n');
+    const newLines = newText.split('\n');
     const newBlocks = this.getSceneBlocks(newLines);
     const acts = this.getActs();
     const rebuilt = {};
     const lineMap = new Map();
+    // Linhas do preâmbulo não se movem.
+    for (let j = 0; j < prefixEnd; j++) lineMap.set(j, j);
     newOrder.forEach((oldIdx, newIdx) => {
       const act = blockToAct[oldIdx];
       if (act) {
         if (!rebuilt[act]) rebuilt[act] = [];
         rebuilt[act].push(newBlocks[newIdx].line);
       }
-      const oldBlock = blocks[oldIdx], newBlock = newBlocks[newIdx];
+      const oldBlock = contents[oldIdx], newBlock = newBlocks[newIdx];
       for (let j = 0; j < oldBlock.end - oldBlock.line; j++) {
         lineMap.set(oldBlock.line + j, newBlock.line + j);
       }
@@ -615,8 +691,55 @@ const app = {
     for (const aname of Object.keys(acts)) { if (!rebuilt[aname]) rebuilt[aname] = []; }
     this._remapAnchorsByLineMap(lineMap);
     this.saveActs(rebuilt);
-    this._prevText = this.editor.value;
-    this.updateScenes(this.editor.value);
+    // Reaponta os beats: scene_ref guarda a linha da cena ("Título|L42").
+    let beatsChanged = false;
+    this.beats.forEach(b => {
+      const m = b.scene_ref && b.scene_ref.match(/^(.*)\|L(\d+)$/);
+      if (!m) return;
+      const nl = lineMap.get(parseInt(m[2], 10));
+      if (nl !== undefined && String(nl) !== m[2]) {
+        b.scene_ref = m[1] + '|L' + nl;
+        beatsChanged = true;
+      }
+    });
+    if (beatsChanged) this.saveBeats();
+    this._prevText = newText;
+    this.update();
+    this.syncBeatsFromScenes(newText);
+    this.renderBeats();
+  },
+
+  /* ── Scene drag reorder (lista de cenas) ── */
+  initSceneDragReorder() {
+    const list = document.getElementById('scene-list');
+    if (!list) return;
+    let dragLine = null;
+    const clear = () => list.querySelectorAll('li').forEach(el => el.classList.remove('drag-over', 'drag-source'));
+    list.addEventListener('dragstart', e => {
+      const item = e.target.closest('li[data-line]');
+      if (!item) return;
+      dragLine = parseInt(item.dataset.line, 10);
+      e.dataTransfer.setData('text/plain', String(dragLine));
+      e.dataTransfer.effectAllowed = 'move';
+      item.classList.add('drag-source');
+    });
+    list.addEventListener('dragend', clear);
+    list.addEventListener('dragover', e => {
+      if (dragLine === null) return;
+      e.preventDefault();
+      const item = e.target.closest('li[data-line]');
+      list.querySelectorAll('li').forEach(el => el.classList.remove('drag-over'));
+      if (item) item.classList.add('drag-over');
+    });
+    list.addEventListener('drop', e => {
+      e.preventDefault();
+      const item = e.target.closest('li[data-line]');
+      const from = dragLine !== null ? dragLine : parseInt(e.dataTransfer.getData('text/plain'), 10);
+      const to = item ? parseInt(item.dataset.line, 10) : NaN;
+      clear();
+      dragLine = null;
+      if (!isNaN(from) && !isNaN(to) && from !== to) this.moveScene(from, to);
+    });
   },
 
   /* ── Beat drag reorder ── */
@@ -687,13 +810,13 @@ const app = {
     let prevType = 'ACTION';
     let current = null;
     lines.forEach((line, i) => {
-      const t = guessType(line, prevType);
+      const t = this._guess(line, prevType);
       if (t === 'SCENE') current = { heading: line.trim().replace(/^\./, ''), line: i };
       if (t !== 'BLANK') prevType = t;
     });
     if (!current) { el.textContent = ''; el.style.display = 'none'; return; }
     const beat = this._findBeatForScene(current.heading, current.line);
-    if (beat && beat.act) { el.textContent = '📍 ' + beat.act; el.style.display = ''; }
+    if (beat && beat.act) { el.textContent = '📍 ' + actLabel(beat.act); el.style.display = ''; }
     else { el.textContent = ''; el.style.display = 'none'; }
   },
 
@@ -704,7 +827,7 @@ const app = {
     let prevType = 'ACTION';
     let s = 0;
     lines.forEach(line => {
-      const t = guessType(line, prevType);
+      const t = this._guess(line, prevType);
       if (t === 'SCENE') s++;
       if (t !== 'BLANK') prevType = t;
     });
@@ -863,7 +986,7 @@ const app = {
     const lines = text.split('\n');
     const chars = {}; const locs = new Set(); let prev = 'ACTION';
     lines.forEach(line => {
-      const t = guessType(line, prev);
+      const t = this._guess(line, prev);
       if (t === 'CHARACTER') { const n = line.trim().toUpperCase(); chars[n] = (chars[n] || 0) + 1; }
       if (t === 'SCENE') {
         const m = line.trim().match(/^(INT|EXT|EST|I\/E)[.\s]+(.+?)(\s*[-–—].*)?$/i);
@@ -903,10 +1026,10 @@ const app = {
   _renderBeatComments(comments) {
     const el = document.getElementById('beat-comments');
     el.innerHTML = '';
-    if (!comments || comments.length === 0) { el.innerHTML = '<p style="color:var(--fg-sec)">Sem comentários.</p>'; return; }
+    if (!comments || comments.length === 0) { el.innerHTML = '<p style="color:var(--fg-sec)">' + _('beat_no_comments') + '</p>'; return; }
     comments.slice().reverse().forEach(c => {
       el.innerHTML += '<div style="padding:3px 0;border-bottom:1px solid var(--border)">' +
-        '<b>' + esc(c.author || 'Autor') + '</b> ' +
+        '<b>' + esc(c.author || _('beat_author')) + '</b> ' +
         '<span style="color:var(--fg-sec)">' + esc(c.time || '') + '</span><br>' +
         esc(c.text) + '</div>';
     });
@@ -965,15 +1088,25 @@ const app = {
   closeBeatGuide() { document.getElementById('beat-guide-modal').style.display = 'none'; },
   editBeat(i) { this.openBeatModal(i); },
   deleteBeat(i) { this.beats.splice(i, 1); this.saveBeats(); this.renderBeats(); this.renderTimeline(); this.updateScenes(this.editor.value); },
+  moveBeat(i, delta) {
+    const j = i + delta;
+    if (i < 0 || i >= this.beats.length || j < 0 || j >= this.beats.length) return;
+    const [beat] = this.beats.splice(i, 1);
+    this.beats.splice(j, 0, beat);
+    this.saveBeats();
+    this.renderBeats();
+    this.renderTimeline();
+  },
   insertBeat(i) {
     const b = this.beats[i];
     if (!b) return;
     const ta = this.editor;
     const pos = ta.selectionStart;
-    ta.value = ta.value.slice(0, pos) + (b.title || '') + '\n\n' + ta.value.slice(pos);
-    this.update(); ta.focus();
+    const insert = (b.title || '') + '\n\n';
+    this._setEditorValue(ta.value.slice(0, pos) + insert + ta.value.slice(pos), pos + insert.length);
+    this.update();
   },
-  saveBeats() { localStorage.setItem('fw_beats', JSON.stringify(this.beats)); },
+  saveBeats() { store('fw_beats', JSON.stringify(this.beats)); },
 
   /* ── Auto-sync beats from scenes ── */
   syncBeatsFromScenes(text) {
@@ -989,7 +1122,7 @@ const app = {
     lines.forEach((line, i) => {
       const markerMatch = line.trim().match(/^#\s*(?:ato\s*)?(\d+)\s*$/i);
       if (markerMatch) { currentMarkerAct = 'Ato ' + markerMatch[1]; prev = 'ACTION'; return; }
-      const t = guessType(line, prev);
+      const t = this._guess(line, prev);
       if (t === 'SCENE') {
         const clean = line.trim().replace(/^\./, '');
         sceneData.push({ heading: clean, line: i });
@@ -1100,8 +1233,8 @@ const app = {
       return na - nb;
     });
     const plotlines = ['Principal', 'A', 'B'];
-    const actColors = {'Ato 1':'#569cd6','Ato 2':'#4ec9b0','Ato 3':'#dcdcaa','Ato 4':'#c586c0','Ato 5':'#d16969'};
-    const plotColors = {'Principal':'#569cd6','A':'#ce9178','B':'#4ec9b0'};
+    const actColors = ACT_COLORS;
+    const plotColors = PLOT_COLORS;
 
     // Map scene → plotline (from matching beats)
     const scenePlot = {};
@@ -1143,7 +1276,7 @@ const app = {
     actNames.forEach(act => {
       const h = document.createElement('div');
       h.style.cssText = 'padding:3px;font-weight:bold;font-size:9pt;text-align:center;color:#fff;background:' + (actColors[act] || '#888') + ';border-radius:3px';
-      h.textContent = act;
+      h.textContent = actLabel(act);
       headerRow.appendChild(h);
     });
     el.appendChild(headerRow);
@@ -1197,7 +1330,7 @@ const app = {
     const list = document.getElementById('beat-list');
     list.innerHTML = '';
     if (this.beats.length === 0) { list.innerHTML = '<div class="list-empty">' + _('empty_beats') + '</div>'; return; }
-    const plotColors = {'Principal':'#569cd6','A':'#ce9178','B':'#4ec9b0'};
+    const plotColors = PLOT_COLORS;
     // Built the same way syncBeatsFromScenes builds scene_ref — full
     // heading, not parseScenes()'s 60-char-truncated label — otherwise
     // any scene heading over 60 chars never matches and its beat shows
@@ -1206,7 +1339,7 @@ const app = {
     const sceneRefs = new Set();
     let prevType = 'ACTION';
     lines.forEach((line, i) => {
-      const t = guessType(line, prevType);
+      const t = this._guess(line, prevType);
       if (t === 'SCENE') sceneRefs.add(line.trim().replace(/^\./, '') + '|L' + i);
       if (t !== 'BLANK') prevType = t;
     });
@@ -1229,15 +1362,33 @@ const app = {
       titleRow.innerHTML = '<span style="' + dotStyle + '"></span>' +
         '<span style="font-size:11pt">' + prefix + esc(b.title || '?') + '</span>';
       div.appendChild(titleRow);
-      // Line 2: plotline + action buttons
+      // Line 2: plotline + action buttons. Botões de verdade (focáveis,
+      // funcionam por teclado e no touch — o drag-and-drop HTML5 não
+      // funciona em celular/tablet) e ↑/↓ como alternativa ao arrastar.
       const actionRow = document.createElement('div');
       actionRow.style.cssText = 'display:flex;align-items:center;gap:4px;margin-top:3px;padding-left:14px';
-      actionRow.innerHTML =
-        '<span style="font-size:8pt;color:' + color + '">' + esc(pl) + '</span>' +
-        '<span style="flex:1"></span>' +
-        '<span style="cursor:pointer;font-size:13pt" onclick="app.editBeat(' + i + ')">✎</span>' +
-        '<span style="cursor:pointer;font-size:13pt" onclick="app.insertBeat(' + i + ')">↗</span>' +
-        '<span style="color:#c00;cursor:pointer;font-size:13pt" onclick="app.deleteBeat(' + i + ')">✕</span>';
+      const plSpan = document.createElement('span');
+      plSpan.style.cssText = 'font-size:8pt;color:' + color;
+      plSpan.textContent = pl;
+      actionRow.appendChild(plSpan);
+      const spacer = document.createElement('span');
+      spacer.style.flex = '1';
+      actionRow.appendChild(spacer);
+      const mkBtn = (label, title, handler, danger) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'beat-btn' + (danger ? ' danger' : '');
+        b.textContent = label;
+        b.title = title;
+        b.setAttribute('aria-label', title);
+        b.addEventListener('click', handler);
+        return b;
+      };
+      actionRow.appendChild(mkBtn('↑', _('beat_move_up'), () => this.moveBeat(i, -1)));
+      actionRow.appendChild(mkBtn('↓', _('beat_move_down'), () => this.moveBeat(i, 1)));
+      actionRow.appendChild(mkBtn('✎', _('beat_edit_title'), () => this.editBeat(i)));
+      actionRow.appendChild(mkBtn('↗', _('beat_insert_title'), () => this.insertBeat(i)));
+      actionRow.appendChild(mkBtn('✕', _('beat_remove_title'), () => this.deleteBeat(i), true));
       div.appendChild(actionRow);
       list.appendChild(div);
     });
@@ -1357,7 +1508,7 @@ const app = {
         if (el && el.value.trim()) this.titleData['outro_' + k] = el.value.trim();
       }
     });
-    localStorage.setItem('fw_title', JSON.stringify(this.titleData));
+    store('fw_title', JSON.stringify(this.titleData));
   },
 
   limparTitulo() {
@@ -1449,7 +1600,7 @@ const app = {
     const term = document.getElementById('find-input').value;
     const repl = document.getElementById('replace-input').value;
     const len = term.length;
-    ta.value = ta.value.slice(0, pos) + repl + ta.value.slice(pos + len);
+    this._setEditorValue(ta.value.slice(0, pos) + repl + ta.value.slice(pos + len), pos + repl.length);
     this.findDo();
     this.findGo(this.findIdx);
   },
@@ -1458,7 +1609,7 @@ const app = {
     if (!term) return;
     const cs = document.getElementById('find-case').checked;
     const re = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), cs ? 'g' : 'gi');
-    this.editor.value = this.editor.value.replace(re, document.getElementById('replace-input').value);
+    this._setEditorValue(this.editor.value.replace(re, document.getElementById('replace-input').value));
     this.update();
     this.findDo();
   },
@@ -1503,16 +1654,19 @@ const app = {
   _renderCronograma() {
     const grid = document.getElementById('proj-cronograma');
     if (!grid) return;
-    const etapas = ['Pré-Produção','Produção','Pós-Produção','Divulgação','Exibições/Oficina','Prestação de Contas'];
+    const etapas = ['crono_pre','crono_prod','crono_pos','crono_div','crono_exib','crono_prest'];
     const data = (this.projetoData && this.projetoData.cronograma) || [];
     // Default all false
     const crono = etapas.map((_, i) => data[i] ? [...data[i]] : Array(12).fill(false));
+    // Guarda o rascunho no estado: antes, marcar células sem nunca ter
+    // clicado "Salvar Dados" era descartado silenciosamente.
+    this._cronoDraft = crono;
 
     grid.innerHTML = '';
     // Header
     const hdr = document.createElement('div');
     hdr.style.cssText = 'font-weight:bold;color:var(--fg-sec)';
-    hdr.textContent = 'Etapa / Mês';
+    hdr.textContent = _('crono_stage');
     grid.appendChild(hdr);
     for (let m = 1; m <= 12; m++) {
       const d = document.createElement('div');
@@ -1521,10 +1675,10 @@ const app = {
       grid.appendChild(d);
     }
     // Rows
-    etapas.forEach((etapa, i) => {
+    etapas.forEach((etapaKey, i) => {
       const label = document.createElement('div');
       label.style.cssText = 'font-size:8pt';
-      label.textContent = etapa;
+      label.textContent = _(etapaKey);
       grid.appendChild(label);
       for (let m = 0; m < 12; m++) {
         const cell = document.createElement('div');
@@ -1534,9 +1688,10 @@ const app = {
         cell.addEventListener('click', () => {
           crono[i][m] = !crono[i][m];
           cell.style.background = crono[i][m] ? 'var(--accent)' : 'transparent';
+          this._cronoDraft = crono;
           if (this.projetoData) {
             this.projetoData.cronograma = crono;
-            localStorage.setItem('fw_projeto', JSON.stringify(this.projetoData));
+            store('fw_projeto', JSON.stringify(this.projetoData));
           }
         });
         grid.appendChild(cell);
@@ -1553,8 +1708,8 @@ const app = {
       return sum + (isNaN(v) ? 0 : v);
     }, 0);
     const el = document.getElementById('proj-orc-total');
-      const locale = lang === 'pt-BR' ? 'pt-BR' : 'en-US';
-      if (el) el.textContent = 'Total: R$ ' + total.toLocaleString(locale, {minimumFractionDigits:2});
+    const locale = lang === 'pt-BR' ? 'pt-BR' : 'en-US';
+    if (el) el.textContent = _('proj_orc_total') + ' R$ ' + total.toLocaleString(locale, {minimumFractionDigits:2});
   },
 
   salvarProjeto() {
@@ -1564,7 +1719,7 @@ const app = {
       if (el.type === 'checkbox') return el.checked;
       return el.value;
     };
-    const cronoSalvo = this.projetoData ? this.projetoData.cronograma : null;
+    const cronoSalvo = this._cronoDraft || (this.projetoData ? this.projetoData.cronograma : null);
     this.projetoData = {
       nome: getVal('proj-nome'), proponente: getVal('proj-proponente'), cpf: getVal('proj-cpf'),
       segmento: getVal('proj-segmento'), produto: getVal('proj-produto'), valor: getVal('proj-valor'), periodo: getVal('proj-periodo'),
@@ -1588,8 +1743,8 @@ const app = {
       pitchDiferencial: getVal('proj-pitch-diferencial'), pitchSimilares: getVal('proj-pitch-similares'),
       pitchTexto: getVal('proj-pitch-texto'), pitchElenco: getVal('proj-pitch-elenco')
     };
-    if (cronoSalvo) this.projetoData.cronograma = cronoSalvo;
-    localStorage.setItem('fw_projeto', JSON.stringify(this.projetoData));
+    this.projetoData.cronograma = cronoSalvo || [];
+    store('fw_projeto', JSON.stringify(this.projetoData));
     this.isModified = true;
     this.updateIndicator();
   },
@@ -1606,7 +1761,7 @@ const app = {
       '<h1>' + _('proj_title') + '</h1>' +
       '<h2>' + _('proj_section1') + '</h2>' +
       '<table><tr><td><b>' + _('export_nome') + ':</b> ' + e(d.nome) + '</td><td><b>' + _('export_proponente') + ':</b> ' + e(d.proponente) + '</td></tr>' +
-      '<tr><td><b>CPF/CNPJ:</b> ' + e(d.cpf) + '</td><td><b>' + _('export_segmento') + ':</b> ' + e(d.segmento) + '</td></tr>' +
+      '<tr><td><b>' + _('export_cpf') + ':</b> ' + e(d.cpf) + '</td><td><b>' + _('export_segmento') + ':</b> ' + e(d.segmento) + '</td></tr>' +
       '<tr><td><b>' + _('export_produto') + ':</b> ' + e(d.produto) + '</td><td><b>' + _('export_valor') + ':</b> R$ ' + e(d.valor) + '</td></tr></table>' +
       '<h2>' + _('proj_section2') + '</h2><p><b>' + _('export_resumo') + ':</b> ' + e(d.resumo) + '</p>' +
       '<p><b>' + _('export_objetivo_geral') + ':</b> ' + e(d.objGeral) + '</p>' +
@@ -1646,18 +1801,23 @@ const app = {
     }
     this.editor.value = ''; this.fileName = null; this.beats = []; this.titleData = null;
     this._prevText = null;
-    this.projectName = ''; localStorage.setItem('fw_beats', '[]');
+    // Desvincula o arquivo salvo: sem isso, Ctrl+S no projeto novo
+    // sobrescreveria o .fountain.json do projeto anterior (Chrome/Edge).
+    this._fileHandle = null;
+    this.projectName = ''; store('fw_beats', '[]');
     localStorage.removeItem('fw_title'); localStorage.removeItem('fw_char_data');
     localStorage.removeItem('fw_project_name'); localStorage.removeItem('fw_scene_colors');
     localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
     this.projetoData = null; localStorage.removeItem('fw_projeto');
+    this._cronoDraft = null;
     this._excalidrawScene = null;
+    this._excalidrawModified = false;
     this._stopExcalidrawLoadRetry();
     clearInterval(this._excalidrawPoll);
     this._excalidrawPoll = null;
-    localStorage.setItem('fw_backups', '[]');
-    const ef = document.getElementById('excalidraw-iframe');
-    if (ef) ef.src = 'index.excalidraw.html?_=' + Date.now();
+    // Os backups NÃO são apagados aqui: se o usuário criou um projeto novo
+    // por engano, as versões de segurança do anterior continuam acessíveis.
+    this._reloadExcalidrawIframe();
     this.renderBeats(); this.update();
   },
   openFile() { document.getElementById('file-input').click(); },
@@ -1670,9 +1830,13 @@ const app = {
     this.updateIndicator();
   },
 
-  async saveProject() {
-    const data = {
-      name: this.projectName || 'roteiro',
+  /* Payload completo do projeto — usado pelo Salvar e pelo Compartilhar
+   * (antes o Compartilhar gravava só nome/texto/beats/ficha, e o arquivo
+   * "parecia" completo mas perdia projeto cultural, elenco e o Quadro). */
+  _buildProjectData() {
+    return {
+      version: 1,
+      name: this.projectName || (lang === 'pt-BR' ? 'roteiro' : 'script'),
       draft: this.editor.value,
       beats: this.beats,
       titleData: this.titleData,
@@ -1694,6 +1858,10 @@ const app = {
       excalidrawScene: this._excalidrawScene,
       updated: new Date().toISOString()
     };
+  },
+
+  async saveProject() {
+    const data = this._buildProjectData();
     const defaultName = this.projectName || (lang === 'pt-BR' ? 'roteiro' : 'script');
     const name = defaultName + '.fountain.json';
     if (window.showSaveFilePicker && this._fileHandle) {
@@ -1701,8 +1869,7 @@ const app = {
         const writable = await this._fileHandle.createWritable();
         await writable.write(JSON.stringify(data, null, 2));
         await writable.close();
-        this.isModified = false; this.updateIndicator();
-        localStorage.setItem('fw_project_saved', 'true'); return;
+        this._markProjectSaved(); return;
       } catch (e) { this._fileHandle = null; }
     }
     if (window.showSaveFilePicker) {
@@ -1722,10 +1889,17 @@ const app = {
       a.href = URL.createObjectURL(blob); a.download = name; a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     }
-    this.isModified = false; this.updateIndicator();
-    console.log('[fonte] save: excalidrawScene=' +
-      (this._excalidrawScene && this._excalidrawScene.elements ? this._excalidrawScene.elements.length : 'null'));
-    localStorage.setItem('fw_project_saved', 'true');
+    this._markProjectSaved();
+  },
+
+  _markProjectSaved() {
+    this.isModified = false;
+    this.updateIndicator();
+    // O quadro passa a ter um estado "salvo" como baseline para o próximo
+    // fechamento não pedir confirmação à toa.
+    this._excalidrawModified = false;
+    this._excalidrawBaseline = false;
+    store('fw_project_saved', 'true');
   },
 
   openProject() {
@@ -1738,39 +1912,42 @@ const app = {
       const reader = new FileReader();
       reader.onload = ev => {
         try {
-          const data = JSON.parse(ev.target.result);
+          const data = migrateProject(JSON.parse(ev.target.result));
           this.editor.value = data.draft || '';
           this._prevText = null;
+          // Desvincula o arquivo salvo (ver newFile): o Ctrl+S deve pedir
+          // onde salvar este projeto, não sobrescrever o anterior.
+          this._fileHandle = null;
           this.beats = data.beats || [];
           this.titleData = data.titleData || null;
           this.projectName = data.name || '';
           this.sceneColors = data.sceneColors || {};
           if (data.darkMode !== undefined) { this.darkMode = data.darkMode; document.body.classList.toggle('dark', this.darkMode); }
-          if (data.charData) localStorage.setItem('fw_char_data', JSON.stringify(data.charData));
-          if (data.wordGoal !== undefined) { this.wordGoal = data.wordGoal; localStorage.setItem('fw_goal', String(data.wordGoal)); }
+          if (data.charData) store('fw_char_data', JSON.stringify(data.charData));
+          if (data.wordGoal !== undefined) { this.wordGoal = data.wordGoal; store('fw_goal', String(data.wordGoal)); }
           if (data.fontSize !== undefined) { this.fontSize = data.fontSize; this.applyFontSize(); }
-          if (data.soundOn !== undefined) { this.soundOn = data.soundOn; localStorage.setItem('fw_sound', data.soundOn ? 'true' : 'false'); }
-          if (data.acts) localStorage.setItem('fw_acts', JSON.stringify(data.acts));
-          if (data.lineMarks) localStorage.setItem('fw_line_marks', JSON.stringify(data.lineMarks));
+          if (data.soundOn !== undefined) { this.soundOn = data.soundOn; store('fw_sound', data.soundOn ? 'true' : 'false'); }
+          if (data.acts) store('fw_acts', JSON.stringify(data.acts));
+          if (data.lineMarks) store('fw_line_marks', JSON.stringify(data.lineMarks));
           if (data.timelineVisible !== undefined) this.timelineVisible = data.timelineVisible;
           if (data.focusOn) { this.focusOn = data.focusOn; document.body.classList.toggle('focus-mode', this.focusOn); }
-          if (data.lang) { lang = data.lang; localStorage.setItem('fw_lang', lang); }
+          if (data.lang) { lang = data.lang; store('fw_lang', lang); }
           if (data.previewMode !== undefined) this.previewMode = data.previewMode;
           if (data.viewMode !== undefined) this.viewMode = data.viewMode;
-          if (data.projeto !== undefined) { this.projetoData = data.projeto; localStorage.setItem('fw_projeto', JSON.stringify(data.projeto)); }
-          if (data.backups) localStorage.setItem('fw_backups', JSON.stringify(data.backups));
+          if (data.projeto !== undefined) { this.projetoData = data.projeto; store('fw_projeto', JSON.stringify(data.projeto)); }
+          if (data.backups) store('fw_backups', JSON.stringify(data.backups));
+          this._cronoDraft = null;
           this._excalidrawScene = data.excalidrawScene || null;
+          this._excalidrawModified = false;
           this._stopExcalidrawLoadRetry();
           clearInterval(this._excalidrawPoll);
           this._excalidrawPoll = null;
-          const ef = document.getElementById('excalidraw-iframe');
-          if (ef) ef.src = 'index.excalidraw.html?_=' + Date.now();
-          localStorage.setItem('fw_title', JSON.stringify(this.titleData));
-          localStorage.setItem('fw_beats', JSON.stringify(this.beats));
-          localStorage.setItem('fw_project_name', this.projectName);
-          localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors));
-          const defaultFileName = lang === 'pt-BR' ? 'roteiro' : 'script';
-      this.fileName = file.name.replace(/\.(?:fountain\.)?json$/, '.fountain');
+          this._reloadExcalidrawIframe();
+          store('fw_title', JSON.stringify(this.titleData));
+          store('fw_beats', JSON.stringify(this.beats));
+          store('fw_project_name', this.projectName);
+          store('fw_scene_colors', JSON.stringify(this.sceneColors));
+          this.fileName = file.name.replace(/\.(?:fountain\.)?json$/, '.fountain');
           this.saveBeats();
           this.update();
           this.syncBeatsFromScenes(this.editor.value);
@@ -1883,7 +2060,7 @@ const app = {
   },
 
   saveLineMarks(marks) {
-    localStorage.setItem('fw_line_marks', JSON.stringify(marks));
+    store('fw_line_marks', JSON.stringify(marks));
   },
 
   markHighlight(type) {
@@ -1905,16 +2082,11 @@ const app = {
     const current = marks[line] || '';
     const buttons = document.querySelectorAll('.hl-btn');
     buttons.forEach(btn => {
-      const onclick = btn.getAttribute('onclick');
-      if (!onclick) return;
-      const type = onclick.match(/markHighlight\('([!*?])'\)/);
-      if (type && type[1] === current) {
-        btn.style.boxShadow = '0 0 0 2px #000';
-        btn.style.outline = '2px solid #000';
-      } else {
-        btn.style.boxShadow = '';
-        btn.style.outline = '';
-      }
+      // data-mark em vez de parsear o onclick (refatorações do HTML não
+      // quebram mais o destaque do botão ativo).
+      const active = current && btn.dataset.mark === current;
+      btn.style.boxShadow = active ? '0 0 0 2px #000' : '';
+      btn.style.outline = active ? '2px solid #000' : '';
     });
   },
 
@@ -1928,14 +2100,14 @@ const app = {
 
     let typeCount = {}; let prev = 'ACTION';
     lines.forEach(line => {
-      const t = guessType(line, prev);
+      const t = this._guess(line, prev);
       typeCount[t] = (typeCount[t] || 0) + 1;
       if (t !== 'BLANK' && t !== 'ACTION') prev = t;
     });
 
     let charSpeech = {}; prev = 'ACTION';
     lines.forEach(line => {
-      const t = guessType(line, prev);
+      const t = this._guess(line, prev);
       if (t === 'CHARACTER') {
         const name = line.trim().toUpperCase();
         charSpeech[name] = (charSpeech[name] || 0) + 1;
@@ -1950,12 +2122,12 @@ const app = {
     const aPct = total > 0 ? Math.round(actions / total * 100) : 0;
 
     let html = '<div style="font-size:10pt;line-height:1.6">';
-    html += '<p><b>Palavras:</b> ' + words + '</p>';
-    html += '<p><b>Caracteres:</b> ' + chars + '</p>';
-    html += '<p><b>Cenas:</b> ' + scenes + '</p>';
-    html += '<p><b>Diálogo:</b> ' + dPct + '% das linhas</p>';
-    html += '<p><b>Ação:</b> ' + aPct + '% das linhas</p>';
-    html += '<p><b>Personagens:</b> ' + Object.keys(charSpeech).length + '</p>';
+    html += '<p><b>' + _('stats_words') + ':</b> ' + words + '</p>';
+    html += '<p><b>' + _('stats_chars') + ':</b> ' + chars + '</p>';
+    html += '<p><b>' + _('stats_scenes') + ':</b> ' + scenes + '</p>';
+    html += '<p><b>' + _('stats_dialogue') + ':</b> ' + _('stats_pct_lines', dPct) + '</p>';
+    html += '<p><b>' + _('stats_action') + ':</b> ' + _('stats_pct_lines', aPct) + '</p>';
+    html += '<p><b>' + _('stats_characters') + ':</b> ' + Object.keys(charSpeech).length + '</p>';
     html += '<hr style="border:none;border-top:1px solid var(--border);margin:8px 0">';
     html += '<p><b>' + _('stats_top_chars') + '</b></p>';
     const top = Object.entries(charSpeech).sort((a, b) => b[1] - a[1]).slice(0, 8);
@@ -1981,12 +2153,22 @@ const app = {
     navigator.clipboard.writeText(chave).then(() => {
       const el = document.querySelector('[onclick*="copiarPix"]');
       const orig = el.textContent;
-      el.textContent = '✓ Copiado!';
+      el.textContent = _('pix_copied');
       setTimeout(() => { el.textContent = orig; }, 2000);
     }).catch(() => {});
   },
 
+  /* O iframe do Quadro só carrega o bundle de 5,5 MB na primeira abertura
+   * (lazy). Este helper recarrega o iframe ao trocar de projeto — mas só se
+   * ele já tiver sido carregado alguma vez, para não derrubar a preguiça. */
+  _reloadExcalidrawIframe() {
+    const ef = document.getElementById('excalidraw-iframe');
+    if (ef && ef.getAttribute('src')) ef.src = 'index.excalidraw.html?_=' + Date.now();
+  },
+
   openExcalidraw() {
+    const iframe = document.getElementById('excalidraw-iframe');
+    if (iframe && !iframe.getAttribute('src')) iframe.src = 'index.excalidraw.html';
     document.getElementById('excalidraw-modal').style.display = 'flex';
     // LOAD_SCENE é enviado UMA vez por abertura (flag _excalidrawLoadSent):
     // agora, se a API já montou; senão, o retry (_startExcalidrawLoadRetry)
@@ -1994,6 +2176,7 @@ const app = {
     // lentas o bundle (5,5 MB) pode demorar segundos para montar — a antiga
     // janela fixa de 3s fazia a cena salva se perder ("quadro vazio").
     this._excalidrawLoadSent = false;
+    this._excalidrawBaseline = false;
     this._sendExcalidrawSceneOnce();
     this._startExcalidrawLoadRetry();
     // Polling de GET_SCENE: captura a cena ativa a cada 2s enquanto o modal
@@ -2012,20 +2195,52 @@ const app = {
     clearInterval(this._excalidrawPoll);
     this._excalidrawPoll = null;
     this._stopExcalidrawLoadRetry();
-    if (!confirm(_('excalidraw_unsaved'))) return;
+    // Só pergunta se o desenho realmente mudou desde o último save do projeto
+    // (antes o confirm aparecia sempre, mesmo sem nenhum desenho).
+    if (this._excalidrawModified && !confirm(_('excalidraw_unsaved'))) return;
     // Captura final antes de fechar (não depende do polling)
     const iframe = document.getElementById('excalidraw-iframe');
     if (iframe && iframe.contentWindow) {
       iframe.contentWindow.postMessage({ type: 'GET_SCENE' }, '*');
     }
-    this._excalidrawModified = false;
     document.getElementById('excalidraw-modal').style.display = 'none';
   },
+  /* Carrega um dos 12 modelos prontos direto no Quadro. Requer o app
+   * servido por HTTP (PWA/servidor) — em file:// o fetch é bloqueado pelo
+   * navegador, e o aviso orienta a usar Open no próprio Excalidraw. */
+  async loadExcalidrawTemplate(file) {
+    const sel = document.getElementById('excalidraw-template');
+    if (!file) return;
+    if (this._excalidrawModified && !confirm(_('excalidraw_unsaved'))) {
+      if (sel) sel.value = '';
+      return;
+    }
+    try {
+      const res = await fetch('templates/' + file);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const scene = await res.json();
+      const elements = Array.isArray(scene) ? scene : (scene.elements || []);
+      this._excalidrawScene = { elements, appState: (scene && scene.appState) || {} };
+      this._excalidrawLoadSent = false;
+      this._excalidrawBaseline = false;
+      this._excalidrawModified = true;
+      this._sendExcalidrawSceneOnce();
+      this._startExcalidrawLoadRetry();
+    } catch (e) {
+      console.warn('Fonte: modelo não carregou', e);
+      alert(_('exb_template_fail'));
+    } finally {
+      if (sel) sel.value = '';
+    }
+  },
+
   exbNewDrawing() {
     const hasDrawing = this._excalidrawScene && this._excalidrawScene.elements && this._excalidrawScene.elements.length > 0;
     if (hasDrawing && !confirm(_('excalidraw_unsaved'))) return;
     this._stopExcalidrawLoadRetry();
     this._excalidrawScene = { elements: [], appState: {} };
+    this._excalidrawModified = true;
+    this._excalidrawLastJson = JSON.stringify(this._excalidrawScene.elements);
     document.getElementById('excalidraw-iframe').src = 'index.excalidraw.html?_=' + Date.now();
   },
   toggleExcalidrawFullscreen() {
@@ -2036,6 +2251,9 @@ const app = {
   },
   _excalidrawScene: null,
   _excalidrawRetry: null,
+  _excalidrawModified: false,
+  _excalidrawLastJson: null,
+  _excalidrawBaseline: false,
 
   _setupExcalidrawListener() {
     window.addEventListener('message', (e) => {
@@ -2047,10 +2265,19 @@ const app = {
       }
       if (e.data.type === 'SCENE_DATA') {
         this._excalidrawScene = e.data.scene || null;
+        // Baseline = primeira leitura após abrir (evita marcar como alterado
+        // só pela normalização que o Excalidraw faz ao montar a cena).
+        const json = JSON.stringify((this._excalidrawScene && this._excalidrawScene.elements) || []);
+        if (!this._excalidrawBaseline) {
+          this._excalidrawBaseline = true;
+          this._excalidrawLastJson = json;
+        } else if (json !== this._excalidrawLastJson) {
+          this._excalidrawModified = true;
+        }
         const cs = document.getElementById('excalidraw-capture-state');
         if (cs) {
           const n = this._excalidrawScene && this._excalidrawScene.elements ? this._excalidrawScene.elements.length : 0;
-          cs.textContent = n > 0 ? '✓ ' + n + ' capturado(s)' : '📷 vazio';
+          cs.textContent = n > 0 ? _('exb_captured', n) : _('exb_empty');
         }
       }
     });
@@ -2089,11 +2316,6 @@ const app = {
     }
   },
 
-  openFountainGuide() {
-    document.getElementById('help-modal').style.display = 'flex';
-    this.selHelpTab('fountain');
-  },
-
   /* ── Character editing ── */
   openChar(name) {
     const data = safeJSON('fw_char_data', '{}');
@@ -2122,7 +2344,7 @@ const app = {
       goal: document.getElementById('ce-goal').value,
       fear: document.getElementById('ce-fear').value,
     };
-    localStorage.setItem('fw_char_data', JSON.stringify(data));
+    store('fw_char_data', JSON.stringify(data));
     this.closeChar();
   },
 
@@ -2131,7 +2353,7 @@ const app = {
     if (!name) return;
     const data = safeJSON('fw_char_data', '{}');
     delete data[name];
-    localStorage.setItem('fw_char_data', JSON.stringify(data));
+    store('fw_char_data', JSON.stringify(data));
     this.closeChar();
   },
 
@@ -2144,7 +2366,7 @@ const app = {
   },
   saveGoal() {
     const val = parseInt(document.getElementById('goal-input').value);
-    if (val > 0) { this.wordGoal = val; localStorage.setItem('fw_goal', String(val)); }
+    if (val > 0) { this.wordGoal = val; store('fw_goal', String(val)); }
     this.closeGoal();
     this.updateGoalDisplay();
   },
@@ -2169,7 +2391,7 @@ const app = {
     // Keep last 30 days
     const keys = Object.keys(data).sort();
     if (keys.length > 30) { delete data[keys[0]]; }
-    localStorage.setItem('fw_productivity', JSON.stringify(data));
+    store('fw_productivity', JSON.stringify(data));
   },
 
   renderProductivity() {
@@ -2177,7 +2399,7 @@ const app = {
     if (!el) return;
     const data = safeJSON('fw_productivity', '{}');
     const keys = Object.keys(data).sort().slice(-7);
-    if (keys.length === 0) { el.innerHTML = 'Sem dados'; return; }
+    if (keys.length === 0) { el.innerHTML = _('stats_no_data'); return; }
     const max = Math.max(1, ...keys.map(k => data[k]));
     let html = '<div style="display:flex;gap:3px;align-items:end;height:60px;padding:4px">';
     keys.forEach(k => {
@@ -2192,12 +2414,12 @@ const app = {
   },
 
   /* ── Theme + Focus ── */
-  toggleTheme() { this.darkMode = !this.darkMode; document.body.classList.toggle('dark', this.darkMode); localStorage.setItem('fw_dark', this.darkMode ? 'true' : 'false'); },
+  toggleTheme() { this.darkMode = !this.darkMode; document.body.classList.toggle('dark', this.darkMode); store('fw_dark', this.darkMode ? 'true' : 'false'); },
 
   /* ── Language ── */
   toggleLang() {
     const newLang = lang === 'pt-BR' ? 'en' : 'pt-BR';
-    localStorage.setItem('fw_lang', newLang);
+    store('fw_lang', newLang);
     location.reload();
   },
 
@@ -2222,6 +2444,10 @@ const app = {
     const pixRow = document.getElementById('pix-entry');
     if (pixRow) pixRow.closest('p').style.display = lang === 'pt-BR' ? 'block' : 'none';
     if (typeof structureOpts !== 'undefined') this.populateStructureSelects();
+    // Select de ato do beat: "Ato N" (PT) / "Act N" (EN) — o value
+    // persistido continua "Ato N" para não migrar dados.
+    const beatAct = document.getElementById('beat-act');
+    if (beatAct) Array.from(beatAct.options).forEach(opt => { opt.textContent = actLabel(opt.value); });
   },
 
   populateStructureSelects() {
@@ -2265,7 +2491,7 @@ const app = {
   /* ── Zoom ── */
   applyFontSize() {
     this.editor.style.fontSize = this.fontSize + 'pt';
-    localStorage.setItem('fw_font_size', String(this.fontSize));
+    store('fw_font_size', String(this.fontSize));
   },
 
   zoomIn() { this.fontSize = Math.min(24, this.fontSize + 1); this.applyFontSize(); },
@@ -2275,7 +2501,7 @@ const app = {
   /* ── Sound effects ── */
   toggleSound() {
     this.soundOn = !this.soundOn;
-    localStorage.setItem('fw_sound', this.soundOn ? 'true' : 'false');
+    store('fw_sound', this.soundOn ? 'true' : 'false');
     const btn = document.getElementById('sound-btn');
     if (btn) btn.textContent = this.soundOn ? '🔊 ' + _('tb_sound') : '🔇 ' + _('tb_sound');
   },
@@ -2310,6 +2536,10 @@ const app = {
     if (e.ctrlKey && e.key === '=') { e.preventDefault(); this.zoomIn(); }
     if (e.ctrlKey && e.key === '-') { e.preventDefault(); this.zoomOut(); }
     if (e.ctrlKey && e.key === '0') { e.preventDefault(); this.zoomReset(); }
+    // Ênfase Fountain na seleção (o README prometia Ctrl+B/I/U)
+    if (e.ctrlKey && !e.shiftKey && !e.altKey && e.key === 'b') { e.preventDefault(); this.wrapSelection('**', '**'); }
+    if (e.ctrlKey && !e.shiftKey && !e.altKey && e.key === 'i') { e.preventDefault(); this.wrapSelection('*', '*'); }
+    if (e.ctrlKey && !e.shiftKey && !e.altKey && e.key === 'u') { e.preventDefault(); this.wrapSelection('_', '_'); }
     const ac = document.getElementById('autocomplete-box');
     if (ac.style.display !== 'none') {
       const items = ac.querySelectorAll('.ac-item');
@@ -2340,7 +2570,7 @@ const app = {
     const lines = text.split('\n');
     let prev = 'ACTION';
     lines.forEach(line => {
-      const t = guessType(line, prev);
+      const t = this._guess(line, prev);
       if (t === 'CHARACTER') { const n = line.trim().toUpperCase(); chars[n] = (chars[n] || 0) + 1; }
       if (t !== 'BLANK') prev = t;
     });
@@ -2352,8 +2582,8 @@ const app = {
     const line = ta.value.slice(0, ta.selectionStart).split('\n').length - 1;
     const lines = ta.value.split('\n');
     const currentLine = lines[line] || '';
-    const prevType = line > 0 ? guessType(lines[line - 1], 'ACTION') : 'ACTION';
-    const curType = guessType(currentLine, prevType);
+    const prevType = line > 0 ? this._guess(lines[line - 1], 'ACTION') : 'ACTION';
+    const curType = this._guess(currentLine, prevType);
     const text = currentLine.trim();
     if (curType !== 'CHARACTER' || !text || text.length < 1) { this._hideAutocomplete(); return; }
     const chars = this._getCharacterNamesMap(ta.value);
@@ -2395,21 +2625,14 @@ const app = {
     const after = lines.slice(line + 1).join('\n');
     const prefix = before ? '\n' : '';
     const suffix = after ? '\n' : '';
-    ta.value = before + prefix + name + suffix + after;
     const pos = (before + prefix + name).length;
-    ta.selectionStart = ta.selectionEnd = pos;
+    this._setEditorValue(before + prefix + name + suffix + after, pos);
     this._hideAutocomplete();
     this.update();
   },
 
   shareProject() {
-    const data = {
-      name: this.projectName || _('tb_project_name'),
-      draft: this.editor.value,
-      beats: this.beats,
-      titleData: this.titleData,
-      updated: new Date().toISOString()
-    };
+    const data = this._buildProjectData();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const file = new File([blob], (this.projectName || (lang === 'pt-BR' ? 'roteiro' : 'script')) + '.fountain.json', { type: 'application/json' });
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -2439,10 +2662,10 @@ const app = {
     const end = ta.selectionEnd;
     if (start === end) return;
     const selected = ta.value.slice(start, end);
-    ta.value = ta.value.slice(0, start) + before + selected + after + ta.value.slice(end);
-    ta.focus();
-    ta.selectionStart = start;
-    ta.selectionEnd = end + before.length + after.length;
+    this._setEditorValue(
+      ta.value.slice(0, start) + before + selected + after + ta.value.slice(end),
+      start, end + before.length + after.length
+    );
     this.update();
   },
 
@@ -2527,7 +2750,7 @@ const app = {
     if (this._autoSaveTimer) return;
     this._autoSaveTimer = setInterval(() => {
       try {
-        localStorage.setItem('fw_draft', this.editor.value);
+        store('fw_draft', this.editor.value);
         this.saveBeats();
         this.saveActs(this.getActs());
       } catch (e) { console.warn('Fonte: auto-save falhou', e); }
@@ -2545,10 +2768,15 @@ const app = {
         backups.push({
           text, beats: this.beats, acts: this.getActs(),
           sceneColors: this.sceneColors, lineMarks: this.getLineMarks(),
+          // Estado completo do projeto (antes o restore deixava ficha,
+          // projeto cultural e elenco da versão nova misturados ao texto
+          // antigo restaurado).
+          titleData: this.titleData, projeto: this.projetoData,
+          charData: safeJSON('fw_char_data', '{}'),
           name: this.fileName || 'roteiro', time: Date.now()
         });
         if (backups.length > 5) backups.splice(0, backups.length - 5);
-        localStorage.setItem('fw_backups', JSON.stringify(backups));
+        store('fw_backups', JSON.stringify(backups));
       } catch (e) { console.warn('Fonte: backup falhou', e); }
     }, 300000); // 5 minutes
   },
@@ -2581,7 +2809,7 @@ const app = {
     const backups = safeJSON('fw_backups', '[]');
     if (idx < 0 || idx >= backups.length) return;
     if (!confirm(_('backup_restore_confirm'))) return;
-    this.editor.value = backups[idx].text;
+    this._setEditorValue(backups[idx].text);
     this._prevText = null;
     this.fileName = backups[idx].name;
     if (backups[idx].beats) { this.beats = backups[idx].beats; this.saveBeats(); }
@@ -2591,8 +2819,12 @@ const app = {
     // draft's colors/highlights keyed to line numbers that likely mean
     // something completely different in the restored (older) text.
     this.sceneColors = backups[idx].sceneColors || {};
-    try { localStorage.setItem('fw_scene_colors', JSON.stringify(this.sceneColors)); } catch(e) {}
+    store('fw_scene_colors', JSON.stringify(this.sceneColors));
     this.saveLineMarks(backups[idx].lineMarks || {});
+    if (backups[idx].titleData !== undefined) { this.titleData = backups[idx].titleData || null; store('fw_title', JSON.stringify(this.titleData)); }
+    if (backups[idx].projeto !== undefined) { this.projetoData = backups[idx].projeto || null; store('fw_projeto', JSON.stringify(this.projetoData)); }
+    if (backups[idx].charData) store('fw_char_data', JSON.stringify(backups[idx].charData));
+    this._cronoDraft = null;
     this.update();
     this.renderBeats();
     this.closeBackups();
@@ -2649,6 +2881,17 @@ function guessType(text, prev) {
 
 function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;').replace(/"/g,'&quot;'); }
 
+/* Migração de esquema do .fountain.json. Arquivos antigos (sem `version`)
+ * são equivalentes à v1; o campo existe para que evoluções futuras possam
+ * transformar o payload sem quebrar projetos já salvos. */
+function migrateProject(data) {
+  if (!data || typeof data !== 'object') return data;
+  const v = data.version || 1;
+  if (v > 1) console.warn('Fonte: projeto em versão mais nova (' + v + ') — campos desconhecidos podem ser ignorados.');
+  // (nenhuma migração necessária ainda — v1 é o formato atual)
+  return data;
+}
+
 /* ── File input handler ── */
 document.getElementById('file-input').addEventListener('change', function(e) {
   const file = e.target.files[0];
@@ -2659,7 +2902,13 @@ document.getElementById('file-input').addEventListener('change', function(e) {
     return;
   }
   const reader = new FileReader();
-  reader.onload = ev => { app.editor.value = ev.target.result; app._prevText = null; app.fileName = file.name; app.update(); app.syncBeatsFromScenes(app.editor.value); };
+  reader.onload = ev => {
+    app._setEditorValue(ev.target.result);
+    app._prevText = null; app.fileName = file.name;
+    // Importar outro roteiro desvincula o arquivo salvo (ver newFile).
+    app._fileHandle = null;
+    app.update(); app.syncBeatsFromScenes(app.editor.value);
+  };
   reader.readAsText(file, 'UTF-8');
   e.target.value = '';
 });

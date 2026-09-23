@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Fonte — smoke test (app/editor)</title></head>
+<body>
+<!--
+  Smoke test end-to-end do Fonte — parte 1 (app, editor, modais, arquivos).
+  O Quadro/Excalidraw tem teste próprio em browser-smoke-board.html.
+
+  Como rodar:
+    1. Na raiz do projeto:  python3 serve.py
+    2. Abra:  http://localhost:8000/web/tests/browser-smoke.html
+    3. Resultado na lista; a última linha é SMOKE-DONE.
+
+  Headless:
+    google-chrome --headless=new --disable-gpu --no-sandbox \
+      --virtual-time-budget=25000 --dump-dom \
+      http://localhost:8000/web/tests/browser-smoke.html | grep -E "PASS|FAIL"
+-->
+<iframe id="f" src="../index.html" style="width:1200px;height:800px"></iframe>
+<pre id="out">aguardando…</pre>
+<script>
+const out = [];
+function log(ok, msg) { out.push((ok ? 'PASS ' : 'FAIL ') + msg); document.getElementById('out').textContent = out.join('\n'); }
+function done() { document.getElementById('out').textContent = out.join('\n') + '\nSMOKE-DONE'; }
+const f = document.getElementById('f');
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+f.onload = async () => {
+  await wait(1200);
+  const w = f.contentWindow;
+  const d = f.contentDocument;
+  const app = w.eval('app');
+  w.confirm = () => true; // headless: confirm sempre "sim"
+  try {
+    log(!!app, 'app inicializa');
+    log(d.getElementById('scene-count').textContent === '5', 'cenas detectadas (5) = ' + d.getElementById('scene-count').textContent);
+    log(+d.getElementById('beat-count').textContent >= 5, 'beats auto-criados = ' + d.getElementById('beat-count').textContent);
+    log(!d.getElementById('excalidraw-iframe').getAttribute('src'), 'iframe do Quadro sem src (lazy)');
+
+    d.getElementById('help-modal').style.display = 'flex';
+    d.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    log(d.getElementById('help-modal').style.display === 'none', 'Esc fecha modal');
+    log(d.querySelector('#help-modal .modal').getAttribute('role') === 'dialog', 'role=dialog nos modais');
+
+    app.editor.value = 'INT. CASA - DIA\n\nAção qualquer.';
+    app.editor.setSelectionRange(17, 21);
+    d.getElementById('editor').dispatchEvent(new w.KeyboardEvent('keydown', { key: 'b', ctrlKey: true, bubbles: true }));
+    log(app.editor.value.includes('**Ação**'), 'Ctrl+B aplica negrito');
+
+    w.localStorage.setItem('fw_backups', JSON.stringify([{ text: 'backup-antigo', time: 1 }]));
+    app._fileHandle = { fake: true };
+    app.editor.value = 'INT. Y - DIA\n\nFala.';
+    await app.newFile();
+    log(app._fileHandle === null, 'newFile reseta _fileHandle');
+    const bk = JSON.parse(w.localStorage.getItem('fw_backups') || '[]');
+    log(bk.length === 1 && bk[0].text === 'backup-antigo', 'newFile preserva backups');
+
+    app._setEditorValue('');
+    app.update();
+    const reload = new Promise(r => { f.onload = r; });
+    f.contentWindow.location.reload();
+    await reload;
+    await wait(900);
+    const w2 = f.contentWindow;
+    const app2 = w2.eval('app');
+    log(app2.editor.value === '', 'documento vazio sobrevive ao reload');
+
+    log(w2.eval('migrateProject({draft:"x"}).draft') === 'x', 'migrateProject aceita legado');
+    log(w2.eval('migrateProject({version:1,draft:"y"}).version') === 1, 'migrateProject v1');
+    w2.eval('lang = "en"');
+    log(w2.eval('actLabel("Ato 2")') === 'Act 2', 'actLabel EN');
+    w2.eval('lang = "pt-BR"');
+
+    const payload = w2.eval('app._buildProjectData()');
+    log(payload.version === 1, '_buildProjectData tem version=1');
+    log('projeto' in payload && 'excalidrawScene' in payload && 'charData' in payload, 'payload do share completo');
+
+    w2.eval('app._renderCronograma()');
+    const cells = w2.document.querySelectorAll('#proj-cronograma div[data-stage]');
+    cells[0].click();
+    const draft = w2.eval('app._cronoDraft');
+    log(!!(draft && draft[0] && draft[0][0] === true), 'cronograma guardado no rascunho');
+    w2.eval('app.salvarProjeto()');
+    const proj = JSON.parse(w2.localStorage.getItem('fw_projeto') || '{}');
+    log(!!(proj.cronograma && proj.cronograma[0] && proj.cronograma[0][0] === true), 'cronograma salvo no projeto');
+
+    const opts = w2.document.querySelectorAll('#excalidraw-template option');
+    log(opts.length === 13, 'seletor com 12 templates');
+    log(!!w2.navigator.serviceWorker, 'service worker disponível');
+    done();
+  } catch (e) {
+    log(false, 'EXCEÇÃO: ' + e.message);
+    done();
+  }
+};
+</script>
+</body>
+</html>

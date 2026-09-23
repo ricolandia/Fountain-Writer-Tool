@@ -2,18 +2,42 @@ name: Build Web
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
+    tags: ['v*']
+  pull_request:
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - run: cd web && zip -r ../Fonte-web.zip . -x "docker-compose.yml" -x "Dockerfile" -x "test-excalidraw.html" && cd ..
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Testes (parser, guessType, i18n, estrutura)
+        run: node --test web/tests/*.js
+
+  build:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Empacotar zip web (sem arquivos de dev)
+        run: |
+          cd web
+          zip -r ../Fonte-web.zip . \
+            -x "tests/*" \
+            -x "server.py" \
+            -x "fountain_utils.py" \
+            -x "__pycache__/*" \
+            -x "test-excalidraw.html" \
+            -x "docker-compose.yml" \
+            -x "Dockerfile"
+          cd ..
       - uses: actions/upload-artifact@v5
         with:
           name: Fonte-web

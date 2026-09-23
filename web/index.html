@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Fonte</title>
+<meta name="theme-color" content="#f5f0e8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0e12" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Fonte">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="imagens/fonte-icon.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
@@ -19,8 +24,8 @@
   <label for="show-beats" class="backdrop" id="backdrop-beats"></label>
 
   <header id="toolbar">
-    <span class="mobile-only"><label for="show-scenes" class="pane-btn">🎬 Cenas</label></span>
-    <span class="mobile-only"><label for="show-beats" class="pane-btn">📋 Beats</label></span>
+    <span class="mobile-only"><button class="pane-btn" data-pane-toggle="show-scenes" aria-controls="pane-left" aria-expanded="false">🎬 Cenas</button></span>
+    <span class="mobile-only"><button class="pane-btn" data-pane-toggle="show-beats" aria-controls="pane-right" aria-expanded="false">📋 Beats</button></span>
     <button onclick="app.newFile()" data-i18n="tb_new">📄 Novo</button>
     <button onclick="app.openProject()" data-i18n="tb_open">📂 Abrir</button>
     <button onclick="app.saveProject()" data-i18n="tb_save">💾 Salvar</button>
@@ -38,9 +43,9 @@
     <button onclick="app.openGoal()" data-i18n="tb_goal">🎯 Meta</button>
     <button onclick="app.openBackups()" data-i18n="tb_backup">💾 Backups</button>
     <span class="sep"></span>
-    <button onclick="app.markHighlight('!')" class="hl-btn" style="background:#fff3b0" data-i18n="tb_review">🖍 Revisar</button>
-    <button onclick="app.markHighlight('*')" class="hl-btn" style="background:#c8e6c9" data-i18n="tb_ok">🖍 OK</button>
-    <button onclick="app.markHighlight('?')" class="hl-btn" style="background:#ffcdd2" data-i18n="tb_problem">🖍 Problema</button>
+    <button onclick="app.markHighlight('!')" class="hl-btn" data-mark="!" style="background:#fff3b0" data-i18n="tb_review">🖍 Revisar</button>
+    <button onclick="app.markHighlight('*')" class="hl-btn" data-mark="*" style="background:#c8e6c9" data-i18n="tb_ok">🖍 OK</button>
+    <button onclick="app.markHighlight('?')" class="hl-btn" data-mark="?" style="background:#ffcdd2" data-i18n="tb_problem">🖍 Problema</button>
     <span style="width:100%;height:0"></span>
     <button onclick="app.toggleTimeline()" data-i18n="tb_timeline">📊 Trama</button>
     <button onclick="app.toggleTimelineHeight()" data-i18n-title="title_expand" title="Expandir timeline">⤢</button>
@@ -59,7 +64,7 @@
     <button onclick="app.toggleTheme()" data-i18n-title="title_theme">🌗</button>
     <button onclick="app.toggleLang()" id="lang-btn" style="font-size:9pt">PT</button>
     <button onclick="app.openHelp()" data-i18n-title="title_help">❓</button>
-    <span id="save-indicator" style="font-size:10pt;color:var(--fg-sec)">💾</span>
+    <span id="save-indicator" role="status" aria-live="polite" style="font-size:10pt;color:var(--fg-sec)">💾</span>
     <span class="timer" id="timer-display">⏱ 00:00</span>
     <span class="sep"></span>
     <button onclick="app.openApoio()" data-i18n="tb_apoio" style="font-size:9pt;color:var(--fg-sec);cursor:pointer;background:transparent;border:none;padding:2px 6px">☕ Apoie</button>
@@ -73,39 +78,39 @@
     </div>
 
     <div id="pane-center" class="pane">
-      <div id="textarea-wrap"><textarea id="editor" data-i18n-placeholder="editor_placeholder"></textarea><div id="autocomplete-box" style="display:none;position:absolute;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:4px;max-height:180px;overflow-y:auto;font:9pt 'Courier New',monospace;box-shadow:0 4px 12px rgba(0,0,0,0.15)"></div></div>
+      <div id="textarea-wrap"><textarea id="editor" data-i18n-placeholder="editor_placeholder" data-i18n-title="editor_aria" aria-label="Editor de roteiro"></textarea><div id="autocomplete-box" style="display:none;position:absolute;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:4px;max-height:180px;overflow-y:auto;font:9pt 'Courier New',monospace;box-shadow:0 4px 12px rgba(0,0,0,0.15)"></div></div>
       <div id="preview-wrap"><div id="preview"></div></div>
       <div id="projeto-form" style="display:none;padding:20px 40px;overflow-y:auto;flex:1;background:var(--editor-bg)">
         <h2 style="margin-bottom:16px;font-size:13pt" data-i18n="proj_title">Projeto Cultural</h2>
         <!-- 1. Dados do Projeto -->
         <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')" data-i18n="proj_section1">1. Dados do Proponente e Projeto ▸</h3>
           <div class="proj-corpo">
-            <div class="proj-linha"><label>Nome do Projeto</label><input type="text" id="proj-nome" style="flex:1"></div>
-            <div class="proj-linha"><label>Proponente</label><input type="text" id="proj-proponente" style="flex:1"></div>
-            <div class="proj-linha"><label>CPF/CNPJ</label><input type="text" id="proj-cpf" style="flex:1" placeholder="000.000.000-00"></div>
-            <div class="proj-linha"><label>Segmento Cultural</label><input type="text" id="proj-segmento" style="flex:1"></div>
-            <div class="proj-linha"><label>Produto Cultural</label><input type="text" id="proj-produto" style="flex:1"></div>
-            <div class="proj-linha"><label>Valor Solicitado (R$)</label><input type="text" id="proj-valor" style="flex:1" placeholder="180.000,00"></div>
-            <div class="proj-linha"><label>Período (meses)</label><input type="number" id="proj-periodo" style="flex:1;width:80px" value="12"></div>
+            <div class="proj-linha"><label data-i18n="proj_nome">Nome do Projeto</label><input type="text" id="proj-nome" style="flex:1"></div>
+            <div class="proj-linha"><label data-i18n="proj_proponente">Proponente</label><input type="text" id="proj-proponente" style="flex:1"></div>
+            <div class="proj-linha"><label data-i18n="proj_cpf">CPF/CNPJ</label><input type="text" id="proj-cpf" style="flex:1" data-i18n-placeholder="proj_cpf_ph" placeholder="000.000.000-00"></div>
+            <div class="proj-linha"><label data-i18n="proj_segmento">Segmento Cultural</label><input type="text" id="proj-segmento" style="flex:1"></div>
+            <div class="proj-linha"><label data-i18n="proj_produto">Produto Cultural</label><input type="text" id="proj-produto" style="flex:1"></div>
+            <div class="proj-linha"><label data-i18n="proj_valor">Valor Solicitado (R$)</label><input type="text" id="proj-valor" style="flex:1" data-i18n-placeholder="proj_valor_ph" placeholder="180.000,00"></div>
+            <div class="proj-linha"><label data-i18n="proj_periodo">Período (meses)</label><input type="number" id="proj-periodo" style="flex:1;width:80px" value="12"></div>
           </div>
         </div>
         <!-- 2. Perfil -->
         <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')" data-i18n="proj_section2">2. Perfil do Projeto ▸</h3>
           <div class="proj-corpo">
-            <div class="proj-linha"><label>Resumo</label><textarea id="proj-resumo" rows="4" style="flex:1"></textarea></div>
-            <div class="proj-linha"><label>Objetivo Geral</label><textarea id="proj-obj-geral" rows="3" style="flex:1"></textarea></div>
-            <div class="proj-linha"><label>Objetivos Específicos</label><textarea id="proj-obj-espec" rows="3" style="flex:1" placeholder="Um por linha"></textarea></div>
-            <div class="proj-linha"><label>Justificativa</label><textarea id="proj-justificativa" rows="5" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label data-i18n="proj_resumo">Resumo</label><textarea id="proj-resumo" rows="4" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label data-i18n="proj_obj_geral">Objetivo Geral</label><textarea id="proj-obj-geral" rows="3" style="flex:1"></textarea></div>
+            <div class="proj-linha"><label data-i18n="proj_obj_espec">Objetivos Específicos</label><textarea id="proj-obj-espec" rows="3" style="flex:1" data-i18n-placeholder="proj_obj_espec_ph" placeholder="Um por linha"></textarea></div>
+            <div class="proj-linha"><label data-i18n="proj_justif">Justificativa</label><textarea id="proj-justificativa" rows="5" style="flex:1"></textarea></div>
           </div>
         </div>
         <!-- 3. Equipe -->
         <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')" data-i18n="proj_section3">3. Equipe Principal ▸</h3>
           <div class="proj-corpo">
-            <div class="proj-linha"><label>Direção e Roteiro</label><input type="text" id="proj-equipe-direcao" style="flex:1"></div>
-            <div class="proj-linha"><label>Direção de Animação</label><input type="text" id="proj-equipe-animacao" style="flex:1"></div>
-            <div class="proj-linha"><label>Direção de Arte</label><input type="text" id="proj-equipe-arte" style="flex:1"></div>
-            <div class="proj-linha"><label>Trilha Sonora</label><input type="text" id="proj-equipe-trilha" style="flex:1"></div>
-            <div class="proj-linha"><label>Coordenação de Produção</label><input type="text" id="proj-equipe-producao" style="flex:1"></div>
+            <div class="proj-linha"><label data-i18n="proj_eq_direcao">Direção e Roteiro</label><input type="text" id="proj-equipe-direcao" style="flex:1"></div>
+            <div class="proj-linha"><label data-i18n="proj_eq_animacao">Direção de Animação</label><input type="text" id="proj-equipe-animacao" style="flex:1"></div>
+            <div class="proj-linha"><label data-i18n="proj_eq_arte">Direção de Arte</label><input type="text" id="proj-equipe-arte" style="flex:1"></div>
+            <div class="proj-linha"><label data-i18n="proj_eq_trilha">Trilha Sonora</label><input type="text" id="proj-equipe-trilha" style="flex:1"></div>
+            <div class="proj-linha"><label data-i18n="proj_eq_producao">Coordenação de Produção</label><input type="text" id="proj-equipe-producao" style="flex:1"></div>
           </div>
         </div>
         <!-- 4. Divulgação -->
@@ -178,12 +183,12 @@
         <!-- 11. Pitch -->
         <div class="proj-secao"><h3 class="proj-titulo" onclick="this.parentNode.classList.toggle('proj-aberto')" data-i18n="proj_section11">11. Pitch ▸</h3>
           <div class="proj-corpo">
-            <div class="proj-linha"><label data-i18n="proj_pitch_tagline">Tagline:</label><input type="text" id="proj-pitch-tagline" style="flex:1" placeholder="ex: O amor vence todas as barreiras"></div>
-            <div class="proj-linha"><label data-i18n="proj_pitch_comp">Comparação (X encontra Y):</label><input type="text" id="proj-pitch-comp" style="flex:1" placeholder="ex: Encontro Explosivo encontra Matrix"></div>
+            <div class="proj-linha"><label data-i18n="proj_pitch_tagline">Tagline:</label><input type="text" id="proj-pitch-tagline" style="flex:1" data-i18n-placeholder="proj_pitch_tagline_ph" placeholder="ex: O amor vence todas as barreiras"></div>
+            <div class="proj-linha"><label data-i18n="proj_pitch_comp">Comparação (X encontra Y):</label><input type="text" id="proj-pitch-comp" style="flex:1" data-i18n-placeholder="proj_pitch_comp_ph" placeholder="ex: Encontro Explosivo encontra Matrix"></div>
             <div class="proj-linha"><label data-i18n="proj_pitch_diferencial">Diferencial do projeto:</label><textarea id="proj-pitch-diferencial" rows="2" style="flex:1"></textarea></div>
             <div class="proj-linha"><label data-i18n="proj_pitch_similares">Projetos similares de sucesso:</label><textarea id="proj-pitch-similares" rows="2" style="flex:1"></textarea></div>
             <div class="proj-linha"><label data-i18n="proj_pitch_texto">Pitch narrativo (3-5 frases):</label><textarea id="proj-pitch-texto" rows="5" style="flex:1"></textarea></div>
-            <div class="proj-linha"><label data-i18n="proj_pitch_elenco">Elenco potencial:</label><textarea id="proj-pitch-elenco" rows="2" style="flex:1" placeholder="Separe por vírgula"></textarea></div>
+            <div class="proj-linha"><label data-i18n="proj_pitch_elenco">Elenco potencial:</label><textarea id="proj-pitch-elenco" rows="2" style="flex:1" data-i18n-placeholder="proj_pitch_elenco_ph" placeholder="Separe por vírgula"></textarea></div>
           </div>
         </div>
         <!-- Ações -->
@@ -358,7 +363,7 @@
       <div class="tab-content active" id="tab-beats">
         <p style="padding:4px;display:flex;gap:4px;align-items:center">
           <span id="beat-count" style="color:var(--fg-sec);font-size:9pt">0</span>
-          <span id="beat-draft-label" style="color:var(--fg-sec);font-size:7pt">· rascunho</span>
+          <span id="beat-draft-label" style="color:var(--fg-sec);font-size:7pt" data-i18n="beat_draft">· rascunho</span>
           <button onclick="app.addBeat()" data-i18n="tb_add_beat">+ Beat</button>
         </p>
         <div id="beat-list"></div>
@@ -478,22 +483,22 @@
   <div class="modal" style="max-width:380px">
     <div class="modal-header" data-i18n="apoio_header">☕ Apoie o projeto</div>
     <div class="modal-body" style="font-size:10pt;line-height:1.8">
-      <p>Se o <b>Fonte</b> te ajuda, considere contribuir.</p>
+      <p data-i18n="apoio_text">Se o <b>Fonte</b> te ajuda, considere contribuir.</p>
       <hr style="border:none;border-top:1px solid var(--border);margin:10px 0">
-      <p><span style="color:var(--fg-sec)">🧡 Pix:</span><br>
+      <p><span style="color:var(--fg-sec)" data-i18n="apoio_pix">🧡 Pix:</span><br>
         <span id="pix-entry" onclick="app.copiarPix()" style="cursor:pointer;background:var(--surface2);padding:3px 8px;border-radius:4px;display:inline-block;margin-top:4px" data-i18n-title="title_copiar_pix" title="Clique para copiar">ricardograca@ricolandia.com</span>
       </p>
-      <p style="margin-top:10px"><span style="color:var(--fg-sec)">💳 PayPal:</span><br>
+      <p style="margin-top:10px"><span style="color:var(--fg-sec)" data-i18n="apoio_paypal">💳 PayPal:</span><br>
         <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=ricolandia%40gmail.com&currency_code=BRL" target="_blank" style="color:var(--accent)">Donate via PayPal</a>
       </p>
-      <p style="margin-top:10px"><span style="color:var(--fg-sec)">🧡 GitHub Sponsors:</span><br>
+      <p style="margin-top:10px"><span style="color:var(--fg-sec)" data-i18n="apoio_sponsors">🧡 GitHub Sponsors:</span><br>
         <a href="https://github.com/sponsors/ricolandia" target="_blank" style="color:var(--accent)">github.com/sponsors/ricolandia</a>
       </p>
       <hr style="border:none;border-top:1px solid var(--border);margin:10px 0">
-      <p style="font-size:9pt;text-align:center">
+      <p style="font-size:9pt;text-align:center" data-i18n="apoio_opensource">
         🧡 Código aberto — <a href="https://github.com/ricolandia/Fountain-Writer-Tool" target="_blank" style="color:var(--accent)">veja no GitHub</a>
       </p>
-      <p style="font-size:8pt;text-align:center;color:var(--fg-sec);margin-top:6px">
+      <p style="font-size:8pt;text-align:center;color:var(--fg-sec);margin-top:6px" data-i18n="apoio_license">
         📄 Licença MIT — livre para usar, modificar e distribuir
       </p>
     </div>
@@ -511,13 +516,30 @@
       <span data-i18n="excalidraw_header">🧩 Quadro de Planejamento</span>
       <span id="excalidraw-capture-state" style="font-size:8pt;color:var(--fg-sec);cursor:default"></span>
       <span style="display:flex;gap:8px;align-items:center">
+        <select id="excalidraw-template" onchange="app.loadExcalidrawTemplate(this.value)" data-i18n-title="exb_templates" aria-label="Modelos" style="font-size:9pt;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface3);color:var(--fg)">
+          <option value="" data-i18n="exb_templates">Modelos…</option>
+          <option value="estrutura-3-atos.excalidraw">3 Atos</option>
+          <option value="jornada-heroi.excalidraw">Jornada do Herói</option>
+          <option value="mapa-personagens.excalidraw">Mapa de Personagens</option>
+          <option value="save-the-cat.excalidraw">Save the Cat</option>
+          <option value="story-circle.excalidraw">Story Circle (Harmon)</option>
+          <option value="quadro-cenas.excalidraw">Quadro de Cenas</option>
+          <option value="estrutura-tv.excalidraw">Estrutura de TV</option>
+          <option value="batman-chart.excalidraw">Batman Chart</option>
+          <option value="mood-board.excalidraw">Mood Board</option>
+          <option value="diagrama-relacoes.excalidraw">Diagrama de Relações</option>
+          <option value="linha-tempo.excalidraw">Linha do Tempo</option>
+          <option value="arco-personagem.excalidraw">Arco de Personagem</option>
+        </select>
         <span onclick="app.exbNewDrawing()" style="cursor:pointer;font-size:10pt;padding:4px 8px;border-radius:4px;border:1px solid var(--border)" data-i18n="exb_new_drawing">＋ Novo desenho</span>
         <span onclick="app.toggleExcalidrawFullscreen()" id="excalidraw-fullscreen-btn" style="cursor:pointer;font-size:12pt" data-i18n-title="excalidraw_fullscreen" title="Tela cheia">⛶</span>
         <span onclick="app.closeExcalidraw()" style="cursor:pointer;font-weight:bold;font-size:14pt">✕</span>
       </span>
     </div>
     <div class="modal-body" style="padding:0;height:calc(100% - 50px);display:block">
-      <iframe id="excalidraw-iframe" src="index.excalidraw.html" style="width:100%;height:100%;border:none" title="Excalidraw"></iframe>
+      <!-- src é definido na primeira abertura do Quadro (lazy): o bundle de
+           5,5 MB não é baixado por quem nunca usa o quadro. -->
+      <iframe id="excalidraw-iframe" style="width:100%;height:100%;border:none" title="Excalidraw"></iframe>
     </div>
   </div>
 </div>
@@ -684,7 +706,7 @@
 
 <input type="file" id="file-input" accept=".fountain,.txt" style="display:none">
 <a id="download-link" style="display:none"></a>
-<div id="toast" style="display:none;position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:6px;font:9pt 'Courier New',monospace;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.3)"></div>
+<div id="toast" role="status" aria-live="polite" style="display:none;position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:6px;font:9pt 'Courier New',monospace;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.3)"></div>
 
 <script src="js/fountain-parser.js"></script>
 <script src="js/i18n.js"></script>

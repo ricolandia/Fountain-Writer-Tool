@@ -1,5 +1,132 @@
 # Changelog
 
+## v2.5.0 (2026-09-23)
+
+### 🇧🇷 Português
+
+#### 🔒 Correções de perda de dados (prioridade)
+- **Ctrl+S não sobrescreve mais o arquivo de outro projeto** — ao criar/abrir/
+  importar um projeto, o vínculo com o arquivo salvo é desfeito (no Chrome/Edge
+  o save reusava o handle anterior e gravava por cima sem diálogo).
+- **Armazenamento cheio agora avisa** — todas as gravações no localStorage
+  passam por um helper com tratamento de cota; antes o auto-save falhava em
+  silêncio e o indicador continuava mostrando "salvo".
+- **Documento vazio de propósito sobrevive ao reload** (não vira mais o
+  roteiro de exemplo).
+- **Novo projeto não apaga mais os backups** do projeto anterior.
+- **Restaurar backup devolve o projeto inteiro** (antes ficha/projeto
+  cultural/elenco da versão nova ficavam misturados ao texto antigo).
+- **Cronograma do Projeto Cultural não se perde mais** no primeiro uso.
+- **Ctrl+Z funciona** em substituir-tudo, restaurar backup, importar, etc.
+  (o texto passa a ser trocado via `execCommand`, preservando o undo nativo).
+
+#### ✨ Novidades
+- **Seletor de modelos no Quadro** — os 12 templates do Excalidraw agora
+  aparecem num dropdown dentro do Quadro (funciona via servidor/PWA).
+- **Reordenar cenas arrastando** na lista de cenas (o drag reorder prometido
+  no Ajuda agora existe; inclui ↑/↓ nos beats para teclado e touch).
+- **Ctrl+B / Ctrl+I / Ctrl+U** — negrito/itálico/sublinhado Fountain na
+  seleção (prometido no README, agora implementado).
+- **Esc fecha modais** + `role="dialog"`/`aria-modal` e foco de volta ao
+  editor; botões de painel mobile acessíveis por teclado.
+
+#### 🚀 Desempenho
+- **Quadro não pesa mais no carregamento** — o bundle do Excalidraw (5,5 MB)
+  só é baixado na primeira abertura do Quadro (era carregado em todo acesso,
+  mesmo por quem nunca usava).
+- **Digitação mais leve em roteiros longos** — o classificador de linhas
+  (guessType) tem memo; cada update deixa de varrer o texto 6–8 vezes.
+- **Service worker v6** — cache-buster do Quadro normalizado (fim do
+  fallback errado offline e do cache inflado), stale-while-revalidate para
+  assets pesados e network-first só para documentos/app shell.
+
+#### 🐛 Correções
+- **XSS no parser**: scene number (`#...#`) agora é escapado antes de virar
+  atributo `id` na preview/export.
+- **Beats re-apontados ao reordenar cenas** (scene_ref é chaveado por linha —
+  antes o sync criaria beats duplicados).
+- **Cores/marcações acompanham a cena** reordenada (o remap só detectava
+  âncora descartada, não linha renumerada).
+- **Correção no moveScene**: não descarta mais o preâmbulo antes da primeira
+  cena (ex.: `FADE IN:`) nem insere linha em branco extra a cada movimento.
+- **i18n completo**: Estatísticas, cronograma, CPF, "Total: R$", estado de
+  captura do Quadro, modal de Apoio, placeholders do Projeto Cultural e
+  nomes de ato ("Act N" em inglês).
+- **Manifest PWA** com `id`, ícone maskable, `theme-color` claro/escuro e
+  `100dvh` no mobile (teclado virtual não cobre mais a barra de status).
+
+#### 🧪 Testes e infra
+- **CI roda os testes** a cada push/PR (`node --test web/tests/*.js`) e o
+  release só publica se passarem; zip web sem arquivos de dev.
+- **Testes novos**: migrateProject, actLabel, escaping do scene number e
+  moveScene (round-trip do reorder, incluindo preâmbulo e beats).
+- **Smoke tests no navegador** (`web/tests/browser-smoke.html` e
+  `browser-smoke-board.html`) cobrindo os fluxos críticos e o bridge do
+  Excalidraw.
+- **`sync-deploy.sh`** para sincronizar `web/` → `deploy/` sem subir lixo.
+- Limpeza: `codemirror-fountain.js` (nunca usado), `moveActToScene` e
+  `openFountainGuide` (sem chamadas) removidos; mapas de cor unificados;
+  backend opcional com CORS restrito e nome de arquivo sanitizado.
+
+---
+
+### 🇺🇸 English
+
+#### 🔒 Data-loss fixes (top priority)
+- **Ctrl+S no longer overwrites another project's file** — creating/opening/
+  importing a project unbinds the saved file handle (Chrome/Edge reused the
+  previous handle and saved over it with no dialog).
+- **Full storage now warns** — every localStorage write goes through a
+  quota-aware helper; autosave used to fail silently while the indicator
+  still showed "saved".
+- **An intentionally empty document survives reload** (no longer replaced by
+  the sample script).
+- **New project no longer wipes the previous project's backups.**
+- **Backup restore brings the whole project back** (sheet/cultural
+  project/cast used to stay from the newer version).
+- **Cultural Project schedule is no longer lost** on first use.
+- **Ctrl+Z works** after replace-all, backup restore, import, etc. (text is
+  replaced via `execCommand`, preserving native undo).
+
+#### ✨ New
+- **Board template picker** — the 12 Excalidraw templates are now a dropdown
+  inside the Board (works over server/PWA).
+- **Drag to reorder scenes** in the scene list (the drag reorder promised in
+  Help now exists; beats also got ↑/↓ for keyboard/touch).
+- **Ctrl+B / Ctrl+I / Ctrl+U** — Fountain bold/italic/underline on selection.
+- **Esc closes modals** + `role="dialog"`/`aria-modal` and focus return;
+  mobile pane buttons are keyboard accessible.
+
+#### 🚀 Performance
+- **Board no longer weighs on load** — the 5.5 MB Excalidraw bundle is only
+  fetched the first time the Board is opened.
+- **Lighter typing on long scripts** — memoized line classifier; each update
+  no longer rescans the text 6–8 times.
+- **Service worker v6** — normalized Board cache-buster (fixes wrong offline
+  fallback and cache bloat), stale-while-revalidate for heavy assets.
+
+#### 🐛 Fixes
+- **Parser XSS**: scene number (`#...#`) is escaped before becoming an `id`.
+- **Beats re-linked after scene reorder**; colors/marks follow moved scenes.
+- **moveScene fix**: no longer drops the preamble before the first scene nor
+  adds an extra blank line per move.
+- **Complete i18n** (Statistics, schedule, Tax ID, total, Board capture
+  state, Support modal, placeholders, "Act N" in English).
+- **PWA manifest** with `id`, maskable icon, light/dark `theme-color` and
+  `100dvh` on mobile.
+
+#### 🧪 Tests & infra
+- **CI runs the tests** on every push/PR; release only publishes if they
+  pass; web zip excludes dev files.
+- **New tests**: migrateProject, actLabel, scene-number escaping and
+  moveScene round-trip.
+- **Browser smoke tests** for critical flows and the Excalidraw bridge.
+- **`sync-deploy.sh`** to sync `web/` → `deploy/`.
+- Cleanup: dead code removed, color maps unified, optional backend with
+  restricted CORS and sanitized filenames.
+
+---
+
 ## v2.4.2 (2026-08-04)
 
 ### 🇧🇷 Português

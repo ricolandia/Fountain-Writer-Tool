@@ -112,7 +112,15 @@ const Fountain = (function () {
                 if (text.endsWith('  ')) continue;
                 let sceneNum;
                 const sn = text.match(regex.scene_number);
-                if (sn) { sceneNum = sn[1]; text = text.replace(regex.scene_number, ''); }
+                if (sn) {
+                    // O scene number vira atributo id="..." no HTML — precisa
+                    // ser escapado (um .fountain importado podia injetar HTML
+                    // pela preview/export: #x" onmouseover="..."#).
+                    sceneNum = sn[1].replace(/[&<>"']/g, ch => (
+                        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+                    ));
+                    text = text.replace(regex.scene_number, '');
+                }
                 tokens.push({ type: 'scene_heading', text, scene_number: sceneNum });
                 continue;
             }

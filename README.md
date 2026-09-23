@@ -33,7 +33,7 @@ Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 | **Editor** | Textarea com auto-save a cada 10s (localStorage) |
 | **Preview** | Live rendering Fountain (CHARACTER 37%, DIALOGUE 20%) |
 | **Corkboard** | Visualização em cards (toggle ⊞/⊟) |
-| **Sidebar de cenas** | Lista com separadores visuais de ato (Ato 1–7 fixos) |
+| **Sidebar de cenas** | Lista com separadores visuais de ato (Ato 1–7 fixos) e reorder por arrastar |
 | **Atribuição por beat** | Muda o ato da cena pelo modal do beat |
 | **Beats** | CRUD com plotline (Principal/A/B), inserção no texto (↗), drag reorder |
 | **Comentários** | Comentários por beat (autor + timestamp) |
@@ -58,7 +58,7 @@ Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 | **Pomodoro** | Timer de escrita + Pomodoro 25min |
 | **Metas diárias** | Meta de palavras com progresso |
 | **Highlights** | Marcação colorida por linha (Ctrl+1/2/3) |
-| **Auto-backup** | A cada 5min, 10 versões, com restore |
+| **Auto-backup** | A cada 5min, 5 versões, com restore |
 | **Estatísticas** | Cenas, palavras, top personagens |
 | **Gráfico** | Produtividade dos últimos 7 dias |
 | **Som** | Efeito sonoro de teclas (toggle) |
@@ -89,7 +89,8 @@ Editor visual completo para planejar seu roteiro. Funciona offline, 100% local.
 | **Linha do Tempo** | Cenas posicionadas no eixo temporal com trilhas de subtrama |
 | **Arco de Personagem** | Curva emocional com pontos narrativos chave |
 
-Para usar: abra o 🧩 Quadro → no Excalidraw, use **Open** → escolha um template `.excalidraw`.
+Para usar: abra o 🧩 Quadro → escolha um modelo no seletor **Modelos…** (no app via servidor/PWA).
+Alternativa offline (arquivo local): no Excalidraw, use **Open** → escolha um template `.excalidraw`.
 
 ## 💾 Sobre Salvar
 
@@ -98,7 +99,7 @@ O Fonte usa dois sistemas de persistência:
 | Método | O que salva | Quando |
 |---|---|---|
 | **localStorage** | Texto + beats + atos | Auto-save a cada 10s |
-| **Backup** | Texto + beats + atos + cores + marcações | A cada 5min (10 versões) |
+| **Backup** | Projeto completo (texto, beats, atos, cores, marcações, ficha, projeto cultural) | A cada 5min (5 versões) |
 | **💾 Salvar** | Projeto completo .json | Manual |
 
 **💾 Salvar no Chrome/Edge/Opera:**
@@ -264,7 +265,7 @@ Copy the `deploy/` folder to any static HTTP server (FTP, Nginx, Apache).
 - Scene navigator, beats, timeline, characters, locations
 - **Film Sheet:** logline, synopsis, treatment, genre
 - **Story Structure:** McKee's governing idea, central value, antagonistic force, guided questions
-- **Excalidraw Planning Board** with 12 templates — fully integrated (draw, save, restore)
+- **Excalidraw Planning Board** with 12 templates — fully integrated (draw, save, restore, template picker)
 - **Cultural Project** module (10 sections for Brazilian incentive laws)
 - **Native desktop app** for Windows/Linux/macOS
 - PWA: installable, works offline

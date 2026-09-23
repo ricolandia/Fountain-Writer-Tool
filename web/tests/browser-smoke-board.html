@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Fonte — smoke test (Quadro/Excalidraw)</title></head>
+<body>
+<!--
+  Smoke test end-to-end do Fonte — parte 2 (Quadro de Planejamento).
+  Valida lazy load do bundle, bridge LOAD_SCENE/GET_SCENE, seletor de
+  templates e persistência da cena ao fechar.
+
+  Como rodar:
+    1. Na raiz do projeto:  python3 serve.py
+    2. Abra:  http://localhost:8000/web/tests/browser-smoke-board.html
+
+  Headless:
+    google-chrome --headless=new --disable-gpu --no-sandbox \
+      --virtual-time-budget=45000 --dump-dom \
+      http://localhost:8000/web/tests/browser-smoke-board.html | grep -E "PASS|FAIL"
+-->
+<iframe id="f" src="../index.html" style="width:1200px;height:800px"></iframe>
+<pre id="out">aguardando…</pre>
+<script>
+const out = [];
+function log(ok, msg) { out.push((ok ? 'PASS ' : 'FAIL ') + msg); document.getElementById('out').textContent = out.join('\n'); }
+const f = document.getElementById('f');
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+f.onload = async () => {
+  await wait(1200);
+  const w = f.contentWindow;
+  const d = f.contentDocument;
+  const app = w.eval('app');
+  w.confirm = () => true;
+  try {
+    app.openExcalidraw();
+    log(d.getElementById('excalidraw-iframe').getAttribute('src') === 'index.excalidraw.html', 'src do iframe definido ao abrir');
+
+    let ready = false;
+    for (let i = 0; i < 30 && !ready; i++) { await wait(500); ready = app._excalidrawLoadSent === true; }
+    log(ready, 'LOAD_SCENE enviado (API do Excalidraw montou)');
+
+    await app.loadExcalidrawTemplate('estrutura-3-atos.excalidraw');
+    const n = app._excalidrawScene && app._excalidrawScene.elements ? app._excalidrawScene.elements.length : 0;
+    log(n > 0, 'template carregado com elementos = ' + n);
+
+    let captured = 0;
+    for (let i = 0; i < 16 && captured === 0; i++) {
+      await wait(500);
+      const m = d.getElementById('excalidraw-capture-state').textContent.match(/(\d+)/);
+      captured = m ? +m[1] : 0;
+    }
+    log(captured > 0, 'cena capturada do iframe = ' + captured + ' elementos');
+
+    app.closeExcalidraw();
+    const n2 = app._excalidrawScene && app._excalidrawScene.elements ? app._excalidrawScene.elements.length : 0;
+    log(n2 > 0, 'cena mantida ao fechar o quadro');
+    document.getElementById('out').textContent = out.join('\n') + '\nSMOKE-DONE';
+  } catch (e) {
+    log(false, 'EXCEÇÃO: ' + e.message);
+    document.getElementById('out').textContent = out.join('\n') + '\nSMOKE-DONE';
+  }
+};
+</script>
+</body>
+</html>
