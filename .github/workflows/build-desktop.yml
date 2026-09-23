@@ -27,9 +27,9 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
@@ -65,7 +65,7 @@ jobs:
           fi
 
       - name: Upload artefato
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
           path: dist/Fonte
@@ -75,9 +75,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v8
         with:
           path: artifacts
 
@@ -86,19 +86,17 @@ jobs:
           python3 - <<'EOF'
           import zipfile, os
           os.makedirs('_release', exist_ok=True)
-          # Zip web universal (web/ → Fonte-web.zip)
-          with zipfile.ZipFile('_release/Fonte-web.zip', 'w', zipfile.ZIP_DEFLATED) as z:
-              for root, _, files in os.walk('web'):
-                  for f in files:
-                      if f in ('docker-compose.yml', 'Dockerfile', 'test-excalidraw.html'):
-                          continue
-                      p = os.path.join(root, f)
-                      z.write(p, os.path.relpath(p, 'web'))
-          # Zips por plataforma — cada um dentro de uma pasta Fonte/ (organizado)
+          # Zips por plataforma — cada um dentro de uma pasta Fonte/ (organizado).
+          # Procura as pastas dos artefatos em qualquer nível (o layout varia
+          # entre versões da action de download).
           for name in ('Fonte-linux', 'Fonte-windows', 'Fonte-macos'):
-              src = os.path.join('artifacts', name)
-              if not os.path.isdir(src):
-                  print(f'⚠️  Artefato ausente: {src}')
+              src = None
+              for root, dirs, files in os.walk('artifacts'):
+                  if os.path.basename(root) == name:
+                      src = root
+                      break
+              if not src:
+                  print(f'⚠️  Artefato ausente: {name}')
                   continue
               with zipfile.ZipFile(f'_release/{name}.zip', 'w', zipfile.ZIP_DEFLATED) as z:
                   for root, _, files in os.walk(src):
@@ -109,7 +107,7 @@ jobs:
           print('Empacotado:', os.listdir('_release'))
           EOF
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           files: _release/*
           body_path: CHANGELOG.md

@@ -13,8 +13,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Testes (parser, guessType, i18n, estrutura)
@@ -25,7 +25,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Empacotar zip web (sem arquivos de dev)
         run: |
           cd web
@@ -38,7 +38,7 @@ jobs:
             -x "docker-compose.yml" \
             -x "Dockerfile"
           cd ..
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: Fonte-web
           path: Fonte-web.zip
@@ -47,12 +47,18 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v5
-      - run: |
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          path: _artifacts
+      - name: Coletar zip web
+        run: |
           mkdir -p _release
-          cp Fonte-web/Fonte-web.zip _release/
-      - uses: softprops/action-gh-release@v2
+          # Procura o zip em qualquer nível (o layout dos artefatos varia
+          # entre versões da action) — antes era um caminho fixo e quebrou.
+          find _artifacts -name 'Fonte-web.zip' -exec cp {} _release/ \;
+          ls -la _release/
+      - uses: softprops/action-gh-release@v3
         with:
           files: _release/*
           body_path: CHANGELOG.md

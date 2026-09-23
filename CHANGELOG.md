@@ -58,6 +58,12 @@
 #### 🧪 Testes e infra
 - **CI roda os testes** a cada push/PR (`node --test web/tests/*.js`) e o
   release só publica se passarem; zip web sem arquivos de dev.
+- **Actions atualizadas** (checkout@v7, setup-node@v7, setup-python@v7,
+  upload-artifact@v7, download-artifact@v8, action-gh-release@v3) — as
+  versões antigas rodavam forçadas no Node 24 (Node 20 descontinuado) e o
+  job de release quebrava ao localizar o artefato; a coleta do zip agora
+  procura em qualquer nível. O `Fonte-web.zip` passou a ser publicado só
+  pelo workflow web (antes os dois workflows competiam pelo mesmo asset).
 - **Testes novos**: migrateProject, actLabel, escaping do scene number e
   moveScene (round-trip do reorder, incluindo preâmbulo e beats).
 - **Smoke tests no navegador** (`web/tests/browser-smoke.html` e
@@ -118,6 +124,12 @@
 #### 🧪 Tests & infra
 - **CI runs the tests** on every push/PR; release only publishes if they
   pass; web zip excludes dev files.
+- **Actions upgraded** (checkout@v7, setup-node@v7, setup-python@v7,
+  upload-artifact@v7, download-artifact@v8, action-gh-release@v3) — the old
+  versions ran forced on Node 24 (Node 20 deprecated) and the release job
+  broke locating the artifact; zip collection now searches any level. The
+  `Fonte-web.zip` is now published only by the web workflow (the two
+  workflows used to race for the same asset).
 - **New tests**: migrateProject, actLabel, scene-number escaping and
   moveScene round-trip.
 - **Browser smoke tests** for critical flows and the Excalidraw bridge.
