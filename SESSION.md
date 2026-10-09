@@ -114,6 +114,33 @@ Quadro ganhou teste de regressão por pixels.
 
 > ⚠️ O bundle mudou → SW **v8** (cache `lib/` é SWR; o bump garante a troca).
 
+## 🔍 Auditoria 23/Set/2026 (v2.6.0) — erros, performance e quick wins
+
+Auditoria com medições reais (benchmark de 500 cenas em Chrome headless,
+contadores por `update()`). Executadas as Fases 1+2 do plano.
+
+**Performance (por update, 500 cenas):** `JSON.parse` 502→0 · `createElement`
+~500→0 (assinatura completa de lista/timeline) · `Fountain.parse` do preview
+1→0 (debounce 300 ms) · escritas no localStorage 1→0 (throttle; era 1–2 por
+rajada) · `getLineMarks()` 500→1 · polling do Quadro só com hash
+(`GET_SCENE_META`; cena completa só quando muda).
+
+**Correções:** cronograma não perde mais marcas não salvas ao trocar de view
+(A1) · Ctrl+B/I/U com CapsLock (A3) · backups de 5 min sem duplicar (A4) ·
+`.fountain.json` com só o último backup + merge ao abrir (A5) · i18n
+restante (A8) · a11y dos botões do Quadro e do "?" de Beats (A9) · modelos
+pré-carregados ao abrir o Quadro (A6, offline no PWA).
+
+**Estrutural:** build do bundle agora é reprodutível (C1) — patch `__exAPI`
++ ponte na fonte `excalidraw-build/src/index.js`, assets via
+`window.EXCALIDRAW_ASSET_PATH`, README com rebuild; um `bun build.js` foi
+gerado e **validado pelos smoke tests** (bundle em `web/lib/` é o rebuild).
+Smoke no CI (A7). **Escopo descartado por decisão:** A2 (Esc dentro do
+iframe) — "deixar o que já está funcionando".
+
+**Nota:** o benchmark temporário (`web/tests/_bench.html`) foi removido; os
+números ficam registrados aqui.
+
 ## Como testar
 
 ```bash

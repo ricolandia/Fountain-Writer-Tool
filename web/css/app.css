@@ -131,6 +131,9 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
   font: 12pt 'Courier New', monospace; padding: 0 3px; line-height: 1; border-radius: 3px; }
 .beat-btn:hover { background: var(--surface3); }
 .beat-btn.danger { color: #c00; }
+.exb-btn { border: none; background: transparent; color: var(--fg); cursor: pointer;
+  font: 10pt 'Courier New', monospace; padding: 4px 8px; border-radius: 4px; }
+.exb-btn:hover { background: var(--surface3); }
 
 /* ── Autocomplete ── */
 #autocomplete-box { min-width: 180px; }

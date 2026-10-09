@@ -10,6 +10,9 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 </head>
 <body>
 <div id="root"></div>
+<!-- Caminho dos assets (fontes/locales/chunks) do bundle. Mecanismo oficial
+     do Excalidraw — sem isso ele cairia no CDN unpkg. -->
+<script>window.EXCALIDRAW_ASSET_PATH = './lib/';</script>
 <script src="lib/excalidraw-embed.js"></script>
 </body>
 </html>

@@ -355,7 +355,7 @@
     <div id="pane-right" class="pane">
       <div class="tabs" id="right-tabs">
         <button class="tab active" data-tab="beats">
-          <span data-i18n="tb_beats">BEATS</span> <span onclick="event.stopPropagation();app.openBeatGuide()" style="cursor:pointer;font-size:7pt;color:var(--fg-sec)">?</span>
+          <span data-i18n="tb_beats">BEATS</span> <span id="beat-guide-btn" role="button" tabindex="0" aria-label="Como usar Beats" data-i18n-title="beat_guide_title" style="cursor:pointer;font-size:7pt;color:var(--fg-sec)">?</span>
         </button>
         <button class="tab" data-tab="chars" data-i18n="tb_chars">PERS</button>
         <button class="tab" data-tab="locs" data-i18n="tb_locs">LOC</button>
@@ -531,9 +531,9 @@
           <option value="linha-tempo.excalidraw">Linha do Tempo</option>
           <option value="arco-personagem.excalidraw">Arco de Personagem</option>
         </select>
-        <span onclick="app.exbNewDrawing()" style="cursor:pointer;font-size:10pt;padding:4px 8px;border-radius:4px;border:1px solid var(--border)" data-i18n="exb_new_drawing">＋ Novo desenho</span>
-        <span onclick="app.toggleExcalidrawFullscreen()" id="excalidraw-fullscreen-btn" style="cursor:pointer;font-size:12pt" data-i18n-title="excalidraw_fullscreen" title="Tela cheia">⛶</span>
-        <span onclick="app.closeExcalidraw()" style="cursor:pointer;font-weight:bold;font-size:14pt">✕</span>
+        <button onclick="app.exbNewDrawing()" class="exb-btn" style="border:1px solid var(--border)" data-i18n="exb_new_drawing">＋ Novo desenho</button>
+        <button onclick="app.toggleExcalidrawFullscreen()" id="excalidraw-fullscreen-btn" class="exb-btn" style="font-size:12pt" data-i18n-title="excalidraw_fullscreen" title="Tela cheia" aria-label="Tela cheia">⛶</button>
+        <button onclick="app.closeExcalidraw()" class="exb-btn" style="font-weight:bold;font-size:14pt" aria-label="Fechar">✕</button>
       </span>
     </div>
     <div class="modal-body" style="padding:0;height:calc(100% - 50px);display:block">

@@ -20,6 +20,31 @@ jobs:
       - name: Testes (parser, guessType, i18n, estrutura)
         run: node --test web/tests/*.js
 
+      - name: Smoke tests (Chrome headless)
+        run: |
+          python3 serve.py >/dev/null 2>&1 &
+          SERVER_PID=$!
+          sleep 2
+          status=0
+          for page in browser-smoke.html browser-smoke-board.html; do
+            budget=30000; [ "$page" = "browser-smoke-board.html" ] && budget=60000
+            google-chrome --headless=new --disable-gpu --no-sandbox \
+              --virtual-time-budget=$budget --dump-dom \
+              "http://localhost:8000/web/tests/$page" > "/tmp/$page.out" 2>/dev/null || true
+            if grep -q "FAIL" "/tmp/$page.out"; then
+              echo "❌ $page"
+              grep -oE "(PASS|FAIL)[^<]*" "/tmp/$page.out" | sed 's/^/   /'
+              status=1
+            elif ! grep -q "SMOKE-DONE" "/tmp/$page.out"; then
+              echo "❌ $page não terminou"
+              status=1
+            else
+              echo "✅ $page"
+            fi
+          done
+          kill $SERVER_PID 2>/dev/null || true
+          exit $status
+
   build:
     needs: test
     if: startsWith(github.ref, 'refs/tags/v')

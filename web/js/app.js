@@ -22,6 +22,22 @@ function actLabel(name) {
   return lang === 'pt-BR' ? name : String(name).replace(/^Ato\b/i, 'Act');
 }
 
+/* Título padrão do documento (export/compartilhar) quando não há nome. */
+function docTitle() { return lang === 'pt-BR' ? 'Roteiro' : 'Script'; }
+
+/* Mescla backups locais com os importados de um .fountain.json, mantendo os
+ * `max` mais recentes e sem duplicar (chave: time + nome). O arquivo salvo
+ * embute só o último backup (arquivos menores); ao abrir, o histórico local
+ * não é descartado. */
+function mergeBackups(local, imported, max) {
+  const byKey = new Map();
+  [...(local || []), ...(imported || [])].forEach(b => {
+    if (!b || typeof b.time !== 'number') return;
+    byKey.set(b.time + '|' + (b.name || ''), b);
+  });
+  return Array.from(byKey.values()).sort((a, b) => a.time - b.time).slice(-(max || 5));
+}
+
 /* Paleta única (antes repetida em 5 lugares — fonte de divergência). */
 const PLOT_COLORS = { 'Principal': '#569cd6', 'A': '#ce9178', 'B': '#4ec9b0' };
 const ACT_COLORS = { 'Ato 1': '#569cd6', 'Ato 2': '#4ec9b0', 'Ato 3': '#dcdcaa', 'Ato 4': '#c586c0', 'Ato 5': '#d16969' };
@@ -49,6 +65,12 @@ const app = {
   _prevText: null,
   _cronoDraft: null,
   _storageErrorShown: false,
+  _lineMarksCache: null,
+  _actsCache: null,
+  _draftSaveTimer: null,
+  _pendingDraft: null,
+  _previewTimer: null,
+  _prodSavedAt: 0,
 
   init() {
     this.translateUI();
@@ -93,6 +115,15 @@ const app = {
     });
     this._setupModalA11y();
 
+    // "?" do guia de Beats: focável e operável por teclado (está dentro do
+    // botão da aba, então não pode ser um <button> aninhado).
+    const beatHelp = document.getElementById('beat-guide-btn');
+    if (beatHelp) {
+      const openGuide = (e) => { e.stopPropagation(); e.preventDefault(); this.openBeatGuide(); };
+      beatHelp.addEventListener('click', openGuide);
+      beatHelp.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openGuide(e); });
+    }
+
     // Drag reorder via Sortable-like manual implementation
     this.initBeatDragReorder();
     this.initSceneDragReorder();
@@ -105,6 +136,7 @@ const app = {
     this.initBackup();
     this._setupExcalidrawListener();
     window.addEventListener('beforeunload', e => {
+      this._flushDraft();
       if (this.isModified) { e.preventDefault(); e.returnValue = ''; }
     });
     this._initOutroToggles();
@@ -134,13 +166,13 @@ const app = {
     const text = this.editor.value;
     this._resyncLineAnchors(this._prevText, text);
     this._prevText = text;
-    store('fw_draft', text);
+    this._scheduleDraftSave(text);
     this.isModified = true;
     this.updateIndicator();
     this.autoAssignScenes(text);
     this.updateScenes(text);
     this.updateStats(text);
-    this.updatePreview(text);
+    this._schedulePreview();
     this.renderTimeline();
     this.updateCurrentAct();
     const activeTab = document.querySelector('#right-tabs .tab.active');
@@ -159,6 +191,8 @@ const app = {
    * dropped (safer than guessing where they went) instead of drifting. */
   _resyncLineAnchors(oldText, newText) {
     if (oldText === null || oldText === newText) return;
+    // Caso comum (sem cores nem marcações): nada para re-sincronizar.
+    if (Object.keys(this.sceneColors).length === 0 && Object.keys(this.getLineMarks()).length === 0) return;
     const oldLines = oldText.split('\n');
     const newLines = newText.split('\n');
     const oldLen = oldLines.length, newLen = newLines.length;
@@ -286,6 +320,40 @@ const app = {
     if (selStart !== undefined) ta.setSelectionRange(selStart, selEnd === undefined ? selStart : selEnd);
   },
 
+  /* Gravação do rascunho com throttle: o update() roda a cada rajada de
+   * digitação e gravar o texto inteiro no localStorage a cada rajada trava
+   * a thread em roteiros longos. O valor pendente é liberado no unload. */
+  _scheduleDraftSave(text) {
+    this._pendingDraft = text;
+    if (this._draftSaveTimer) return;
+    this._draftSaveTimer = setTimeout(() => {
+      this._draftSaveTimer = null;
+      if (this._pendingDraft !== null) {
+        store('fw_draft', this._pendingDraft);
+        this._pendingDraft = null;
+      }
+    }, 1000);
+  },
+
+  _flushDraft() {
+    if (this._draftSaveTimer) { clearTimeout(this._draftSaveTimer); this._draftSaveTimer = null; }
+    if (this._pendingDraft !== null && this._pendingDraft !== undefined) {
+      store('fw_draft', this._pendingDraft);
+      this._pendingDraft = null;
+    }
+  },
+
+  /* Preview com debounce: parsear o roteiro inteiro a cada rajada (13 ms+
+   * em 62 KB) é o maior custo por tecla com o preview aberto. */
+  _schedulePreview() {
+    if (this.previewMode === 'editor') return;
+    clearTimeout(this._previewTimer);
+    this._previewTimer = setTimeout(() => {
+      this._previewTimer = null;
+      this.updatePreview(this.editor.value);
+    }, 300);
+  },
+
   /* Chamado pelo store() quando o localStorage está cheio — sem isso o app
    * seguia exibindo "salvo" enquanto nada era gravado. */
   notifyStorageError() {
@@ -335,8 +403,27 @@ const app = {
     this.updateScenes(this.editor.value);
   },
 
+  /* Assinatura COMPLETA do que a lista/corkboard renderizam (cenas, atos,
+   * plotlines, cores e marcações). Se nada disso mudou, o DOM não é
+   * reconstruído — antes, cada rajada de digitação recriava os N itens. */
+  _sceneListSignature(scenes) {
+    const marks = this.getLineMarks();
+    const parts = scenes.map(s => {
+      const beat = this._findBeatForScene(s.label, s.line);
+      const plot = beat && beat.plotline ? beat.plotline : '';
+      const desc = beat && beat.desc ? beat.desc.slice(0, 80) : '';
+      const act = this._sceneActMap[s.line] || '';
+      return s.line + '|' + s.label + '|' + act + '|' + plot + '|' + desc + '|' +
+        (this.sceneColors[s.line] || '') + '|' + (marks[s.line] || '');
+    });
+    return this.sceneView + '#' + Object.keys(this.getActs()).join(',') + '#' + parts.join(';');
+  },
+
   renderSceneList(scenes) {
     const list = document.getElementById('scene-list');
+    const sig = this._sceneListSignature(scenes);
+    if (sig === this._sceneListSig) return;
+    this._sceneListSig = sig;
     list.innerHTML = '';
     if (scenes.length === 0) { list.innerHTML = '<li class="list-empty" style="cursor:default">' + _('empty_scenes') + '</li>'; return; }
 
@@ -410,6 +497,9 @@ const app = {
   renderSceneCards(scenes) {
     const board = document.getElementById('scene-corkboard');
     if (!board) return;
+    const sig = this._sceneListSignature(scenes);
+    if (sig === this._sceneListSig) return;
+    this._sceneListSig = sig;
     board.innerHTML = '';
     if (scenes.length === 0) { board.innerHTML = '<div style="padding:8px;font-size:9pt;color:var(--fg-sec)">' + _('empty_scenes') + '</div>'; return; }
 
@@ -524,11 +614,14 @@ const app = {
 
   /* ── Acts ── */
   getActs() {
-    let acts = safeJSON('fw_acts', 'null');
-    if (!acts) { acts = {'Ato 1': [], 'Ato 2': [], 'Ato 3': [], 'Ato 4': [], 'Ato 5': [], 'Ato 6': [], 'Ato 7': []}; this.saveActs(acts); }
-    return acts;
+    if (!this._actsCache) {
+      let acts = safeJSON('fw_acts', 'null');
+      if (!acts) { acts = {'Ato 1': [], 'Ato 2': [], 'Ato 3': [], 'Ato 4': [], 'Ato 5': [], 'Ato 6': [], 'Ato 7': []}; this.saveActs(acts); }
+      this._actsCache = acts;
+    }
+    return this._actsCache;
   },
-  saveActs(acts) { store('fw_acts', JSON.stringify(acts)); },
+  saveActs(acts) { this._actsCache = acts; store('fw_acts', JSON.stringify(acts)); },
 
   getSceneBlocks(lines) {
     const blocks = [];
@@ -1041,7 +1134,7 @@ const app = {
     if (!text || idx < 0 || idx >= this.beats.length) return;
     if (!this.beats[idx].comments) this.beats[idx].comments = [];
     this.beats[idx].comments.push({
-      author: this.projectName || 'Autor',
+      author: this.projectName || _('beat_author'),
       text,
       time: new Date().toLocaleString(lang)
     });
@@ -1215,16 +1308,36 @@ const app = {
     document.getElementById('app').classList.toggle('timeline-expanded');
   },
 
+  /* Assinatura completa do que a timeline renderiza (atos, cenas com
+   * ato/trama e beats órfãos). Evita reconstruir a grade a cada tecla. */
+  _timelineSignature(scenes) {
+    const parts = scenes.map(s => {
+      const beat = this._findBeatForScene(s.label, s.line);
+      let plot = beat ? beat.plotline || 'Principal' : 'Principal';
+      if (plot === 'C' || plot === 'D') plot = 'B';
+      const act = beat ? (beat.act || 'Ato 1') : '';
+      return s.line + '|' + s.label + '|' + act + '|' + plot;
+    });
+    const matched = new Set(scenes.map(s => s.label));
+    const orphans = this.beats
+      .filter(b => !matched.has(b.title) && !matched.has(b.scene_ref))
+      .map(b => b.title + '|' + (b.act || '') + '|' + (b.plotline || '')).join(';');
+    return Object.keys(this.getActs()).join(',') + '#' + parts.join(';') + '#' + orphans;
+  },
+
   renderTimeline() {
     const el = document.getElementById('timeline-bar');
     if (!el) return;
     if (!this.timelineVisible) { el.style.display = 'none'; return; }
     el.style.display = 'flex';
     el.style.flexDirection = 'column';
-    el.innerHTML = '';
 
     const text = this.editor.value;
     const scenes = this.parseScenes(text);
+    const sig = this._timelineSignature(scenes);
+    if (sig === this._timelineSig) return;
+    this._timelineSig = sig;
+    el.innerHTML = '';
 
     const acts = this.getActs();
     const actNames = Object.keys(acts).sort((a, b) => {
@@ -1655,7 +1768,9 @@ const app = {
     const grid = document.getElementById('proj-cronograma');
     if (!grid) return;
     const etapas = ['crono_pre','crono_prod','crono_pos','crono_div','crono_exib','crono_prest'];
-    const data = (this.projetoData && this.projetoData.cronograma) || [];
+    // Prefere o rascunho em memória: sem isso, trocar de view (Projeto ↔
+    // Roteiro) relia só o salvo e descartava as marcas não salvas.
+    const data = this._cronoDraft || (this.projetoData && this.projetoData.cronograma) || [];
     // Default all false
     const crono = etapas.map((_, i) => data[i] ? [...data[i]] : Array(12).fill(false));
     // Guarda o rascunho no estado: antes, marcar células sem nunca ter
@@ -1808,6 +1923,7 @@ const app = {
     localStorage.removeItem('fw_title'); localStorage.removeItem('fw_char_data');
     localStorage.removeItem('fw_project_name'); localStorage.removeItem('fw_scene_colors');
     localStorage.removeItem('fw_acts'); localStorage.removeItem('fw_line_marks');
+    this._invalidateStateCaches();
     this.projetoData = null; localStorage.removeItem('fw_projeto');
     this._cronoDraft = null;
     this._excalidrawScene = null;
@@ -1854,7 +1970,9 @@ const app = {
       viewMode: this.viewMode,
       focusOn: this.focusOn,
       lang: lang,
-      backups: safeJSON('fw_backups', '[]'),
+      // Só o último backup: embutir as 5 cópias do texto inteiro inflava o
+      // .fountain.json (roteiro de 500 KB → +2,5 MB) e o compartilhamento.
+      backups: (safeJSON('fw_backups', '[]') || []).slice(-1),
       excalidrawScene: this._excalidrawScene,
       updated: new Date().toISOString()
     };
@@ -1929,13 +2047,18 @@ const app = {
           if (data.soundOn !== undefined) { this.soundOn = data.soundOn; store('fw_sound', data.soundOn ? 'true' : 'false'); }
           if (data.acts) store('fw_acts', JSON.stringify(data.acts));
           if (data.lineMarks) store('fw_line_marks', JSON.stringify(data.lineMarks));
+          this._invalidateStateCaches();
           if (data.timelineVisible !== undefined) this.timelineVisible = data.timelineVisible;
           if (data.focusOn) { this.focusOn = data.focusOn; document.body.classList.toggle('focus-mode', this.focusOn); }
           if (data.lang) { lang = data.lang; store('fw_lang', lang); }
           if (data.previewMode !== undefined) this.previewMode = data.previewMode;
           if (data.viewMode !== undefined) this.viewMode = data.viewMode;
           if (data.projeto !== undefined) { this.projetoData = data.projeto; store('fw_projeto', JSON.stringify(data.projeto)); }
-          if (data.backups) store('fw_backups', JSON.stringify(data.backups));
+          if (data.backups) {
+            // Merge (não substitui): o arquivo traz só o último backup, mas o
+            // histórico local de 5 versões continua válido.
+            store('fw_backups', JSON.stringify(mergeBackups(safeJSON('fw_backups', '[]'), data.backups, 5)));
+          }
           this._cronoDraft = null;
           this._excalidrawScene = data.excalidrawScene || null;
           this._excalidrawModified = false;
@@ -2020,7 +2143,7 @@ const app = {
     const sec = this._getExportSections();
     this.closeExportModal();
     const html = this._renderScriptHtml(this.editor.value);
-    const title = this.fileName || 'Roteiro';
+    const title = this.fileName || docTitle();
     const titleHtml = this.titleData ? this.renderTitleHTML(this.titleData, sec) : '';
     const full = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + title + '</title><style>' +
       'body{max-width:800px;margin:40px auto;padding:60px 80px}' +
@@ -2036,7 +2159,7 @@ const app = {
     const sec = this._getExportSections();
     this.closeExportModal();
     const scriptHtml = this._renderScriptHtml(this.editor.value);
-    const title = this.fileName || 'Roteiro';
+    const title = this.fileName || docTitle();
     const titleHtml = this.titleData ? this.renderTitleHTML(this.titleData, sec) : '';
     const html = '<!DOCTYPE html><html><head><title>' + title + '</title><style>' +
       this._scriptStylesheet(true) +
@@ -2055,12 +2178,23 @@ const app = {
     return this.editor.value.slice(0, pos).split('\n').length - 1;
   },
 
+  /* Cache em memória: getLineMarks() é chamado por item de cena no render
+   * (500 cenas = 500 JSON.parse por update). saveLineMarks/escritas diretas
+   * mantêm o cache em dia; _invalidateStateCaches() limpa ao abrir/limpar
+   * projeto. */
   getLineMarks() {
-    return safeJSON('fw_line_marks', '{}');
+    if (!this._lineMarksCache) this._lineMarksCache = safeJSON('fw_line_marks', '{}');
+    return this._lineMarksCache;
   },
 
   saveLineMarks(marks) {
+    this._lineMarksCache = marks;
     store('fw_line_marks', JSON.stringify(marks));
+  },
+
+  _invalidateStateCaches() {
+    this._lineMarksCache = null;
+    this._actsCache = null;
   },
 
   markHighlight(type) {
@@ -2170,6 +2304,10 @@ const app = {
     const iframe = document.getElementById('excalidraw-iframe');
     if (iframe && !iframe.getAttribute('src')) iframe.src = 'index.excalidraw.html';
     document.getElementById('excalidraw-modal').style.display = 'flex';
+    // Pré-carrega os modelos em background: além de deixar o seletor
+    // instantâneo, o arquivo entra no cache do service worker (offline no
+    // PWA mesmo sem nunca ter aberto o seletor).
+    this._ensureTemplatesLoaded().catch(() => {});
     // LOAD_SCENE é enviado UMA vez por abertura (flag _excalidrawLoadSent):
     // agora, se a API já montou; senão, o retry (_startExcalidrawLoadRetry)
     // continua tentando a cada 400ms até o bundle ficar pronto. Em conexões
@@ -2184,10 +2322,13 @@ const app = {
     // SCENE_DATA sozinho) nem sempre dispara no WebView — sem isso, o save
     // grava "excalidrawScene": null e a cena se perde.
     clearInterval(this._excalidrawPoll);
+    // Polling leve: pergunta só o HASH da cena (string curta). A cena
+    // inteira (clone estruturado) só é pedida quando o hash muda — antes
+    // eram 2 s × cena completa mesmo sem nenhuma alteração.
     this._excalidrawPoll = setInterval(() => {
       const f = document.getElementById('excalidraw-iframe');
       if (f && f.contentWindow) {
-        f.contentWindow.postMessage({ type: 'GET_SCENE' }, '*');
+        f.contentWindow.postMessage({ type: 'GET_SCENE_META' }, '*');
       }
     }, 2000);
   },
@@ -2287,6 +2428,7 @@ const app = {
   _excalidrawModified: false,
   _excalidrawLastJson: null,
   _excalidrawBaseline: false,
+  _excalidrawHash: null,
   _templatesPromise: null,
 
   _setupExcalidrawListener() {
@@ -2297,7 +2439,15 @@ const app = {
         this._sendExcalidrawSceneOnce();
         this._startExcalidrawLoadRetry();
       }
+      if (e.data.type === 'SCENE_META') {
+        // Só pede a cena completa se algo mudou desde a última captura.
+        if (e.data.hash !== this._excalidrawHash) {
+          const f = document.getElementById('excalidraw-iframe');
+          if (f && f.contentWindow) f.contentWindow.postMessage({ type: 'GET_SCENE' }, '*');
+        }
+      }
       if (e.data.type === 'SCENE_DATA') {
+        this._excalidrawHash = e.data.hash || null;
         this._excalidrawScene = e.data.scene || null;
         // Baseline = primeira leitura após abrir (evita marcar como alterado
         // só pela normalização que o Excalidraw faz ao montar a cena).
@@ -2418,6 +2568,10 @@ const app = {
 
   /* ── Productivity ── */
   trackProductivity() {
+    // O gráfico é diário — não precisa gravar a cada rajada de digitação.
+    const now = Date.now();
+    if (now - this._prodSavedAt < 5000) return;
+    this._prodSavedAt = now;
     const today = new Date().toISOString().slice(0, 10);
     const words = this.editor.value.split(/\s+/).filter(w => w).length;
     const data = safeJSON('fw_productivity', '{}');
@@ -2570,10 +2724,12 @@ const app = {
     if (e.ctrlKey && e.key === '=') { e.preventDefault(); this.zoomIn(); }
     if (e.ctrlKey && e.key === '-') { e.preventDefault(); this.zoomOut(); }
     if (e.ctrlKey && e.key === '0') { e.preventDefault(); this.zoomReset(); }
-    // Ênfase Fountain na seleção (o README prometia Ctrl+B/I/U)
-    if (e.ctrlKey && !e.shiftKey && !e.altKey && e.key === 'b') { e.preventDefault(); this.wrapSelection('**', '**'); }
-    if (e.ctrlKey && !e.shiftKey && !e.altKey && e.key === 'i') { e.preventDefault(); this.wrapSelection('*', '*'); }
-    if (e.ctrlKey && !e.shiftKey && !e.altKey && e.key === 'u') { e.preventDefault(); this.wrapSelection('_', '_'); }
+    // Ênfase Fountain na seleção (o README prometia Ctrl+B/I/U).
+    // toLowerCase(): com CapsLock ligado o e.key vem 'B'/'I'/'U'.
+    const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
+    if (e.ctrlKey && !e.shiftKey && !e.altKey && key === 'b') { e.preventDefault(); this.wrapSelection('**', '**'); }
+    if (e.ctrlKey && !e.shiftKey && !e.altKey && key === 'i') { e.preventDefault(); this.wrapSelection('*', '*'); }
+    if (e.ctrlKey && !e.shiftKey && !e.altKey && key === 'u') { e.preventDefault(); this.wrapSelection('_', '_'); }
     const ac = document.getElementById('autocomplete-box');
     if (ac.style.display !== 'none') {
       const items = ac.querySelectorAll('.ac-item');
@@ -2670,7 +2826,7 @@ const app = {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const file = new File([blob], (this.projectName || (lang === 'pt-BR' ? 'roteiro' : 'script')) + '.fountain.json', { type: 'application/json' });
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file], title: 'Fonte - ' + (this.projectName || 'Roteiro') }).catch(() => {});
+      navigator.share({ files: [file], title: 'Fonte - ' + (this.projectName || docTitle()) }).catch(() => {});
     } else {
       const a = document.getElementById('download-link');
       a.href = URL.createObjectURL(blob);
@@ -2799,6 +2955,10 @@ const app = {
       if (!text.trim()) return;
       try {
         const backups = safeJSON('fw_backups', '[]');
+        // Sem mudança no texto desde o último backup, não duplica a cópia
+        // (economiza cota do localStorage em sessões longas).
+        const last = backups[backups.length - 1];
+        if (last && last.text === text) return;
         backups.push({
           text, beats: this.beats, acts: this.getActs(),
           sceneColors: this.sceneColors, lineMarks: this.getLineMarks(),

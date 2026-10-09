@@ -1,5 +1,82 @@
 # Changelog
 
+## v2.6.0 (2026-09-23)
+
+### 🇧🇷 Português
+
+#### 🚀 Desempenho (medido com roteiro de 500 cenas / 3.501 linhas, por update)
+- **JSON.parse: 502 → 0** — marcações e atos ficam em cache na memória
+  (`getLineMarks()` era chamado por item de cena no render)
+- **DOM: ~500 → 0 `createElement`** — lista de cenas e timeline só são
+  reconstruídas quando a assinatura completa muda (cenas, atos, plotlines,
+  cores, marcações); antes, cada rajada de digitação recriava os N itens
+- **Preview com debounce de 300 ms** — `Fountain.parse` custa 13 ms+ por
+  passe em 62 KB e rodava a cada rajada
+- **Gravações no localStorage com throttle** (rascunho 1 s, produtividade
+  5 s, com flush no fechar) — eram 2 escritas síncronas por rajada
+- **`_resyncLineAnchors` com early-return** quando não há cores/marcações
+- **Polling do Quadro leve**: pergunta só o hash da cena a cada 2 s; a cena
+  inteira só é transferida quando algo muda
+
+#### 🐛 Correções
+- **Cronograma**: marcas não salvas não se perdem mais ao trocar de view
+  (Projeto ↔ Roteiro)
+- **Ctrl+B/I/U funcionam com CapsLock ligado**
+- **Backups de 5 min não duplicam** quando o texto não mudou desde o último
+- **`.fountain.json` embute só o último backup** (roteiro de 500 KB gerava
+  +2,5 MB de arquivo); ao abrir, o histórico local é **mesclado** (5 mais
+  recentes) em vez de substituído
+- i18n: "Autor" dos comentários e títulos de export/compartilhar
+
+#### 🏗️ Infra e acessibilidade
+- **Build reprodutível do bundle do Quadro**: o patch `__exAPI` e a ponte
+  agora vivem na fonte (`excalidraw-build/src/index.js`), os assets usam
+  `window.EXCALIDRAW_ASSET_PATH` (sem patch manual no publicPath) e o
+  README documenta o rebuild — validado pelos smoke tests (um `bun build.js`
+  reproduz a produção; antes, um rebuild apagava todas as correções)
+- **Smoke tests no CI** (Chrome headless) a cada push/PR
+- **a11y**: botões do Quadro (Novo desenho/fullscreen/fechar) e o "?" do
+  guia de Beats agora são focáveis e operáveis por teclado
+- Modelos do Quadro pré-carregados em background ao abrir (seletor funciona
+  offline no PWA)
+- Testes: **52** (novos: `mergeBackups`, assinatura da lista de cenas)
+
+---
+
+### 🇺🇸 English
+
+#### 🚀 Performance (measured on a 500-scene / 3,501-line script, per update)
+- **JSON.parse: 502 → 0** — marks and acts are cached in memory
+- **DOM: ~500 → 0 `createElement`** — scene list and timeline are only
+  rebuilt when the full signature changes (scenes, acts, plotlines, colors,
+  marks)
+- **Preview debounced by 300 ms** — `Fountain.parse` costs 13 ms+ per pass
+  on 62 KB
+- **Throttled localStorage writes** (draft 1 s, productivity 5 s, flushed on
+  close)
+- **`_resyncLineAnchors` early-return** when there are no colors/marks
+- **Light Board polling**: asks only for the scene hash every 2 s; the full
+  scene is transferred only when something changes
+
+#### 🐛 Fixes
+- **Schedule**: unsaved marks no longer lost when switching views
+- **Ctrl+B/I/U work with CapsLock on**
+- **5-min backups no longer duplicate** unchanged text
+- **`.fountain.json` embeds only the latest backup**; opening merges the
+  local history (5 most recent) instead of replacing it
+- i18n leftovers ("Author", export/share titles)
+
+#### 🏗️ Infra & accessibility
+- **Reproducible Board bundle build**: the `__exAPI` patch and the bridge
+  now live in the source (`excalidraw-build/src/index.js`), assets via
+  `window.EXCALIDRAW_ASSET_PATH`; rebuild validated by the smoke tests
+- **Smoke tests in CI** (headless Chrome) on every push/PR
+- **a11y**: Board buttons and the Beats guide "?" are keyboard-operable
+- Board templates preloaded in background when opening (offline picker)
+- Tests: **52**
+
+---
+
 ## v2.5.2 (2026-09-23)
 
 ### 🇧🇷 Português
