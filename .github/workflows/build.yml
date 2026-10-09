@@ -22,24 +22,35 @@ jobs:
 
       - name: Smoke tests (Chrome headless)
         run: |
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)
+          if [ -z "$CHROME" ]; then
+            echo "::error::Nenhum Chrome/Chromium encontrado no runner"
+            exit 1
+          fi
+          echo "Chrome: $CHROME"
           python3 serve.py >/dev/null 2>&1 &
           SERVER_PID=$!
-          sleep 2
+          sleep 3
           status=0
           for page in browser-smoke.html browser-smoke-board.html; do
-            budget=30000; [ "$page" = "browser-smoke-board.html" ] && budget=60000
-            google-chrome --headless=new --disable-gpu --no-sandbox \
+            budget=30000; [ "$page" = "browser-smoke-board.html" ] && budget=90000
+            # --disable-dev-shm-usage: /dev/shm pequeno nos runners quebra o Chrome
+            "$CHROME" --headless --disable-gpu --no-sandbox --disable-dev-shm-usage \
               --virtual-time-budget=$budget --dump-dom \
-              "http://localhost:8000/web/tests/$page" > "/tmp/$page.out" 2>/dev/null || true
-            if grep -q "FAIL" "/tmp/$page.out"; then
-              echo "❌ $page"
-              grep -oE "(PASS|FAIL)[^<]*" "/tmp/$page.out" | sed 's/^/   /'
+              "http://localhost:8000/web/tests/$page" > "/tmp/$page.out" 2>"/tmp/$page.err" || true
+            # Extrai SÓ o bloco de resultado: o dump inclui o <script> da página,
+            # que contém as strings "PASS"/"FAIL" (grep no dump inteiro dá falso positivo).
+            sed -n '/<pre id="out">/,/<\/pre>/p' "/tmp/$page.out" | sed 's/<[^>]*>//g' > "/tmp/$page.result"
+            if grep -qE "^FAIL" "/tmp/$page.result"; then
+              echo "::error::$page com FAIL"
+              sed 's/^/   /' "/tmp/$page.result"
               status=1
-            elif ! grep -q "SMOKE-DONE" "/tmp/$page.out"; then
-              echo "❌ $page não terminou"
+            elif ! grep -q "SMOKE-DONE" "/tmp/$page.result"; then
+              echo "::error::$page não terminou (stderr:)"
+              tail -5 "/tmp/$page.err" | sed 's/^/   /'
               status=1
             else
-              echo "✅ $page"
+              echo "✅ $page ($(grep -cE '^PASS' "/tmp/$page.result") checks)"
             fi
           done
           kill $SERVER_PID 2>/dev/null || true
