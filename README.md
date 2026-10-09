@@ -266,7 +266,7 @@ Copy the `deploy/` folder to any static HTTP server (FTP, Nginx, Apache).
 - **Film Sheet:** logline, synopsis, treatment, genre
 - **Story Structure:** McKee's governing idea, central value, antagonistic force, guided questions
 - **Excalidraw Planning Board** with 12 templates — fully integrated (draw, save, restore, template picker)
-- **Cultural Project** module (10 sections for Brazilian incentive laws)
+- **Cultural Project** module (11 sections for Brazilian incentive laws)
 - **Native desktop app** for Windows/Linux/macOS
 - PWA: installable, works offline
 - i18n: PT-BR / English
@@ -284,19 +284,19 @@ MIT — free to use, modify, and distribute.
 
 ---
 
-## Imagens
+## Imagens / Images
 
 ![Fonte](imagens/2-2/Fonte_01_.webp)
-*Editor principal com preview ao vivo e timeline*
+*Editor principal com preview ao vivo e timeline · Main editor with live preview and timeline*
 
 ![Fonte](imagens/2-2/Fonte_04_.webp)
-*Estrutura da História — McKee: ideia governante, valor central, força antagônica*
+*Estrutura da História — McKee: ideia governante, valor central, força antagônica · Story Structure — McKee: governing idea, central value, antagonistic force*
 
 ![Fonte](imagens/2-2/Fonte_08_.webp)
-*Timeline — atos × tramas com subtramas*
+*Timeline — atos × tramas com subtramas · Timeline — acts × plotlines with subplots*
 
 ![Fonte](imagens/2-2/Fonte_09_.webp)
-*Projeto Cultural — 10 seções para leis de incentivo*
+*Projeto Cultural — 11 seções para leis de incentivo · Cultural Project — 11 sections for incentive laws*
 
 ![Fonte](imagens/2-2/Fonte_10_.webp)
-*Quadro de Planejamento Visual — Excalidraw com 12 templates*
+*Quadro de Planejamento Visual — Excalidraw com 12 templates · Visual Planning Board — Excalidraw with 12 templates*
