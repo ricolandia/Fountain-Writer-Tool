@@ -24,6 +24,8 @@ Disponível em 5 formatos:
 
 Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 
+[![Fonte — Timeline: atos × tramas com subtramas (clique para assistir ao vídeo)](imagens/2-2/Fonte_08_.webp)](https://youtu.be/2i40tqUGrhQ)
+
 🎬 **Vídeo de apresentação:** [Editor de roteiros Gratuito e Opensource](https://youtu.be/2i40tqUGrhQ)
 
 ---
