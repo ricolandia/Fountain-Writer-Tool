@@ -24,6 +24,8 @@ Disponível em 5 formatos:
 
 Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 
+🎬 **Vídeo de apresentação:** [Fonte — Editor de roteiros gratuito e opensource](https://youtu.be/TMbVYStT9lU)
+
 ---
 
 ## Funcionalidades
@@ -217,6 +219,8 @@ Available in 5 formats:
 
 Author: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 
+🎬 **Intro video:** [Fonte — free and open-source screenplay editor](https://youtu.be/TMbVYStT9lU)
+
 ### Quick start
 
 #### 🖥 Option 1 — Native desktop (Windows/Linux/macOS)
@@ -297,6 +301,9 @@ MIT — free to use, modify, and distribute.
 ---
 
 ## Imagens / Images
+
+[![Fonte — Editor de roteiros gratuito e opensource (vídeo de apresentação)](https://i.ytimg.com/vi/TMbVYStT9lU/hqdefault.jpg)](https://youtu.be/TMbVYStT9lU)
+*🎬 Vídeo de apresentação · Intro video — clique para assistir · click to watch*
 
 ![Fonte](imagens/2-2/Fonte_01_.webp)
 *Editor principal com preview ao vivo e timeline · Main editor with live preview and timeline*
