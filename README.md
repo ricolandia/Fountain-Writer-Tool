@@ -24,7 +24,7 @@ Disponível em 5 formatos:
 
 Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 
-🎬 **Vídeo de apresentação:** [Fonte — Editor de roteiros gratuito e opensource](https://youtu.be/TMbVYStT9lU)
+🎬 **Vídeo de apresentação:** [Editor de roteiros Gratuito e Opensource](https://youtu.be/2i40tqUGrhQ)
 
 ---
 
@@ -219,7 +219,7 @@ Available in 5 formats:
 
 Author: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 
-🎬 **Intro video:** [Fonte — free and open-source screenplay editor](https://youtu.be/TMbVYStT9lU)
+🎬 **Intro video:** [Fonte — free and open-source screenplay editor](https://youtu.be/2i40tqUGrhQ)
 
 ### Quick start
 
@@ -302,7 +302,7 @@ MIT — free to use, modify, and distribute.
 
 ## Imagens / Images
 
-[![Fonte — Editor de roteiros gratuito e opensource (vídeo de apresentação)](https://i.ytimg.com/vi/TMbVYStT9lU/hqdefault.jpg)](https://youtu.be/TMbVYStT9lU)
+[![Editor de roteiros Gratuito e Opensource (vídeo de apresentação)](https://i.ytimg.com/vi/2i40tqUGrhQ/hqdefault.jpg)](https://youtu.be/2i40tqUGrhQ)
 *🎬 Vídeo de apresentação · Intro video — clique para assistir · click to watch*
 
 ![Fonte](imagens/2-2/Fonte_01_.webp)
