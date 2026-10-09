@@ -163,7 +163,13 @@ Ou abrir `web/index.html` direto no navegador (alguns recursos podem precisar de
 
 ### ☁️ Opção 4 — Deploy estático
 
-Copie a pasta `deploy/` para qualquer servidor HTTP estático (FTP, Nginx, Apache).
+Extraia o **`Fonte-web.zip` do release mais recente** em qualquer servidor
+estático (FTP, Nginx, Apache) — ele já inclui o `.htaccess` que ajusta o
+cache para o service worker. No repositório, `./sync-deploy.sh` sincroniza
+`web/` → `deploy/` (com os extras do site, ex.: capturas de tela).
+
+> ⚠️ Use sempre o release **mais recente**: zips de releases antigos não têm
+> as correções e não incluem o `.htaccess`.
 
 ### Opção 5 — Docker (API opcional para PDF/HTML)
 
@@ -251,7 +257,13 @@ Or open `web/index.html` directly (some features need HTTP server).
 
 #### ☁️ Option 4 — Static deploy
 
-Copy the `deploy/` folder to any static HTTP server (FTP, Nginx, Apache).
+Extract the **`Fonte-web.zip` from the latest release** on any static server
+(FTP, Nginx, Apache) — it already includes the `.htaccess` that tunes caching
+for the service worker. In the repository, `./sync-deploy.sh` syncs
+`web/` → `deploy/` (with the site extras, e.g. screenshots).
+
+> ⚠️ Always use the **latest** release: zips from older releases lack the
+> fixes and do not include the `.htaccess`.
 
 ### Downloads
 - **📦 Web:** [Download Fonte-web.zip](https://github.com/ricolandia/Fountain-Writer-Tool/releases) — extract and open `index.html`

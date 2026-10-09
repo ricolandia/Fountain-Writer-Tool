@@ -1,0 +1,22 @@
+# Fonte — Demo (PWA)
+# Opções para servidor Apache
+
+Options -Indexes
+DirectoryIndex index.html
+
+# HTML/JS/CSS/JSON: revalidar sempre — o service worker (sw.js) já cuida do
+# cache offline e o network-first do SW não adianta se o cache HTTP servir
+# uma versão antiga por dias. "no-cache" = revalida (304 se não mudou).
+<FilesMatch "\.(html|js|css|json)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+</FilesMatch>
+
+# Assets que raramente mudam: cache longo
+<FilesMatch "\.(png|svg|webp|woff2|ico)$">
+    Header set Cache-Control "max-age=604800, public"
+</FilesMatch>
+
+# O service worker nunca deve ser cacheado pelo HTTP cache
+<FilesMatch "^sw\.js$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+</FilesMatch>
