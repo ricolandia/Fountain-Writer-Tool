@@ -19,7 +19,7 @@
  * Ao mudar o app de forma que precise invalidar cache antigo, suba o número
  * da versão abaixo — isso força os clientes a buscarem tudo de novo.
  */
-const VERSION = 'v8';
+const VERSION = 'v9';
 const CACHE_NAME = 'fountain-writer-' + VERSION;
 
 const PRECACHE_URLS = [
@@ -38,11 +38,11 @@ const PRECACHE_URLS = [
 /* Normaliza a chave de cache removendo o parâmetro cache-buster (?_=...). */
 function cacheKeyFor(req) {
   const url = new URL(req.url);
-  if (url.searchParams.has('_')) {
-    url.searchParams.delete('_');
-    return url.href;
+  let changed = false;
+  for (const p of ['_', 'v']) {
+    if (url.searchParams.has(p)) { url.searchParams.delete(p); changed = true; }
   }
-  return req;
+  return changed ? url.href : req;
 }
 
 self.addEventListener('install', event => {

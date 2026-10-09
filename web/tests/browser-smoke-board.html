@@ -32,7 +32,7 @@ f.onload = async () => {
   w.confirm = () => true;
   try {
     app.openExcalidraw();
-    log(d.getElementById('excalidraw-iframe').getAttribute('src') === 'index.excalidraw.html', 'src do iframe definido ao abrir');
+    log((d.getElementById('excalidraw-iframe').getAttribute('src') || '').startsWith('index.excalidraw.html'), 'src do iframe definido ao abrir (com versao)');
 
     let ready = false;
     for (let i = 0; i < 30 && !ready; i++) { await wait(500); ready = app._excalidrawLoadSent === true; }

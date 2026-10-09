@@ -1,4 +1,6 @@
 /* ── Fonte v2 — app.js ── */
+/* Versão dos assets (cache-busting): suba junto com a versão do release. */
+const ASSET_V = '2.6.2';
 function safeJSON(key, fallback) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : JSON.parse(fallback); }
   catch(e) { console.warn('Fonte: erro ao ler', key, e); return JSON.parse(fallback); }
@@ -2302,7 +2304,7 @@ const app = {
 
   openExcalidraw() {
     const iframe = document.getElementById('excalidraw-iframe');
-    if (iframe && !iframe.getAttribute('src')) iframe.src = 'index.excalidraw.html';
+    if (iframe && !iframe.getAttribute('src')) iframe.src = 'index.excalidraw.html?v=' + ASSET_V;
     document.getElementById('excalidraw-modal').style.display = 'flex';
     // Pré-carrega os modelos em background: além de deixar o seletor
     // instantâneo, o arquivo entra no cache do service worker (offline no

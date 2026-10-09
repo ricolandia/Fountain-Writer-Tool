@@ -1,5 +1,37 @@
 # Changelog
 
+## v2.6.2 (2026-10-09)
+
+### 🇧🇷 Português
+
+#### 🐛 Correções
+- **Cache do site (CDN/navegador) servindo versão antiga** — o CDN da
+  Hostinger mantinha cópias velhas de `sw.js`/`app.js` (cacheadas pelo
+  `.htaccess` antigo, max-age de 1 semana) e o navegador ficava preso no
+  service worker v5, servindo um `app.js` sem o seletor de modelos.
+  Correção definitiva: **URLs versionadas** (`?v=`) no `index.html`, no
+  bundle do Quadro e no `src` do iframe + **SW v9** (normaliza `?v=` na
+  chave do cache). Cada release usa URLs novas, então nenhum cache velho
+  (CDN ou navegador) atrapalha.
+  ⚠️ **Checklist de release:** subir o `?v=`/`ASSET_V` junto com a versão
+  (web/index.html, web/js/app.js, web/index.excalidraw.html).
+
+---
+
+### 🇺🇸 English
+
+#### 🐛 Fixes
+- **Site cache (CDN/browser) serving an old version** — the Hostinger CDN
+  kept stale copies of `sw.js`/`app.js` (cached under the old `.htaccess`,
+  1-week max-age) and the browser stayed stuck on service worker v5, serving
+  an `app.js` without the template picker. Definitive fix: **versioned URLs**
+  (`?v=`) in `index.html`, the Board bundle and the iframe `src` + **SW v9**
+  (normalizes `?v=` in the cache key). Each release uses new URLs, so no
+  stale cache (CDN or browser) gets in the way.
+  ⚠️ **Release checklist:** bump `?v=`/`ASSET_V` along with the version.
+
+---
+
 ## v2.6.0 (2026-10-09)
 
 ### 🇧🇷 Português
