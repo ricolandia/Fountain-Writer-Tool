@@ -28,6 +28,7 @@ const PRECACHE_URLS = [
   './css/app.css',
   './js/app.js',
   './js/fountain-parser.js',
+  './js/revdiff.js',
   './js/paginator.js',
   './js/pdf.js',
   './js/i18n.js',

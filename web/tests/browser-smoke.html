@@ -134,6 +134,48 @@ f.onload = async () => {
     })()`);
     log(!!cap && /\.pdf$/.test(cap.nome), 'botão do modal gera o arquivo (' + (cap && cap.nome) + ')');
     log(!!cap && cap.bytes > 500 && cap.paginas === 2, 'PDF do botão válido (' + (cap && cap.bytes) + ' bytes, ' + (cap && cap.paginas) + ' págs)');
+
+    /* ── Revisões coloridas (item 1) ─────────────────────────────────────
+     * Fluxo real: inicia a revisão, muda o roteiro, e o app tem de saber o
+     * que mudou — na lista de cenas e no PDF. */
+    log(w2.eval('typeof Revision') === 'object', 'módulo de revisão carregado');
+    w2.eval(`(function(){
+      app._setEditorValue('INT. CASA - DIA\\n\\nA rua está vazia.\\n\\nFIM');
+      app.update();
+      app._revSelected = 'azul';
+      app.startRevision();
+    })()`);
+    w2.eval(`(function(){
+      app._setEditorValue('INT. CASA - DIA\\n\\nA rua está deserta.\\n\\nFIM');
+      app.update();
+    })()`);
+    await wait(700);
+    const rev = w2.eval(`(function(){
+      var c = app._pageCache;
+      return {
+        ativa: !!app.revision,
+        cor: app.revision && app.revision.color,
+        blocos: app.revision && app.revision.blocks.length,
+        cenas: (c && c.rev) ? c.rev.revisedScenes.size : -1,
+        paginas: c ? c.revisedPages : -1,
+        selos: document.querySelectorAll('#scene-list li span[style*="border-radius:2px"]').length,
+      };
+    })()`);
+    log(rev.ativa && rev.cor === 'azul' && rev.blocos === 3, 'revisão iniciada e resumo guardado (' + rev.blocos + ' blocos)');
+    log(rev.cenas === 1, 'diff detecta a cena alterada (' + rev.cenas + ' cena)');
+    log(rev.paginas >= 1, 'página revisada marcada (' + rev.paginas + ')');
+    log(rev.selos === 1, 'selo colorido na lista de cenas (' + rev.selos + ')');
+    /* No PDF exportado a revisão tem de sair marcada — sem isso a cor não
+     * serve para nada na entrega. */
+    const revPdf = w2.eval(`(function(){
+      var orig = PdfBuilder.save, out = null;
+      PdfBuilder.save = function(nome, doc){ out = { bytes: PdfBuilder.build(doc), cor: doc.revision && doc.revision.color }; };
+      try { document.getElementById('exp-scene-numbers').checked = false; app.doExportPdfFile(); }
+      finally { PdfBuilder.save = orig; }
+      return out ? { tamanho: out.bytes.length, cor: out.cor, temMarca: Array.prototype.indexOf.call(out.bytes, 42) >= 0 } : null;
+    })()`);
+    log(!!revPdf && revPdf.cor === '#2f6fbd', 'PDF sai com a cor da rodada (' + (revPdf && revPdf.cor) + ')');
+    log(!!revPdf && revPdf.temMarca, 'PDF traz o asterisco da revisão');
     done();
   } catch (e) {
     log(false, 'EXCEÇÃO: ' + e.message);

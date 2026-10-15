@@ -198,6 +198,7 @@ const Fountain = (function () {
      * É a entrada do renderizador paginado (web/js/paginator.js) e do gerador
      * de PDF (web/js/pdf.js). Não mexe no contrato de parse(). */
     function parseBlocks(script) {
+        if (!String(script === undefined || script === null ? '' : script).trim()) return [];
         const tokens = tokenize(script);
         const out = [];
         for (let i = tokens.length - 1; i >= 0; i--) {

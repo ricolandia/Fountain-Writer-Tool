@@ -220,8 +220,14 @@ const Paginator = (function () {
         const units = [];
         const title = [];
         let i = 0;
+        let unitStart = 0;
+        /* Cada unidade sabe de quais BLOCOS ela veio (from/to): é o que permite
+         * dizer "esta unidade é revisada" sem mapear número de linha.
+         * Regra: chamar pushUnit DEPOIS de avançar o `i` (to = i - 1). */
+        const pushUnit = (unit) => { unit.from = unitStart; unit.to = i - 1; units.push(unit); };
 
         while (i < blocks.length) {
+            unitStart = i;
             const b = blocks[i];
 
             if (TITLE_TOKENS.indexOf(b.type) >= 0) {
@@ -230,42 +236,47 @@ const Paginator = (function () {
             }
             if (SKIPPED.indexOf(b.type) >= 0) { i++; continue; }
 
-            if (b.type === 'page_break') { units.push({ kind: 'break' });   i++; continue; }
-            if (b.type === 'line_break') { units.push({ kind: 'blank' });   i++; continue; }
+            if (b.type === 'page_break') { i++; pushUnit({ kind: 'break' });   continue; }
+            if (b.type === 'line_break') { i++; pushUnit({ kind: 'blank' });   continue; }
 
             if (b.type === 'section') {
+                i++;
                 if (o.includeSections) {
-                    units.push({
+                    pushUnit({
                         kind: 'section',
                         lines: blockLines(b.text || '', m.centered, 'center',
                                           runs => runs.map(r => Object.assign({}, r, { bold: true }))),
                     });
                 }
-                i++; continue;
+                continue;
             }
 
             if (b.type === 'scene_heading') {
-                units.push({
+                i++;
+                pushUnit({
                     kind: 'heading',
                     sceneNumber: b.scene_number,
                     lines: blockLines(b.text, m.scene_heading, 'left', upperRuns),
                 });
-                i++; continue;
+                continue;
             }
 
             if (b.type === 'action') {
-                units.push({ kind: 'action', lines: blockLines(b.text, m.action, 'left') });
-                i++; continue;
+                i++;
+                pushUnit({ kind: 'action', lines: blockLines(b.text, m.action, 'left') });
+                continue;
             }
 
             if (b.type === 'centered') {
-                units.push({ kind: 'centered', lines: blockLines(b.text, m.centered, 'center') });
-                i++; continue;
+                i++;
+                pushUnit({ kind: 'centered', lines: blockLines(b.text, m.centered, 'center') });
+                continue;
             }
 
             if (b.type === 'transition') {
-                units.push({ kind: 'transition', lines: blockLines(b.text, m.transition, 'right', upperRuns) });
-                i++; continue;
+                i++;
+                pushUnit({ kind: 'transition', lines: blockLines(b.text, m.transition, 'right', upperRuns) });
+                continue;
             }
 
             if (b.type === 'dual_dialogue_begin') {
@@ -279,15 +290,15 @@ const Paginator = (function () {
                     } else i++;
                 }
                 i++;                                    // pula dual_dialogue_end
-                if (groups.length >= 2)      units.push({ kind: 'dual', lines: dualLines(groups, m) });
-                else if (groups.length === 1) units.push({ kind: 'dialogue', character: groups[0].character, lines: groups[0].lines });
+                if (groups.length >= 2)      pushUnit({ kind: 'dual', lines: dualLines(groups, m) });
+                else if (groups.length === 1) pushUnit({ kind: 'dialogue', character: groups[0].character, lines: groups[0].lines });
                 continue;
             }
 
             if (b.type === 'dialogue_begin') {
                 const got = collectDialogue(blocks, i);
-                units.push({ kind: 'dialogue', character: got.group.character, lines: got.group.lines });
                 i = got.next;
+                pushUnit({ kind: 'dialogue', character: got.group.character, lines: got.group.lines });
                 continue;
             }
 
@@ -372,6 +383,21 @@ const Paginator = (function () {
         const pages = [];
         let page = null, sceneIndex = 0;
 
+        /* Blocos revisados (índices nos blocos atuais, como sai de Revision.diff). */
+        const revisedBlocks = (o.revisedBlocks instanceof Set) ? o.revisedBlocks : null;
+        const isRevisedUnit = (u) => {
+            if (!revisedBlocks || !revisedBlocks.size) return false;
+            for (let k = u.from; k <= u.to; k++) if (revisedBlocks.has(k)) return true;
+            return false;
+        };
+        /* Marca o COMEÇO do bloco revisado — a granularidade do diff é o
+         * parágrafo, então marcar cada linha de um parágrafo longo viraria
+         * poluição. A página que contém o bloco entra como revisada depois. */
+        const markRevised = (u, lines) => {
+            if (lines && lines.length && isRevisedUnit(u)) lines[0].revised = true;
+            return lines;
+        };
+
         const newPage = () => {
             page = { number: pages.length + 1, header: null, lines: [] };
             pages.push(page);
@@ -406,7 +432,7 @@ const Paginator = (function () {
                      * conteúdo depois dele na mesma página. */
                     if (remaining() < lines.length + 1) newPage();
                 }
-                pushLines(lines);
+                pushLines(markRevised(u, lines));
                 continue;
             }
 
@@ -415,7 +441,7 @@ const Paginator = (function () {
                     addBlank();
                     if (remaining() < u.lines.length + 1) newPage();
                 }
-                pushLines(u.lines);
+                pushLines(markRevised(u, u.lines));
                 addBlank();
                 continue;
             }
@@ -426,7 +452,7 @@ const Paginator = (function () {
                     /* Não começa um bloco de ação deixando 1 linha só no pé. */
                     if (remaining() < Math.min(u.lines.length, 2)) newPage();
                 }
-                pushLines(u.lines);                 // ação longa flui entre páginas
+                pushLines(markRevised(u, u.lines));     // ação longa flui entre páginas
                 continue;
             }
 
@@ -435,12 +461,12 @@ const Paginator = (function () {
                     addBlank();
                     if (remaining() < 2) newPage();
                 }
-                pushLines(u.lines);
+                pushLines(markRevised(u, u.lines));
                 continue;
             }
 
             if (u.kind === 'dialogue') {
-                const lines = dialogueLines(u, m);
+                const lines = markRevised(u, dialogueLines(u, m));
                 if (page.lines.length > 0) {
                     addBlank();
                     /* PERSONAGEM + ao menos 1 linha de fala juntos. */
@@ -481,6 +507,7 @@ const Paginator = (function () {
             while (p.lines.length && p.lines[0].type === 'blank') p.lines.shift();
             while (p.lines.length && p.lines[p.lines.length - 1].type === 'blank') p.lines.pop();
             p.header = p.number >= 2 ? p.number + '.' : null;
+            p.revised = p.lines.some(l => l.revised);
         }
 
         const titlePage = o.titlePage ? buildTitlePage(built.title, m) : null;
@@ -493,9 +520,12 @@ const Paginator = (function () {
             pageSize: size,
             metrics: m,
             options: o,
+            /* Cor da rodada de revisão — o gerador de PDF lê daqui. */
+            revision: (o.revision && o.revision.color) ? { color: o.revision.color, label: o.revision.label || '' } : null,
             stats: {
                 pages: pages.length,
                 scenes,
+                revisedPages: pages.filter(p => p.revised).length,
                 lines: pages.reduce((n, p) => n + p.lines.length, 0),
             },
         };

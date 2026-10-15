@@ -80,6 +80,23 @@ function loadPdfBuilder() {
   });
 }
 
+function loadRevision() {
+  loadFountainParser();
+  if (typeof globalThis.Revision !== 'undefined') return;
+  loadFileAndExport('revdiff.js', {
+    '^const Revision =': 'globalThis.Revision =',
+  });
+}
+
+/* Diff de revisão entre dois roteiros em Fountain (antes → depois). */
+function revisionDiff(before, after, options) {
+  loadRevision();
+  const base = globalThis.Revision.blockHashes(globalThis.Fountain.parseBlocks(before));
+  const blocks = globalThis.Fountain.parseBlocks(after);
+  const result = globalThis.Revision.diff(base, blocks, options);
+  return Object.assign({ blocks }, result);
+}
+
 /* Pagina um roteiro em Fountain direto (parser + paginador). */
 function paginateFountain(source, options) {
   loadPaginator();
@@ -111,4 +128,4 @@ function loadAppMethod(name) {
 }
 
 module.exports = { loadFountainParser, loadI18n, loadGuessType, loadAppFunction, loadAppMethod,
-                   loadPaginator, loadPdfBuilder, paginateFountain };
+                   loadPaginator, loadPdfBuilder, loadRevision, paginateFountain, revisionDiff };

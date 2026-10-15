@@ -1,6 +1,6 @@
 /* ── Fonte v2 — app.js ── */
 /* Versão dos assets (cache-busting): suba junto com a versão do release. */
-const ASSET_V = '2.6.2';
+const ASSET_V = '2.7.0';
 function safeJSON(key, fallback) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : JSON.parse(fallback); }
   catch(e) { console.warn('Fonte: erro ao ler', key, e); return JSON.parse(fallback); }
@@ -375,6 +375,11 @@ const app = {
 
   updateScenes(text) {
     const scenes = this.parseScenes(text);
+    /* Selo de revisão: as cenas revisadas vêm do diff (que roda no cálculo
+     * debounced, junto com a paginação). Sem cache do texto atual, sem selo —
+     * assim a lista nunca mostra estado de um texto que não é mais o do editor. */
+    const rev = (this._pageCache && this._pageCache.text === text) ? this._pageCache.rev : null;
+    scenes.forEach((s, i) => { s.revised = !!(rev && rev.revisedScenes && rev.revisedScenes.has(i)); });
     document.getElementById('scene-count').textContent = scenes.length;
     this._sceneActMap = {};
     scenes.forEach(s => {
@@ -406,6 +411,129 @@ const app = {
     this.updateScenes(this.editor.value);
   },
 
+  /* ── Revisões (rodadas coloridas) ──────────────────────────────────────
+   * Estado guardado no projeto: { color, date, blocks } — `blocks` são os
+   * HASHES dos blocos do parser no momento em que a revisão foi iniciada.
+   * Comparar depois = diff (web/js/revdiff.js). Nada de texto duplicado no
+   * .fountain.json: 1 número por bloco. */
+  revision: null,
+
+  _revisionHex() {
+    if (!this.revision) return '';
+    return Revision.colorById(this.revision.color).hex;
+  },
+
+  /* Blocos revisados → cenas revisadas → páginas revisadas. Uma cena vai do seu
+   * título até o título seguinte. */
+  _revisionState(blocks) {
+    if (!this.revision || !Array.isArray(this.revision.blocks) || !this.revision.blocks.length) return null;
+    const cor = Revision.colorById(this.revision.color);
+    const res = Revision.diff(this.revision.blocks, blocks);
+    const revisedScenes = new Set();
+    let cena = -1;
+    for (let i = 0; i < blocks.length; i++) {
+      if (blocks[i].type === 'scene_heading') cena++;
+      if (cena >= 0 && res.revised.has(i)) revisedScenes.add(cena);
+    }
+    return {
+      revisedBlocks: res.revised,
+      revisedScenes,
+      approximate: res.approximate,
+      color: cor.hex,
+      label: cor.id,
+    };
+  },
+
+  openRevisionModal() {
+    document.getElementById('revision-modal').style.display = 'flex';
+    this.renderRevisionModal();
+  },
+  closeRevisionModal() {
+    document.getElementById('revision-modal').style.display = 'none';
+  },
+
+  /* Cor escolhida no modal (ainda não iniciada). */
+  selectRevisionColor(id) {
+    this._revSelected = id;
+    this.renderRevisionModal();
+  },
+
+  renderRevisionModal() {
+    const box = document.getElementById('rev-colors');
+    if (!box) return;
+    const atual = this.revision ? this.revision.color : null;
+    if (!this._revSelected) this._revSelected = atual || Revision.nextColor('branca');
+    box.innerHTML = '';
+    Revision.COLORS.forEach(c => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.title = (lang === 'pt-BR' ? c.pt : c.en) + (c.id === atual ? ' ✓' : '');
+      const sel = c.id === this._revSelected;
+      b.style.cssText = 'width:30px;height:26px;border-radius:4px;cursor:pointer;border:2px solid ' +
+        (sel ? 'var(--fg)' : 'var(--border)') + ';background:' + c.hex;
+      b.dataset.color = c.id;
+      b.addEventListener('click', () => this.selectRevisionColor(c.id));
+      box.appendChild(b);
+    });
+    const st = document.getElementById('rev-status');
+    if (st) {
+      if (!this.revision) {
+        st.textContent = _('rev_none');
+      } else {
+        const cor = Revision.colorById(this.revision.color);
+        const nome = lang === 'pt-BR' ? cor.pt : cor.en;
+        const cache = (this._pageCache && this._pageCache.rev) ? this._pageCache : null;
+        const cenas = cache ? cache.rev.revisedScenes.size : 0;
+        const pags = cache ? cache.revisedPages : 0;
+        const data = this.revision.date ? new Date(this.revision.date).toLocaleDateString() : '';
+        st.textContent = _('rev_current', nome) + ' · ' + _('rev_scenes', cenas) + ' · ' +
+          _('rev_pages', pags) + (data ? ' · ' + _('rev_since', data) : '') +
+          (cache && cache.rev.approximate ? ' ' + _('rev_approx') : '');
+      }
+    }
+    this._updateRevisionIndicator();
+  },
+
+  /* Selo na toolbar: quadradinho na cor da rodada quando há revisão ativa. */
+  _updateRevisionIndicator() {
+    const btn = document.getElementById('rev-btn');
+    if (!btn) return;
+    btn.style.background = this.revision ? this._revisionHex() : '';
+    btn.style.color = (this.revision && this.revision.color === 'branca') ? '#fff' : '';
+    const cor = this.revision ? Revision.colorById(this.revision.color) : null;
+    btn.title = cor ? _('rev_current', lang === 'pt-BR' ? cor.pt : cor.en) : _('rev_none');
+  },
+
+  /* Inicia a revisão na cor escolhida: guarda o resumo do roteiro AGORA. */
+  startRevision() {
+    const id = this._revSelected || Revision.nextColor('branca');
+    this.revision = {
+      color: id,
+      date: new Date().toISOString(),
+      blocks: Revision.blockHashes(Fountain.parseBlocks(this.editor.value)),
+    };
+    this._revSelected = id;
+    this._pageCache = null;
+    this.isModified = true;
+    const cor = Revision.colorById(id);
+    this._showToast(_('rev_started', lang === 'pt-BR' ? cor.pt : cor.en));
+    this.refreshPageStats();
+  },
+
+  nextRevisionColor() {
+    this._revSelected = Revision.nextColor(this.revision ? this.revision.color : 'branca');
+    this.renderRevisionModal();
+  },
+
+  endRevision() {
+    this.revision = null;
+    this._revSelected = Revision.nextColor('branca');
+    this._pageCache = null;
+    this.isModified = true;
+    this._showToast(_('rev_ended'));
+    this.refreshPageStats();
+  },
+
   /* Assinatura COMPLETA do que a lista/corkboard renderizam (cenas, atos,
    * plotlines, cores e marcações). Se nada disso mudou, o DOM não é
    * reconstruído — antes, cada rajada de digitação recriava os N itens. */
@@ -417,7 +545,7 @@ const app = {
       const desc = beat && beat.desc ? beat.desc.slice(0, 80) : '';
       const act = this._sceneActMap[s.line] || '';
       return s.line + '|' + s.label + '|' + act + '|' + plot + '|' + desc + '|' +
-        (this.sceneColors[s.line] || '') + '|' + (marks[s.line] || '');
+        (this.sceneColors[s.line] || '') + '|' + (marks[s.line] || '') + '|' + (s.revised ? 'R' : '');
     });
     return this.sceneView + '#' + Object.keys(this.getActs()).join(',') + '#' + parts.join(';');
   },
@@ -487,7 +615,12 @@ const app = {
     const beat = this._findBeatForScene(s.label, s.line);
     let plot = beat ? beat.plotline || 'Principal' : '';
     if (plot === 'C' || plot === 'D') plot = 'B';
-    li.innerHTML = (i + 1) + '. ' + esc(s.label) +
+    /* Selo de revisão: quadradinho na cor da rodada, à esquerda do número. */
+    const revHex = this._revisionHex();
+    const revMark = (s.revised && revHex)
+      ? '<span style="display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:4px;vertical-align:middle;background:' + revHex + '"></span>'
+      : '';
+    li.innerHTML = revMark + (i + 1) + '. ' + esc(s.label) +
       (plot ? ' <span style="font-size:7pt;color:' + (plotColors[plot] || '#888') + '">[' + plot + ']</span>' : '');
     li.dataset.line = s.line;
     li.addEventListener('click', e => {
@@ -1964,6 +2097,7 @@ const app = {
       acts: this.getActs(),
       lineMarks: this.getLineMarks(),
       projeto: this.projetoData,
+      revision: this.revision || null,
       darkMode: this.darkMode,
       wordGoal: this.wordGoal,
       fontSize: this.fontSize,
@@ -2043,6 +2177,10 @@ const app = {
           this.titleData = data.titleData || null;
           this.projectName = data.name || '';
           this.sceneColors = data.sceneColors || {};
+          /* Revisão (rodada colorida): volta com o resumo dos blocos guardado. */
+          this.revision = data.revision || null;
+          this._revSelected = this.revision ? this.revision.color : null;
+          this._pageCache = null;
           if (data.darkMode !== undefined) { this.darkMode = data.darkMode; document.body.classList.toggle('dark', this.darkMode); }
           if (data.charData) store('fw_char_data', JSON.stringify(data.charData));
           if (data.wordGoal !== undefined) { this.wordGoal = data.wordGoal; store('fw_goal', String(data.wordGoal)); }
@@ -2078,6 +2216,7 @@ const app = {
           this.update();
           this.syncBeatsFromScenes(this.editor.value);
           this.renderBeats();
+          this._updateRevisionIndicator();
         } catch (err) { alert(_('err_import') + ': ' + err.message); }
       };
       reader.readAsText(file, 'UTF-8');
@@ -2143,11 +2282,12 @@ const app = {
     };
   },
 
-  /* ── Contagem REAL de páginas (paginador) ──
+  /* ── Cálculo debounced: páginas reais + revisão ──
    * O painel mostra na hora a estimativa (linhas ÷ 55) e troca pelo número
    * real quando o paginador roda (debounce de 300 ms): paginar é uma passada
    * completa no texto, não pode rodar a cada rajada de digitação — mesma
-   * razão do debounce do preview (auditoria v2.6.0). */
+   * razão do debounce do preview (auditoria v2.6.0). O mesmo cálculo traz as
+   * marcas de revisão (diff dos blocos) e os selos da lista de cenas. */
   _pageCache: null,
 
   _pageCount(text, lineCount) {
@@ -2167,8 +2307,20 @@ const app = {
   _computePageStats(text, repaint) {
     let cache = null;
     try {
-      const doc = Paginator.paginate(Fountain.parseBlocks(text), { pageSize: this._exportPageSize() });
-      cache = { text, pages: doc.pages.length, scenes: doc.stats.scenes };
+      const blocks = Fountain.parseBlocks(text);
+      const rev = this._revisionState(blocks);
+      const doc = Paginator.paginate(blocks, {
+        pageSize: this._exportPageSize(),
+        revisedBlocks: rev ? rev.revisedBlocks : null,
+        revision: rev ? { color: rev.color, label: rev.label } : null,
+      });
+      cache = {
+        text,
+        pages: doc.pages.length,
+        scenes: doc.stats.scenes,
+        revisedPages: doc.pages.filter(p => p.revised).length,
+        rev,
+      };
     } catch (e) {
       cache = null;                 // roteiro patológico: mantém a estimativa
     }
@@ -2177,6 +2329,11 @@ const app = {
     if (cache && (repaint || atual === text)) {
       const el = document.getElementById('stat-pagina');
       if (el) el.textContent = _('stat_pagina', cache.pages);
+      /* Os selos das cenas dependem deste cache: repinta a lista (a assinatura
+       * de render evita reconstruir o DOM se nada mudou). */
+      this._sceneListSig = null;
+      this.updateScenes(text);
+      if (repaint) this.renderRevisionModal();
     }
   },
 
@@ -2201,10 +2358,14 @@ const app = {
     const sceneNumbers = !!(chk && chk.checked);
     this.closeExportModal();
     try {
-      const doc = Paginator.paginate(Fountain.parseBlocks(this.editor.value), {
+      const blocks = Fountain.parseBlocks(this.editor.value);
+      const rev = this._revisionState(blocks);
+      const doc = Paginator.paginate(blocks, {
         pageSize,
         sceneNumbers,
         titlePage: sec.titlePage !== false,
+        revisedBlocks: rev ? rev.revisedBlocks : null,
+        revision: rev ? { color: rev.color, label: rev.label } : null,
       });
       const base = (this.fileName || 'roteiro').replace(/\.fountain$/i, '').replace(/\.json$/i, '');
       PdfBuilder.save(base + '.pdf', doc);
@@ -3157,6 +3318,8 @@ function migrateProject(data) {
   const v = data.version || 1;
   if (v > 1) console.warn('Fonte: projeto em versão mais nova (' + v + ') — campos desconhecidos podem ser ignorados.');
   // (nenhuma migração necessária ainda — v1 é o formato atual)
+  // Campo opcional (revisão colorida): projeto antigo simplesmente não tem.
+  if (data.revision === undefined) data.revision = null;
   return data;
 }
 

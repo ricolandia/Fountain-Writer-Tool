@@ -65,6 +65,24 @@ const PdfBuilder = (function () {
         return (Math.round(n * 100) / 100).toString();
     }
 
+    /* Cor em PDF: componentes 0..1 separados por espaço (operador `rg`). */
+    function hexToRgb(hex) {
+        const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+        if (!m) return null;
+        const n = parseInt(m[1], 16);
+        return {
+            r: ((n >> 16) & 255) / 255,
+            g: ((n >> 8) & 255) / 255,
+            b: (n & 255) / 255,
+        };
+    }
+
+    function colorOp(hex, stroke) {
+        const c = hexToRgb(hex);
+        if (!c) return null;
+        return num(c.r) + ' ' + num(c.g) + ' ' + num(c.b) + (stroke ? ' RG' : ' rg');
+    }
+
     function fontKey(run) {
         if (run.bold && run.italic) return 'boldItalic';
         if (run.bold)               return 'bold';
@@ -102,10 +120,14 @@ const PdfBuilder = (function () {
     function drawText(ops, line, x, y, opts) {
         const size = opts.size || FONT_SIZE;
         const scale = size / FONT_SIZE;
+        /* Cor explícita sempre: o estado gráfico do PDF persiste no content
+         * stream, então sem isto o texto seguinte herdaria a cor da revisão. */
+        const color = colorOp(opts.color, false) || '0 0 0 rg';
         let cx = x;
         for (const run of line.runs) {
             if (run.text.length) {
                 ops.push('BT');
+                ops.push(color);
                 ops.push('/' + FONTS[fontKey(run)].ref + ' ' + num(size) + ' Tf');
                 ops.push('1 0 0 1 ' + num(cx) + ' ' + num(y) + ' Tm');
                 ops.push('(' + pdfString(run.text) + ') Tj');
@@ -113,6 +135,7 @@ const PdfBuilder = (function () {
             }
             if (run.underline) {
                 const w = run.text.length * CHAR_W * scale;
+                ops.push('0 0 0 RG');
                 ops.push('0.75 w');
                 ops.push(num(cx) + ' ' + num(y - 2) + ' m ' + num(cx + w) + ' ' + num(y - 2) + ' l S');
             }
@@ -121,16 +144,43 @@ const PdfBuilder = (function () {
         return ops;
     }
 
+    /* Marca de revisão: asterisco na margem direita (é onde o Final Draft marca)
+     * e uma barra colorida na borda da página revisada — o equivalente digital
+     * da "página colorida" da produção. */
+    function revisionOps(ops, page, size, rev) {
+        if (!rev) return ops;
+        const area = textArea(size);
+        for (let idx = 0; idx < page.lines.length; idx++) {
+            const line = page.lines[idx];
+            if (!line.revised) continue;
+            const y = size.height - MARGIN.top - idx * LINE_H;
+            drawText(ops, { runs: [{ text: '*' }] },
+                     area.left + (TEXT_WIDTH_CHARS + 3) * CHAR_W, y, { color: rev.color });
+        }
+        if (page.revised) {
+            const fill = colorOp(rev.color, false);
+            if (fill) {
+                ops.push(fill);
+                ops.push(num(size.width - 22) + ' ' + num(MARGIN.bottom) + ' 8 ' +
+                         num(size.height - MARGIN.top - MARGIN.bottom) + ' re f');
+            }
+        }
+        return ops;
+    }
+
     function pageContent(page, size, opts) {
         const ops = [];
         const area = textArea(size);
         const y0 = size.height - MARGIN.top;
+        const rev = opts.revision || null;
 
-        /* Número de página no cabeçalho (a partir da 2ª). */
+        /* Número de página no cabeçalho (a partir da 2ª) — na cor da revisão
+         * quando a página é revisada, para achar as páginas novas no maço. */
         if (page.header) {
             const len = page.header.length;
             const x = area.left + TEXT_WIDTH_CHARS * CHAR_W - len * CHAR_W;
-            drawText(ops, { runs: [{ text: page.header }] }, x, size.height - HEADER_FROM_TOP, { size: FONT_SIZE });
+            drawText(ops, { runs: [{ text: page.header }] }, x, size.height - HEADER_FROM_TOP,
+                     { size: FONT_SIZE, color: (page.revised && rev) ? rev.color : null });
         }
 
         let idx = 0;
@@ -160,6 +210,7 @@ const PdfBuilder = (function () {
 
             drawText(ops, line, x, y, { size: line.size === 'title' ? 14 : FONT_SIZE });
         }
+        revisionOps(ops, page, size, rev);          // asteriscos + barra colorida
         return ops.join('\n');
     }
 
@@ -188,12 +239,15 @@ const PdfBuilder = (function () {
     function build(doc, options) {
         const opts = options || {};
         const size = opts.pageSize || doc.pageSize || { width: 595, height: 842 };
+        /* A cor da revisão pode vir do resultado do paginador ou do chamador. */
+        const revision = opts.revision || doc.revision || null;
+        const pageOpts = Object.assign({}, opts, { revision });
 
         const sheets = [];
         if (opts.titlePage === false) { /* sem folha de rosto a pedido */ }
         else if (doc.titlePage) sheets.push({ content: titlePageContent(doc.titlePage, size), header: null });
         for (const p of doc.pages) {
-            sheets.push({ content: pageContent(p, size, opts), header: p.header });
+            sheets.push({ content: pageContent(p, size, pageOpts), header: p.header });
         }
         if (!sheets.length) sheets.push({ content: '', header: null });
 
@@ -263,6 +317,6 @@ const PdfBuilder = (function () {
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
-    return { build, save, toWinAnsi, pdfString, lineX, textArea, runsLength,
+    return { build, save, toWinAnsi, pdfString, lineX, textArea, runsLength, hexToRgb, colorOp,
              CHAR_W, LINE_H, FONT_SIZE, MARGIN, FONTS };
 })();
