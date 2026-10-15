@@ -179,12 +179,18 @@ body { font-family: 'Courier New', Courier, monospace; background: var(--bg);
   background: rgba(0,0,0,0.4); display: flex; align-items: center;
   justify-content: center; z-index: 1000; padding: 20px; }
 .modal { background: var(--surface); border: 1px solid var(--border);
-  border-radius: 8px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; }
+  border-radius: 8px; width: 100%; max-width: 480px; max-height: 85vh;
+  /* overflow-x explícito: só definir overflow-y deixaria o eixo X em `auto`
+   * (regra do CSS) e qualquer rodapé cheio virava barra horizontal. */
+  overflow-y: auto; overflow-x: hidden; }
 .modal-header { padding: 14px 20px; font-weight: bold; font-size: 12pt;
   border-bottom: 1px solid var(--border); }
 .modal-body { padding: 16px 20px; }
-.modal-footer { padding: 12px 20px; display: flex; gap: 8px;
+/* flex-wrap: com mais botões do que cabe, o rodapé quebra em duas linhas em
+ * vez de estourar a largura do modal. */
+.modal-footer { padding: 12px 20px; display: flex; flex-wrap: wrap; gap: 8px;
   border-top: 1px solid var(--border); align-items: center; }
+.modal-footer button { white-space: nowrap; }
 .modal input, .modal textarea { width: 100%; padding: 8px 12px;
   border: 1px solid var(--border); border-radius: 6px;
   background: var(--surface3); color: var(--fg); font: 11pt 'Courier New', monospace; }

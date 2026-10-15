@@ -176,6 +176,41 @@ f.onload = async () => {
     })()`);
     log(!!revPdf && revPdf.cor === '#2f6fbd', 'PDF sai com a cor da rodada (' + (revPdf && revPdf.cor) + ')');
     log(!!revPdf && revPdf.temMarca, 'PDF traz o asterisco da revisão');
+
+    /* ── Modal: rodapé com muitos botões não pode gerar rolagem horizontal ── */
+    const overflow = w2.eval(`(function(){
+      function medir(id, repintar) {
+        var ov = document.getElementById(id);
+        var prev = ov.style.display;
+        ov.style.display = 'flex';
+        if (repintar) app.renderRevisionModal();
+        var m = ov.querySelector('.modal');
+        var r = { scroll: m.scrollWidth, client: m.clientWidth };
+        ov.style.display = prev;
+        return r;
+      }
+      return { exp: medir('export-modal', false), rev: medir('revision-modal', true) };
+    })()`);
+    log(overflow.exp.scroll <= overflow.exp.client + 1,
+        'modal de export sem rolagem horizontal (' + overflow.exp.scroll + '≤' + overflow.exp.client + ')');
+    log(overflow.rev.scroll <= overflow.rev.client + 1,
+        'modal de revisão sem rolagem horizontal (' + overflow.rev.scroll + '≤' + overflow.rev.client + ')');
+
+    /* ── Roteiro novo não pode herdar a rodada antiga ──
+     * O reload do Quadro é posto de fora: com --virtual-time-budget o laço de
+     * retry do Excalidraw não termina e o smoke inteiro trava. O alvo aqui é o
+     * estado da revisão. */
+    w2.eval('app._reloadExcalidrawIframe = function(){}; app._stopExcalidrawLoadRetry();' +
+            'clearInterval(app._excalidrawPoll); app._excalidrawPoll = null;');
+    /* O stub de confirm do smoke vivia só na janela anterior: depois do reload,
+     * um confirm() nativo trava a página em headless (sem usuário para clicar). */
+    w2.confirm = () => true;
+    w2.eval('app._setEditorValue(""); app.update();');
+    w2.eval('app.newFile()');
+    await wait(400);
+    log(w2.eval('app.revision === null'), 'newFile zera a revisão');
+    log(w2.eval("document.getElementById('stat-rev').style.display") === 'none',
+        'sem selo de revisão na barra depois do roteiro novo');
     done();
   } catch (e) {
     log(false, 'EXCEÇÃO: ' + e.message);

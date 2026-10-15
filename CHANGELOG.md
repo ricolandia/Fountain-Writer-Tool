@@ -1,5 +1,41 @@
 # Changelog
 
+## v2.7.1 (2026-10-15)
+
+### 🇧🇷 Português
+
+#### 🐛 Correções
+- **Modais com barra de rolagem horizontal** — o rodapé era `display: flex` sem
+  quebra: com 4 botões (⬇ PDF / 📑 HTML / 🖨 Imprimir / Cancelar) o modal
+  estourava a largura. Agora o rodapé **quebra em duas linhas** e o eixo
+  horizontal está travado. Corrige o modal de exportação **e** o de revisão.
+- **Roteiro novo herdava a rodada de revisão antiga** — `newFile()` não zerava
+  a revisão (o resumo guardado era de outro texto, o que marcaria tudo como
+  revisado). Agora zera.
+- **Revisão ficou legível:** o modal mostra o estado **no topo**, com os 3
+  passos (escolher a cor → iniciar → escrever); quando nada mudou ainda, o texto
+  **diz isso** em vez de "0 cenas revisadas"; a rodada ativa aparece também na
+  **barra de status** (quadradinho na cor, clicável) e o botão 🎨 da toolbar fica
+  com o selo da cor; a cor ativa é destacada na paleta.
+
+### 🇺🇸 English
+
+#### 🐛 Fixes
+- **Modals with a horizontal scrollbar** — the footer was `display: flex` with no
+  wrapping: with 4 buttons (⬇ PDF / 📑 HTML / 🖨 Print / Cancel) the modal
+  overflowed. The footer now **wraps to a second line** and the horizontal axis
+  is locked. Fixes the export modal **and** the revision modal.
+- **A new script inherited the previous revision round** — `newFile()` did not
+  clear the revision (the stored digest belonged to another text, which would
+  mark everything as revised). It is cleared now.
+- **The revision is now legible:** the modal shows the state **at the top** with
+  the 3 steps (pick the color → start → write); when nothing has changed yet it
+  **says so** instead of "0 scenes revised"; an active round also appears in the
+  **status bar** (colored square, clickable) and the 🎨 toolbar button carries
+  the color; the active color is highlighted in the palette.
+
+---
+
 ## v2.7.0 (2026-10-15)
 
 ### 🇧🇷 Português

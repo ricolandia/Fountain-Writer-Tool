@@ -1,6 +1,6 @@
 /* ── Fonte v2 — app.js ── */
 /* Versão dos assets (cache-busting): suba junto com a versão do release. */
-const ASSET_V = '2.7.0';
+const ASSET_V = '2.7.1';
 function safeJSON(key, fallback) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : JSON.parse(fallback); }
   catch(e) { console.warn('Fonte: erro ao ler', key, e); return JSON.parse(fallback); }
@@ -469,8 +469,10 @@ const app = {
       b.type = 'button';
       b.title = (lang === 'pt-BR' ? c.pt : c.en) + (c.id === atual ? ' ✓' : '');
       const sel = c.id === this._revSelected;
+      const ativa = c.id === atual;
       b.style.cssText = 'width:30px;height:26px;border-radius:4px;cursor:pointer;border:2px solid ' +
-        (sel ? 'var(--fg)' : 'var(--border)') + ';background:' + c.hex;
+        (sel ? 'var(--fg)' : 'var(--border)') + ';background:' + c.hex +
+        (ativa ? ';outline:2px solid var(--fg);outline-offset:1px' : '');
       b.dataset.color = c.id;
       b.addEventListener('click', () => this.selectRevisionColor(c.id));
       box.appendChild(b);
@@ -486,22 +488,42 @@ const app = {
         const cenas = cache ? cache.rev.revisedScenes.size : 0;
         const pags = cache ? cache.revisedPages : 0;
         const data = this.revision.date ? new Date(this.revision.date).toLocaleDateString() : '';
-        st.textContent = _('rev_current', nome) + ' · ' + _('rev_scenes', cenas) + ' · ' +
-          _('rev_pages', pags) + (data ? ' · ' + _('rev_since', data) : '') +
-          (cache && cache.rev.approximate ? ' ' + _('rev_approx') : '');
+        let txt = _('rev_current', nome) + (data ? ' · ' + _('rev_since', data) : '');
+        /* "0 cenas revisadas" parece defeito; sem nada mudado, o texto diz
+         * exatamente isso. */
+        txt += (cenas || pags)
+          ? ' · ' + _('rev_scenes', cenas) + ' · ' + _('rev_pages', pags)
+          : ' · ' + _('rev_nochanges');
+        if (cache && cache.rev.approximate) txt += ' ' + _('rev_approx');
+        st.textContent = txt;
       }
     }
     this._updateRevisionIndicator();
   },
 
-  /* Selo na toolbar: quadradinho na cor da rodada quando há revisão ativa. */
+  /* Selo na toolbar e na barra de status: quadradinho na cor da rodada quando
+   * há revisão ativa — o estado precisa ser visível fora do modal. */
   _updateRevisionIndicator() {
     const btn = document.getElementById('rev-btn');
-    if (!btn) return;
-    btn.style.background = this.revision ? this._revisionHex() : '';
-    btn.style.color = (this.revision && this.revision.color === 'branca') ? '#fff' : '';
     const cor = this.revision ? Revision.colorById(this.revision.color) : null;
-    btn.title = cor ? _('rev_current', lang === 'pt-BR' ? cor.pt : cor.en) : _('rev_none');
+    const nome = cor ? (lang === 'pt-BR' ? cor.pt : cor.en) : '';
+    if (btn) {
+      btn.style.background = this.revision ? this._revisionHex() : '';
+      btn.style.color = (this.revision && this.revision.color === 'branca') ? '#fff' : '';
+      btn.title = cor ? _('rev_current', nome) : _('rev_none');
+    }
+    const chip = document.getElementById('stat-rev');
+    if (chip) {
+      if (this.revision) {
+        chip.style.display = '';
+        chip.title = _('rev_current', nome);
+        chip.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:2px;' +
+          'margin-right:3px;vertical-align:middle;background:' + this._revisionHex() +
+          ';border:1px solid var(--border)"></span>' + nome;
+      } else {
+        chip.style.display = 'none';
+      }
+    }
   },
 
   /* Inicia a revisão na cor escolhida: guarda o resumo do roteiro AGORA. */
@@ -2063,6 +2085,12 @@ const app = {
     this.projetoData = null; localStorage.removeItem('fw_projeto');
     this._cronoDraft = null;
     this._excalidrawScene = null;
+    /* Revisão é do PROJETO: roteiro novo não pode herdar a rodada antiga (o
+     * resumo guardado é do outro texto e marcaria tudo como revisado). */
+    this.revision = null;
+    this._revSelected = null;
+    this._pageCache = null;
+    this._updateRevisionIndicator();
     this._excalidrawModified = false;
     this._stopExcalidrawLoadRetry();
     clearInterval(this._excalidrawPoll);
