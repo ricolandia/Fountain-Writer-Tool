@@ -125,6 +125,16 @@ const PdfBuilder = (function () {
         const color = colorOp(opts.color, false) || '0 0 0 rg';
         let cx = x;
         for (const run of line.runs) {
+            /* Marcação ({!…} {*…} {?…}) vira fundo colorido atrás do texto —
+             * a mesma cor que a lista de cenas usa para a linha marcada. */
+            if (run.highlight) {
+                const fill = colorOp(run.highlight, false);
+                if (fill) {
+                    ops.push(fill);
+                    ops.push(num(cx) + ' ' + num(y - 2 * scale) + ' ' +
+                             num(run.text.length * CHAR_W * scale) + ' ' + num(LINE_H * scale) + ' re f');
+                }
+            }
             if (run.text.length) {
                 ops.push('BT');
                 ops.push(color);

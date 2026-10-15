@@ -48,23 +48,45 @@ const Paginator = (function () {
     };
 
     /* ── Ênfase inline → "runs" ─────────────────────────────────────────────
-     * Fountain: ***negrito itálico***, **negrito**, *itálico*, _sublinhado_. */
+     * Fountain: ***negrito itálico***, **negrito**, *itálico*, _sublinhado_.
+     * E as marcações do Fonte: {!revisar} {*ok} {?problema} — as MESMAS cores
+     * que o app usa na lista de cenas (MARK_COLORS em app.js) e em
+     * processHighlights(). Sem isto, o PDF imprimiria as chaves literalmente. */
     const RUN_RE = /(\*{3})([^*]+?)\1|(\*{2})([^*]+?)\3|(\*)([^*]+?)\5|(_)([^_]+?)\7/g;
+    const HL_RE = /\{([!*?])([^}]+)\}/g;
+    const HL_COLORS = { '!': '#fff3b0', '*': '#c8e6c9', '?': '#ffcdd2' };
 
-    function splitRuns(text) {
-        const runs = [];
+    function withHighlight(run, color) {
+        if (color) run.highlight = color;
+        return run;
+    }
+
+    /* Ênfase de um trecho (sem marcação) para o array `out`. */
+    function pushEmphasis(text, out, highlight) {
         let last = 0, m;
         RUN_RE.lastIndex = 0;
         while ((m = RUN_RE.exec(text)) !== null) {
-            if (m.index > last) runs.push({ text: text.slice(last, m.index) });
-            if (m[1])      runs.push({ text: m[2], bold: true, italic: true });
-            else if (m[3]) runs.push({ text: m[4], bold: true });
-            else if (m[5]) runs.push({ text: m[6], italic: true });
-            else           runs.push({ text: m[8], underline: true });
+            if (m.index > last) out.push(withHighlight({ text: text.slice(last, m.index) }, highlight));
+            if (m[1])      out.push(withHighlight({ text: m[2], bold: true, italic: true }, highlight));
+            else if (m[3]) out.push(withHighlight({ text: m[4], bold: true }, highlight));
+            else if (m[5]) out.push(withHighlight({ text: m[6], italic: true }, highlight));
+            else           out.push(withHighlight({ text: m[8], underline: true }, highlight));
             last = m.index + m[0].length;
         }
-        if (last < text.length) runs.push({ text: text.slice(last) });
-        return runs.filter(r => r.text.length > 0);
+        if (last < text.length) out.push(withHighlight({ text: text.slice(last) }, highlight));
+    }
+
+    function splitRuns(text) {
+        const out = [];
+        let last = 0, m;
+        HL_RE.lastIndex = 0;
+        while ((m = HL_RE.exec(text)) !== null) {
+            if (m.index > last) pushEmphasis(text.slice(last, m.index), out, null);
+            pushEmphasis(m[2], out, HL_COLORS[m[1]] || null);
+            last = m.index + m[0].length;
+        }
+        if (last < text.length) pushEmphasis(text.slice(last), out, null);
+        return out.filter(r => r.text.length > 0);
     }
 
     function styleOf(run) {
@@ -72,6 +94,7 @@ const Paginator = (function () {
         if (run.bold)      s.bold = true;
         if (run.italic)    s.italic = true;
         if (run.underline) s.underline = true;
+        if (run.highlight) s.highlight = run.highlight;   // marcação sobrevive à quebra
         return s;
     }
 
@@ -79,11 +102,15 @@ const Paginator = (function () {
         const out = [];
         for (const r of runs) {
             const prev = out[out.length - 1];
+            /* A marcação entra na comparação: fundir um trecho marcado com um
+             * sem marca perderia (ou espalharia) o destaque. */
             if (prev && !!prev.bold === !!r.bold && !!prev.italic === !!r.italic &&
-                !!prev.underline === !!r.underline) {
+                !!prev.underline === !!r.underline &&
+                (prev.highlight || null) === (r.highlight || null)) {
                 prev.text += r.text;
             } else {
-                out.push(Object.assign({ text: r.text }, styleOf(r)));
+                out.push(Object.assign({ text: r.text }, styleOf(r),
+                                       r.highlight ? { highlight: r.highlight } : {}));
             }
         }
         return out;
@@ -94,7 +121,11 @@ const Paginator = (function () {
     }
 
     function upperRuns(runs) {
-        return runs.map(r => ({ text: r.text.toUpperCase(), bold: r.bold, italic: r.italic, underline: r.underline }));
+        return runs.map(r => {
+            const out = { text: r.text.toUpperCase(), bold: r.bold, italic: r.italic, underline: r.underline };
+            if (r.highlight) out.highlight = r.highlight;
+            return out;
+        });
     }
 
     /* Quebra os runs na largura (em CARACTERES). Devolve array de linhas, cada

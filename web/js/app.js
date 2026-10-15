@@ -1,6 +1,6 @@
 /* ── Fonte v2 — app.js ── */
 /* Versão dos assets (cache-busting): suba junto com a versão do release. */
-const ASSET_V = '2.7.1';
+const ASSET_V = '2.7.2';
 function safeJSON(key, fallback) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : JSON.parse(fallback); }
   catch(e) { console.warn('Fonte: erro ao ler', key, e); return JSON.parse(fallback); }

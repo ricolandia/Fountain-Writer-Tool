@@ -1,5 +1,29 @@
 # Changelog
 
+## v2.7.2 (2026-10-15)
+
+### 🇧🇷 Português
+
+#### 🐛 Correções
+- **As marcações do texto saíam literais no PDF** — o novo export imprimia
+  `{!frase marcada}` **com as chaves**, enquanto a prévia, o HTML e a impressão
+  mostravam o destaque colorido. Agora o PDF desenha **fundo colorido** atrás do
+  trecho, com as mesmas cores da lista de cenas (amarelo = revisar, verde = OK,
+  vermelho = problema), inclusive quando o trecho quebra de linha ou tem ênfase
+  dentro (`{!com **negrito**}`).
+
+### 🇺🇸 English
+
+#### 🐛 Fixes
+- **Text marks were printed literally in the PDF** — the new export output
+  `{!marked phrase}` **with the braces**, while the preview, the HTML and print
+  showed the colored highlight. The PDF now draws a **colored background**
+  behind the passage, with the same colors as the scene list (yellow = review,
+  green = OK, red = issue), including when the passage wraps or contains
+  emphasis (`{!with **bold**}`).
+
+---
+
 ## v2.7.1 (2026-10-15)
 
 ### 🇧🇷 Português

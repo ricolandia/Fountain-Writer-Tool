@@ -152,6 +152,37 @@ describe('Paginator — elementos', () => {
     assert.ok(runs.some(r => r.text === 'itálico' && r.italic));
     assert.ok(runs.some(r => r.text === 'sublinhado' && r.underline));
   });
+
+  it('converte as marcações {!…} {*…} {?…} em runs com cor (sem as chaves)', () => {
+    const doc = paginateFountain('Uma {!frase marcada} no meio da ação.', { linesPerPage: 55, titlePage: false });
+    const runs = doc.pages[0].lines[0].runs;
+    const texto = runs.map(r => r.text).join('');
+    assert.equal(texto, 'Uma frase marcada no meio da ação.');
+    assert.ok(!texto.includes('{!'));
+    const marcado = runs.find(r => r.highlight);
+    assert.equal(marcado.highlight, '#fff3b0');
+    assert.equal(marcado.text, 'frase marcada');
+  });
+
+  it('usa as três cores das marcações (revisar/ok/problema)', () => {
+    const doc = paginateFountain('A {!um} B {*dois} C {?três}', { linesPerPage: 55, titlePage: false });
+    const cores = doc.pages[0].lines[0].runs.filter(r => r.highlight).map(r => r.highlight);
+    assert.deepEqual(cores, ['#fff3b0', '#c8e6c9', '#ffcdd2']);
+  });
+
+  it('a marcação sobrevive à quebra de linha e combina com ênfase', () => {
+    const longo = '{!' + 'palavra '.repeat(20).trim() + '}';
+    const doc = paginateFountain(longo, { linesPerPage: 55, titlePage: false });
+    const linhas = doc.pages[0].lines.filter(l => l.type === 'text');
+    assert.ok(linhas.length > 1, 'devia quebrar em mais de uma linha');
+    for (const l of linhas) {
+      assert.ok(l.runs.every(r => r.highlight === '#fff3b0'), 'toda a linha mantém a marcação');
+    }
+    const comEnfase = paginateFountain('{!com **forte** dentro}', { linesPerPage: 55, titlePage: false });
+    const runs = comEnfase.pages[0].lines[0].runs;
+    assert.ok(runs.every(r => r.highlight === '#fff3b0'));
+    assert.ok(runs.some(r => r.text === 'forte' && r.bold));
+  });
 });
 
 describe('Paginator — números e folha de rosto', () => {
@@ -337,6 +368,15 @@ describe('PDF — estrutura', () => {
   it('não gera fonte/objeto de imagem nem dependência externa', () => {
     assert.ok(!text.includes('/XObject'));
     assert.ok(!text.includes('/Annots'));
+  });
+
+  it('desenha a marcação como FUNDO colorido (e não as chaves)', () => {
+    const d = paginateFountain('Ação com {!trecho marcado} aqui.', { linesPerPage: 55, titlePage: false });
+    const t = Buffer.from(globalThis.PdfBuilder.build(d)).toString('latin1');
+    assert.ok(!t.includes('{!'), 'as chaves não podem ir para o PDF');
+    assert.ok(t.includes('(trecho marcado) Tj'), 'o texto marcado continua lá');
+    assert.ok(t.includes('1 0.95 0.69 rg'), 'esperava a cor de fundo do destaque (#fff3b0)');
+    assert.ok(/\d[\d.]* \d[\d.]* \d[\d.]* 12 re f/.test(t), 'esperava o retângulo do fundo');
   });
 
   it('centraliza o título (14pt) no centro do PAPEL', () => {
