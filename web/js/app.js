@@ -174,6 +174,7 @@ const app = {
     this.autoAssignScenes(text);
     this.updateScenes(text);
     this.updateStats(text);
+    this._schedulePageStats(text);
     this._schedulePreview();
     this.renderTimeline();
     this.updateCurrentAct();
@@ -926,7 +927,7 @@ const app = {
       if (t === 'SCENE') s++;
       if (t !== 'BLANK') prevType = t;
     });
-    const pages = Math.max(1, Math.round(lines.length / 55));
+    const pages = this._pageCount(text, lines.length);
     const dur = Math.max(1, Math.round(c / 1500));
     document.getElementById('stat-cenas').textContent = _('stat_cenas', s);
     document.getElementById('stat-palavras').textContent = _('stat_palavras', w);
@@ -2140,6 +2141,77 @@ const app = {
       filmSheet: document.getElementById('exp-include-ficha').checked,
       structure: document.getElementById('exp-include-estrutura').checked,
     };
+  },
+
+  /* ── Contagem REAL de páginas (paginador) ──
+   * O painel mostra na hora a estimativa (linhas ÷ 55) e troca pelo número
+   * real quando o paginador roda (debounce de 300 ms): paginar é uma passada
+   * completa no texto, não pode rodar a cada rajada de digitação — mesma
+   * razão do debounce do preview (auditoria v2.6.0). */
+  _pageCache: null,
+
+  _pageCount(text, lineCount) {
+    const c = this._pageCache;
+    if (c && c.text === text) return c.pages;
+    return Math.max(1, Math.round(lineCount / 55));
+  },
+
+  _schedulePageStats(text) {
+    clearTimeout(this._pageStatsTimer);
+    this._pageStatsTimer = setTimeout(() => {
+      this._pageStatsTimer = null;
+      this._computePageStats(text, false);
+    }, 300);
+  },
+
+  _computePageStats(text, repaint) {
+    let cache = null;
+    try {
+      const doc = Paginator.paginate(Fountain.parseBlocks(text), { pageSize: this._exportPageSize() });
+      cache = { text, pages: doc.pages.length, scenes: doc.stats.scenes };
+    } catch (e) {
+      cache = null;                 // roteiro patológico: mantém a estimativa
+    }
+    this._pageCache = cache;
+    const atual = this.editor ? this.editor.value : null;
+    if (cache && (repaint || atual === text)) {
+      const el = document.getElementById('stat-pagina');
+      if (el) el.textContent = _('stat_pagina', cache.pages);
+    }
+  },
+
+  _exportPageSize() {
+    const sel = document.getElementById('exp-page-size');
+    return (sel && sel.value) || 'a4';
+  },
+
+  /* Troca de A4/Letter precisa recalcular na hora (a página muda). */
+  refreshPageStats() {
+    this._computePageStats(this.editor.value, true);
+  },
+
+  /* Gera o PDF de VERDADE (arquivo): paginador + gerador próprio de PDF.
+   * O botão "Imprimir" continua como alternativa (window.print()).
+   * Ficha do Filme e Estrutura são só do HTML/impressão — o PDF sai com o
+   * roteiro paginado (+ folha de rosto, se marcada). */
+  doExportPdfFile() {
+    const sec = this._getExportSections();
+    const pageSize = this._exportPageSize();
+    const chk = document.getElementById('exp-scene-numbers');
+    const sceneNumbers = !!(chk && chk.checked);
+    this.closeExportModal();
+    try {
+      const doc = Paginator.paginate(Fountain.parseBlocks(this.editor.value), {
+        pageSize,
+        sceneNumbers,
+        titlePage: sec.titlePage !== false,
+      });
+      const base = (this.fileName || 'roteiro').replace(/\.fountain$/i, '').replace(/\.json$/i, '');
+      PdfBuilder.save(base + '.pdf', doc);
+      this._showToast(_('export_pdf_ok', doc.pages.length));
+    } catch (e) {
+      this._showToast(_('export_pdf_error') + ': ' + (e && e.message ? e.message : e));
+    }
   },
   doExportHTML() {
     const sec = this._getExportSections();

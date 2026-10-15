@@ -65,6 +65,27 @@ function loadGuessType() {
   loadAppFunction('guessType');
 }
 
+function loadPaginator() {
+  loadFountainParser();
+  if (typeof globalThis.Paginator !== 'undefined') return;
+  loadFileAndExport('paginator.js', {
+    '^const Paginator =': 'globalThis.Paginator =',
+  });
+}
+
+function loadPdfBuilder() {
+  if (typeof globalThis.PdfBuilder !== 'undefined') return;
+  loadFileAndExport('pdf.js', {
+    '^const PdfBuilder =': 'globalThis.PdfBuilder =',
+  });
+}
+
+/* Pagina um roteiro em Fountain direto (parser + paginador). */
+function paginateFountain(source, options) {
+  loadPaginator();
+  return globalThis.Paginator.paginate(globalThis.Fountain.parseBlocks(source), options);
+}
+
 /* Extrai um MÉTODO do objeto app (ex.: "  moveScene(from, to) { ... }"). */
 function extractMethod(code, name) {
   const re = new RegExp('\\n  ' + name + '\\s*\\(([^)]*)\\)\\s*\\{');
@@ -89,4 +110,5 @@ function loadAppMethod(name) {
   eval(code);
 }
 
-module.exports = { loadFountainParser, loadI18n, loadGuessType, loadAppFunction, loadAppMethod };
+module.exports = { loadFountainParser, loadI18n, loadGuessType, loadAppFunction, loadAppMethod,
+                   loadPaginator, loadPdfBuilder, paginateFountain };

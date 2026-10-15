@@ -59,7 +59,15 @@ const Fountain = (function () {
         return text.replace(/\[STAR\]/g, '*').replace(/\[UL\]/g, '_').trim();
     }
 
-    function parse(script) {
+    const ATTR_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+    function escapeAttr(s) {
+        return String(s).replace(/[&<>"']/g, ch => ATTR_MAP[ch]);
+    }
+
+    /* Tokeniza o roteiro. Devolve os tokens em ORDEM INVERSA — é assim que o
+     * laço abaixo foi escrito (ele decide o "dual dialogue" olhando o bloco
+     * seguinte). Quem precisa de ordem de leitura usa parseBlocks(). */
+    function tokenize(script) {
         const blocks = script
             .replace(regex.boneyard,     '\n$1\n')
             .replace(regex.standardizer, '\n')
@@ -113,12 +121,10 @@ const Fountain = (function () {
                 let sceneNum;
                 const sn = text.match(regex.scene_number);
                 if (sn) {
-                    // O scene number vira atributo id="..." no HTML — precisa
-                    // ser escapado (um .fountain importado podia injetar HTML
+                    // Guardado CRU aqui; o escape para atributo HTML é feito na
+                    // renderização (um .fountain importado podia injetar HTML
                     // pela preview/export: #x" onmouseover="..."#).
-                    sceneNum = sn[1].replace(/[&<>"']/g, ch => (
-                        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
-                    ));
+                    sceneNum = sn[1];
                     text = text.replace(regex.scene_number, '');
                 }
                 tokens.push({ type: 'scene_heading', text, scene_number: sceneNum });
@@ -185,6 +191,29 @@ const Fountain = (function () {
             tokens.push({ type: 'action', text: line });
         }
 
+        return tokens;
+    }
+
+    /* Blocos em ORDEM DE LEITURA, com texto CRU (sem HTML, sem lexer).
+     * É a entrada do renderizador paginado (web/js/paginator.js) e do gerador
+     * de PDF (web/js/pdf.js). Não mexe no contrato de parse(). */
+    function parseBlocks(script) {
+        const tokens = tokenize(script);
+        const out = [];
+        for (let i = tokens.length - 1; i >= 0; i--) {
+            const t = tokens[i];
+            const b = { type: t.type };
+            if (t.text         !== undefined) b.text         = t.text;
+            if (t.scene_number !== undefined) b.scene_number = t.scene_number;
+            if (t.depth        !== undefined) b.depth        = t.depth;
+            if (t.dual         !== undefined) b.dual         = t.dual;
+            out.push(b);
+        }
+        return out;
+    }
+
+    function parse(script) {
+        const tokens = tokenize(script);
         const titleHtml  = [];
         const scriptHtml = [];
         let   title      = '';
@@ -209,7 +238,7 @@ const Fountain = (function () {
                 case 'copyright': titleHtml.push(`<p class="copyright">${t.text}</p>`); break;
 
                 case 'scene_heading':
-                    scriptHtml.push(`<h3${t.scene_number ? ` id="${t.scene_number}"` : ''}>${t.text}</h3>`);
+                    scriptHtml.push(`<h3${t.scene_number !== undefined ? ` id="${escapeAttr(t.scene_number)}"` : ''}>${t.text}</h3>`);
                     break;
                 case 'transition':
                     scriptHtml.push(`<h2>${t.text}</h2>`);
@@ -268,5 +297,5 @@ const Fountain = (function () {
         };
     }
 
-    return { parse, regex };
+    return { parse, parseBlocks, tokenize, regex };
 })();
