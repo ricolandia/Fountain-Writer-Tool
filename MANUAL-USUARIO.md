@@ -115,7 +115,7 @@ Ao abrir o Fonte, você vê:
 - 📄 **Novo** / 📂 **Abrir** / 💾 **Salvar** — gerenciamento de projetos
 - 📄 **Importar** — importa arquivo `.fountain` (texto puro)
 - ⬇ **Fountain** — exporta texto puro
-- 📑 **HTML** / 🖨 **PDF** — exporta roteiro formatado
+- 📑 **HTML** / ⬇ **PDF** — exporta o roteiro formatado (o PDF é paginado no padrão de roteiro) / 🖨 **Imprimir** abre a impressão do navegador
 - 👁 — alterna entre editor, preview dividido e preview
 - 🔍 — busca/substitui
 - 📄 **Ficha** — folha de rosto, ficha do filme, estrutura
@@ -317,8 +317,14 @@ A cada **5 minutos**, o Fonte salva uma cópia do texto (até 5 versões). Para 
 |---|---|---|
 | **Fountain (.fountain)** | ⬇ Fountain | Só o texto puro |
 | **HTML** | 📑 HTML | Abre modal com checkboxes para escolher: Folha de Rosto, Ficha do Filme, Estrutura |
-| **PDF** | 🖨 PDF | Abre a impressão do navegador. Mesmas opções do HTML |
+| **PDF (arquivo)** | ⬇ PDF | **Arquivo PDF de verdade**, paginado no padrão de roteiro: Courier 12pt, **55 linhas por página**, título de cena nunca órfão no pé, fala que muda de página sai com `(MORE)`/`(CONT'D)`, número de página no cabeçalho (a partir da 2ª — a folha de rosto não conta) e, se marcar **Numerar cenas**, o número nas duas margens. Escolhe **A4** ou **Letter (EUA)** |
+| **Imprimir** | 🖨 Imprimir | Abre a impressão do navegador (mesmas opções do HTML). Use quando quiser papel ou "salvar como PDF" do sistema |
 | **Projeto (.fountain.json)** | 💾 Salvar | Tudo: texto, beats, ficha, projeto cultural, cena do Excalidraw, backups |
+
+> **PDF (arquivo) × Imprimir:** o ⬇ **PDF** gera um arquivo paginado pelo próprio
+> Fonte, com margens e numeração controladas — é o que o roteirista entrega.
+> O 🖨 **Imprimir** continua existindo para quem quiser o diálogo do navegador.
+> Ficha do Filme e Estrutura aparecem só no HTML/Impressão.
 
 ---
 

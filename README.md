@@ -54,7 +54,8 @@ Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 | **Temas** | Claro (creme/papel) / escuro |
 | **Idiomas** | Português / English (recarrega) |
 | **Export HTML** | Download .html formatado |
-| **Export PDF** | Via impressão do navegador (com page-breaks) |
+| **⬇ PDF** | **Arquivo PDF paginado** (Courier 12pt, 55 linhas/página, `(MORE)`/`(CONT'D)`, nº de página e de cena) — A4 ou Letter |
+| **Imprimir** | Via impressão do navegador (alternativa) |
 | **⬇ Fountain** | Download .fountain (texto puro) |
 | **📄 Importar** | Importa .fountain (texto puro) |
 | **📂 Abrir** | Abre projeto .fountain.json |
