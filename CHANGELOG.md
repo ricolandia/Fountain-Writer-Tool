@@ -1,5 +1,27 @@
 # Changelog
 
+## v2.7.3 (2026-10-15)
+
+### 🇧🇷 Português
+
+#### ✨ Melhorias
+- **Marcações de linha agora se explicam:** um rótulo **"Marcar:"** antes dos
+  três botões e **tooltip/aria-label** em cada um (com o atalho Ctrl+1/2/3 e o
+  aviso de que a marca de linha **não sai no PDF** — o que sai é a marcação no
+  texto, `{!…}`). O manual ganhou a mesma explicação e a seção deixou de se
+  chamar "Highlights".
+
+### 🇺🇸 English
+
+#### ✨ Improvements
+- **Line marks now explain themselves:** a **"Mark:"** label before the three
+  buttons and a **tooltip/aria-label** on each one (with the Ctrl+1/2/3 shortcut
+  and a note that a line mark **does not go to the PDF** — what goes is the text
+  mark, `{!…}`). The manual got the same explanation and the section is no
+  longer called "Highlights".
+
+---
+
 ## v2.7.2 (2026-10-15)
 
 ### 🇧🇷 Português

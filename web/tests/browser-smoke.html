@@ -196,6 +196,20 @@ f.onload = async () => {
     log(overflow.rev.scroll <= overflow.rev.client + 1,
         'modal de revisão sem rolagem horizontal (' + overflow.rev.scroll + '≤' + overflow.rev.client + ')');
 
+    /* As três marcações de linha ganharam rótulo e tooltip (a confusão era
+     * confundir "marcar linha" com a rodada de revisão). */
+    const marcas = w2.eval(`(function(){
+      var rotulo = document.querySelector('[data-i18n="tb_mark_label"]');
+      var botoes = ['!','*','?'].map(function(c){ return document.querySelector('[data-mark="' + c + '"]'); });
+      return {
+        rotulo: rotulo ? rotulo.textContent : null,
+        comTooltip: botoes.every(function(b){ return b && b.getAttribute('title') && b.getAttribute('aria-label'); }),
+        quantos: botoes.filter(Boolean).length,
+      };
+    })()`);
+    log(marcas.rotulo === 'Marcar:' && marcas.quantos === 3, 'rótulo "Marcar:" antes das três marcações (' + marcas.rotulo + ')');
+    log(marcas.comTooltip, 'as três marcações têm tooltip e aria-label');
+
     /* ── Roteiro novo não pode herdar a rodada antiga ──
      * O reload do Quadro é posto de fora: com --virtual-time-budget o laço de
      * retry do Excalidraw não termina e o smoke inteiro trava. O alvo aqui é o

@@ -295,12 +295,25 @@ Ao fechar o Quadro com alterações não salvas, o Fonte pergunta se você quer 
 
 ⏱ **Escrita** — cronômetro simples. 🍅 **Pomodoro** — 25 minutos de foco, com notificação ao final.
 
-### Highlights
+### Marcações (🖍 Marcar)
 
-Selecione uma linha e use:
+São **marcas de trabalho no editor** — coloram a linha para você se achar depois.
+Com o cursor na linha:
+
 - `Ctrl+1` — 🟡 Revisar (amarelo)
 - `Ctrl+2` — 🟢 OK (verde)
 - `Ctrl+3` — 🔴 Problema (vermelho)
+
+A cor aparece como **fundo da cena na lista de CENAS**. Aperte de novo para
+desmarcar.
+
+> ⚠️ **A marcação de linha NÃO sai no PDF** — ela serve para você organizar o
+> trabalho. O que **sai** é a marcação **no texto**: digite `{!…}` (amarelo),
+> `{*…}` (verde) ou `{?…}` (vermelho) em volta do trecho — isso aparece na
+> prévia, no HTML, na impressão e no PDF.
+>
+> Não confundir com **🎨 Revisão** (rodada de revisão com cor, que marca o que
+> mudou desde que a rodada começou).
 
 ### Gráfico de produtividade
 
