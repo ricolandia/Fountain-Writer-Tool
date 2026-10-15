@@ -1,5 +1,79 @@
 # Changelog
 
+## v2.7.0 (2026-10-15)
+
+### 🇧🇷 Português
+
+#### ✨ Novidades
+- **⬇ PDF de verdade, paginado no padrão de roteiro** — o botão novo gera um
+  **arquivo** PDF (antes só havia "imprimir" pelo navegador): Courier 12pt,
+  **55 linhas por página**, margens de 1,5"/1", título de cena nunca órfão no
+  pé, fala que atravessa página sai com **(MORE)** e volta com
+  **PERSONAGEM (CONT'D)**, diálogo duplo em duas colunas, `===` força quebra,
+  **número de página** no cabeçalho (a folha de rosto não conta) e
+  **numeração de cenas** opcional nas duas margens. Escolha **A4** ou
+  **Letter (EUA)**. O 🖨 Imprimir continua como alternativa.
+- **🎨 Revisões coloridas** — rodada de revisão no padrão da indústria
+  (branco → azul → rosa → amarelo → verde → …): o app guarda um resumo do
+  roteiro ao iniciar a rodada e passa a marcar **o que mudou** — selo colorido
+  nas **cenas revisadas** da lista e, no PDF, **asterisco na margem** das linhas
+  revisadas + **faixa colorida na borda** das páginas revisadas (o equivalente
+  digital do papel colorido). O estado viaja no `.fountain.json`.
+- **📊 Painel com a página real** — o "Pág:" deixa de ser a estimativa
+  (linhas ÷ 55) e passa a ser a **página calculada pelo paginador**, que também
+  mostra quantas páginas foram revisadas.
+
+#### 🧪 Testes
+- **123 testes** (18 → 22 suítes), incluindo validação externa do PDF pelo
+  `pdfinfo`/`pdftotext` quando disponíveis.
+- Smoke de navegador: 35 asserções (PDF gerado *dentro* do navegador, página
+  real no painel, botão do modal gerando o arquivo, revisão detectada e PDF com
+  a cor da rodada).
+
+#### 📝 Notas
+- **Sem dependência nova:** o gerador de PDF é próprio (~5 KB), usando as 14
+  fontes padrão do PDF — em vez de vendorizar ~420 KB de biblioteca.
+- **Checklist de release:** o `?v=` subiu em `index.html` (agora 6 refs) e o
+  `ASSET_V` no `app.js`; o `sw.js` está em **v10**.
+
+---
+
+### 🇺🇸 English
+
+#### ✨ New
+- **⬇ Real, screenplay-formatted PDF** — the new button writes a PDF **file**
+  (before, only the browser's print dialog): Courier 12pt, **55 lines per
+  page**, 1.5"/1" margins, a scene heading is never orphaned at the page
+  bottom, dialogue that crosses a page ends with **(MORE)** and resumes with
+  **CHARACTER (CONT'D)**, dual dialogue in two columns, `===` forces a break,
+  **page numbers** in the header (the title page doesn't count) and optional
+  **scene numbers** in both margins. Pick **A4** or **Letter (US)**. 🖨 Print
+  stays as an alternative.
+- **🎨 Colored revisions** — an industry-standard revision round (white → blue →
+  pink → yellow → green → …): the app snapshots the script when the round
+  starts and then marks **what changed** — a colored badge on revised **scenes**
+  in the list and, in the PDF, a **margin asterisk** on revised lines plus a
+  **colored edge bar** on revised pages (the digital equivalent of colored
+  paper). The state travels inside the `.fountain.json`.
+- **📊 Real page count in the panel** — "Pg:" is no longer the estimate
+  (lines ÷ 55) but the **page computed by the paginator**, which also reports
+  how many pages were revised.
+
+#### 🧪 Tests
+- **123 tests** (18 → 22 suites), including external PDF validation through
+  `pdfinfo`/`pdftotext` when available.
+- Browser smoke: 35 assertions (PDF generated *inside* the browser, real page
+  in the panel, modal button producing the file, revision detected and PDF
+  carrying the round color).
+
+#### 📝 Notes
+- **No new dependency:** the PDF writer is our own (~5 KB) using the 14 PDF
+  standard fonts — instead of vendoring ~420 KB of a library.
+- **Release checklist:** `?v=` bumped in `index.html` (now 6 refs) and
+  `ASSET_V` in `app.js`; `sw.js` is at **v10**.
+
+---
+
 ## v2.6.2 (2026-10-09)
 
 ### 🇧🇷 Português

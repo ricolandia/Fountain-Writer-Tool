@@ -122,6 +122,7 @@ Ao abrir o Fonte, você vê:
 - 📊 **Stats** — estatísticas do roteiro
 - 🎯 **Meta** — meta diária de palavras
 - 💾 **Backups** — restaurar backup automático
+- 🎨 **Revisão** — rodada de revisão colorida (o que mudou desde o início da rodada)
 - 📋 **Projeto** — módulo Projeto Cultural
 - 🧩 **Quadro** — Excalidraw (planejamento visual)
 - 🌗 — alternar tema claro/escuro
@@ -325,6 +326,28 @@ A cada **5 minutos**, o Fonte salva uma cópia do texto (até 5 versões). Para 
 > Fonte, com margens e numeração controladas — é o que o roteirista entrega.
 > O 🖨 **Imprimir** continua existindo para quem quiser o diálogo do navegador.
 > Ficha do Filme e Estrutura aparecem só no HTML/Impressão.
+
+### Revisões coloridas (padrão da indústria)
+
+Quando o roteiro é revisado, a indústria marca as **páginas alteradas com uma
+cor por rodada** (branco → azul → rosa → amarelo → verde → goldenrod → …), para
+a equipe ver de relance o que mudou desde a última entrega. O Fonte faz isso:
+
+1. 🎨 **Revisão** → escolha a cor da rodada (a lista já está na ordem da
+   indústria) → **Iniciar nesta cor**.
+2. Escreva normalmente. O Fonte compara o texto de agora com o do momento em que
+   a rodada começou e mostra **um quadradinho na cor** ao lado das **cenas
+   revisadas** (na lista de cenas).
+3. No **⬇ PDF**, as linhas revisadas saem com um **asterisco na margem** e as
+   páginas revisadas com uma **faixa colorida na borda** (o equivalente digital
+   do papel colorido). O número da página revisada também sai na cor da rodada.
+4. **Próxima cor** avança a rodada; **Encerrar** desliga a marcação.
+
+O estado da revisão (cor, data e um resumo de 1 número por parágrafo) vai dentro
+do `.fountain.json` — abrir o projeto em outro computador preserva a rodada.
+
+> **Granularidade:** o Fonte marca por **parágrafo** (o bloco de ação, a fala, o
+> título de cena), não por palavra — e a marca sai no começo do parágrafo.
 
 ---
 

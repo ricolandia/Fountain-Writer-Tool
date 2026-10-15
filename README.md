@@ -55,6 +55,7 @@ Autor: **Ricardo A. B. Graça** — [ricolandia.com](https://www.ricolandia.com)
 | **Idiomas** | Português / English (recarrega) |
 | **Export HTML** | Download .html formatado |
 | **⬇ PDF** | **Arquivo PDF paginado** (Courier 12pt, 55 linhas/página, `(MORE)`/`(CONT'D)`, nº de página e de cena) — A4 ou Letter |
+| **🎨 Revisão** | **Revisões coloridas**: rodada com cor (branco → azul → rosa → …), selo nas cenas alteradas e, no PDF, asterisco na margem + faixa colorida nas páginas revisadas |
 | **Imprimir** | Via impressão do navegador (alternativa) |
 | **⬇ Fountain** | Download .fountain (texto puro) |
 | **📄 Importar** | Importa .fountain (texto puro) |
